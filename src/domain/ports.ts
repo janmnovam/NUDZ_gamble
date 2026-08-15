@@ -16,6 +16,7 @@ import type {
   ISOTimestamp,
   Limit,
   Profile,
+  UsageEvent,
   UserId,
 } from '@domain/model.ts'
 
@@ -63,4 +64,10 @@ export interface CheckInEditRepository {
   save(edit: CheckInEdit): Promise<void>
   get(checkInEditId: string): Promise<CheckInEdit | undefined>
   listByCheckIn(checkInId: string): Promise<CheckInEdit[]>
+}
+
+export interface UsageEventRepository {
+  save(event: UsageEvent): Promise<void>
+  get(usageEventId: string): Promise<UsageEvent | undefined>
+  listByUser(userId: UserId): Promise<UsageEvent[]>
 }
