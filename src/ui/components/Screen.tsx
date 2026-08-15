@@ -1,6 +1,7 @@
-import { type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 import { cn } from '@ui/lib/cn.ts'
+import { useKeyboardInset } from '@ui/lib/useKeyboardInset.ts'
 
 interface ScreenProps {
   children: ReactNode
@@ -12,16 +13,48 @@ interface ScreenProps {
   contentClassName?: string
 }
 
+/** Breathing room kept between the focused field and the top of the keyboard. */
+const KEYBOARD_GAP = 100
+
 /**
  * Mobile screen scaffold: a centered, phone-width column that fills the viewport.
  * Content scrolls; the footer stays pinned. Device safe areas are respected via
  * `pt-safe` / `pb-safe` instead of drawing a mock status bar.
  */
 export function Screen({ children, header, footer, contentClassName }: ScreenProps) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const keyboardInset = useKeyboardInset()
+
+  // iOS overlays the keyboard on top of the layout without resizing it, so a
+  // field near the bottom ends up hidden behind it. The extra bottom padding
+  // (below) grows the page so there is room to scroll; here, once the keyboard
+  // is up, we scroll the page by exactly the number of pixels the focused field
+  // is hidden, so it lands just above the keyboard. Scrolling the window (the
+  // real scroller, since the shell is `min-h-dvh`) by an exact delta is both
+  // reliable and instant — `scrollIntoView`'s centering under-scrolls on iOS,
+  // and `behavior: 'smooth'` stutters as the keyboard animation re-fires this.
+  useEffect(() => {
+    const container = scrollRef.current
+    const active = document.activeElement
+    if (keyboardInset <= 0 || !container || !(active instanceof HTMLElement)) return
+    if (!container.contains(active)) return
+
+    const viewport = window.visualViewport
+    const visibleBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight
+    const hidden = active.getBoundingClientRect().bottom - (visibleBottom - KEYBOARD_GAP)
+    if (hidden > 0) {
+      window.scrollBy({ top: hidden })
+    }
+  }, [keyboardInset])
+
   return (
     <div className="pt-safe bg-canvas mx-auto flex min-h-dvh w-full max-w-md flex-col">
       {header}
-      <div className={cn('flex flex-1 flex-col overflow-y-auto p-4', contentClassName ?? 'gap-5')}>
+      <div
+        ref={scrollRef}
+        className={cn('flex flex-1 flex-col overflow-y-auto p-4', contentClassName ?? 'gap-5')}
+        style={keyboardInset > 0 ? { paddingBottom: keyboardInset + KEYBOARD_GAP } : undefined}
+      >
         {children}
       </div>
       {footer ? <div className="pb-safe px-4 pt-1">{footer}</div> : null}
