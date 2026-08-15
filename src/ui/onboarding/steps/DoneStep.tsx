@@ -4,16 +4,8 @@ import { Button } from '@ui/components/Button.tsx'
 import { Card } from '@ui/components/Card.tsx'
 import { Screen } from '@ui/components/Screen.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
-import { pluralCategory, type PluralCategory } from '@ui/i18n/plural.ts'
-import { type TranslationKey } from '@ui/i18n/types.ts'
 import { formatHoursMinutes } from '@ui/lib/duration.ts'
 import { groupThousands } from '@ui/lib/money.ts'
-
-const COPING_COUNT_KEYS = {
-  one: 'onboarding.done.coping.one',
-  few: 'onboarding.done.coping.few',
-  other: 'onboarding.done.coping.other',
-} as const satisfies Record<PluralCategory, TranslationKey>
 
 interface DoneStepProps {
   referenceMinutes: number
@@ -36,7 +28,7 @@ export function DoneStep({
   startDate,
   onDone,
 }: DoneStepProps) {
-  const { t, locale } = useTranslation()
+  const { t, t_plural } = useTranslation()
 
   const hourUnit = t('onboarding.limits.unitHour')
   const minuteUnit = t('onboarding.limits.unitMinute')
@@ -50,7 +42,7 @@ export function DoneStep({
     { label: t('onboarding.done.row.limits'), value: limitValue },
     {
       label: t('onboarding.done.row.coping'),
-      value: t(COPING_COUNT_KEYS[pluralCategory(locale, copingCount)], { count: copingCount }),
+      value: t_plural('onboarding.coping.count', copingCount),
     },
   ]
 

@@ -4,6 +4,7 @@ import { I18nContext, type I18nContextValue } from '@ui/i18n/context.ts'
 import { interpolate } from '@ui/i18n/interpolate.ts'
 import { cs } from '@ui/i18n/locales/cs.ts'
 import { en } from '@ui/i18n/locales/en.ts'
+import { pluralKey } from '@ui/i18n/plural.ts'
 import { type Locale, type TranslationKey } from '@ui/i18n/types.ts'
 
 const TRANSLATIONS: Record<Locale, Record<TranslationKey, string>> = { cs, en }
@@ -22,6 +23,8 @@ export function I18nProvider({ children, initialLocale = 'cs' }: I18nProviderPro
       locale,
       setLocale,
       t: (key, vars) => interpolate(TRANSLATIONS[locale][key], vars),
+      t_plural: (base, count, vars) =>
+        interpolate(TRANSLATIONS[locale][pluralKey(base, locale, count)], { count, ...vars }),
     }),
     [locale],
   )

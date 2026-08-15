@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 
+import { type PluralBaseKey } from '@ui/i18n/plural.ts'
 import { type Locale, type TranslationKey } from '@ui/i18n/types.ts'
 
 export interface I18nContextValue {
@@ -7,6 +8,8 @@ export interface I18nContextValue {
   setLocale: (locale: Locale) => void
   /** Translate a key into the current locale, filling any `{name}` placeholders. */
   t: (key: TranslationKey, vars?: Record<string, string | number>) => string
+  /** Translate a pluralized key by count — resolves `.one`/`.few`/`.other` and fills `{count}`. */
+  t_plural: (base: PluralBaseKey, count: number, vars?: Record<string, string | number>) => string
 }
 
 export const I18nContext = createContext<I18nContextValue | null>(null)
