@@ -18,7 +18,7 @@ PWA for harm reduction in gambling — DigiWELL Hackathon 2026.
 | Language      | TypeScript 6.0 (`~6.0.3`)                 | Pinned to 6.x — see "Why TypeScript 6" below                 |
 | Styling       | Tailwind CSS 4 (`@tailwindcss/vite`)      | No `tailwind.config.js`; theme lives in `src/index.css`      |
 | Local storage | Dexie 4 (IndexedDB)                       | Survives refresh; swappable for a server later               |
-| PWA           | `vite-plugin-pwa` (Workbox)               | Manifest + service worker, `devOptions.enabled` for dev      |
+| PWA           | `vite-plugin-pwa` (Workbox)               | Manifest + service worker; SW off in dev, verify via `preview` |
 | Linter        | ESLint 10 + typescript-eslint (type-aware)| `strictTypeChecked` + `stylisticTypeChecked`                 |
 | Formatter     | Prettier 3 + `prettier-plugin-tailwindcss`| `eslint-config-prettier` disables conflicting ESLint rules   |
 | Unit tests    | Jest 30 + ts-jest (+ `fake-indexeddb`)    | Owns `tests/jest/**`, mirrors the `src/` structure           |
@@ -137,7 +137,7 @@ MIT-compatible; there is no GPL/LGPL/AGPL or share-alike code in the tree.
 
 - **Apache-2.0** — `typescript`, `dexie`, `fake-indexeddb`, `@playwright/test`
 - **MIT** — everything else: `react`, `react-dom`, `zustand`, `vite`, `@vitejs/plugin-react`,
-  `tailwindcss`, `@tailwindcss/vite`, `vite-plugin-pwa`, `eslint`, `@eslint/js`,
+  `tailwindcss`, `@tailwindcss/vite`, `vite-plugin-pwa`, `vite-plugin-mkcert`, `eslint`, `@eslint/js`,
   `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-react-hooks`,
   `eslint-plugin-react-refresh`, `globals`, `prettier`, `prettier-plugin-tailwindcss`,
   `@testing-library/react`, `jest`, `ts-jest`, `jest-environment-jsdom`, and the
