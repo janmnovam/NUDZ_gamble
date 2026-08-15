@@ -11,6 +11,9 @@
  * for an HTTP backend later means a different factory here, nothing upstream.
  */
 
+import { CheckInAdapter } from '@data/adapters/checkInAdapter.ts'
+import { CheckInEditAdapter } from '@data/adapters/checkInEditAdapter.ts'
+import { ContactAdapter } from '@data/adapters/contactAdapter.ts'
 import { CopingStrategyAdapter } from '@data/adapters/copingStrategyAdapter.ts'
 import { LimitAdapter } from '@data/adapters/limitAdapter.ts'
 import { OnboardingAdapter } from '@data/adapters/onboardingAdapter.ts'
@@ -18,6 +21,9 @@ import { ProfileAdapter } from '@data/adapters/profileAdapter.ts'
 import { systemNow } from '@data/clock.ts'
 import { type AppDatabase, db as defaultDb } from '@data/db.ts'
 import type {
+  CheckInEditRepository,
+  CheckInRepository,
+  ContactRepository,
   Clock,
   CopingStrategyRepository,
   LimitRepository,
@@ -40,6 +46,9 @@ export function createDataLayer(
     limits: new LimitAdapter(database),
     now,
     onboarding: new OnboardingAdapter(database),
+    contacts: new ContactAdapter(database),
+    checkIns: new CheckInAdapter(database),
+    checkInEdits: new CheckInEditAdapter(database),
   }
 }
 
@@ -51,6 +60,9 @@ export interface DataLayer {
   /** Shared clock — pass to domain services instead of reading wall-clock time directly. */
   now: Clock
   onboarding: OnboardingRepository
+  contacts: ContactRepository
+  checkIns: CheckInRepository
+  checkInEdits: CheckInEditRepository
 }
 
 export { AppDatabase, db } from '@data/db.ts'
@@ -67,3 +79,4 @@ export {
 } from '@domain/clock.ts'
 export { newId } from '@data/ids.ts'
 export { COPING_STRATEGY_DEFAULTS } from '@data/seeds/copingDefaults.ts'
+export { CONTACTS } from '@data/seeds/contacts.ts'

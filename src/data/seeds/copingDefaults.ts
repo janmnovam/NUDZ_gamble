@@ -1,14 +1,42 @@
 import { type CopingStrategyDefaultEntity } from '@data/model.ts'
 
-/**
- * Predefined coping strategies offered in onboarding.
- *
- * PLACEHOLDER — pending Dr. Kazmer's final list and copy. The app is not
- * blocked by this: users can always write their own. Replace the contents
- * (labels/codes/priority/reminder_text) once the canonical list arrives.
- */
+// Catalog ("default") coping strategies, in order, from content.md § Katalog strategií.
+// `code` is a stable id (renaming = migration). PROVISIONAL — confirm with NUDZ.
 export const COPING_STRATEGY_DEFAULTS: readonly CopingStrategyDefaultEntity[] = [
-  { code: 'walk_15min', label: 'Jít na 15 minut ven', priority: 1 },
-  { code: 'call_someone', label: 'Zavolat někomu blízkému', priority: 2 },
-  { code: 'breathing', label: 'Dechové cvičení', priority: 3 },
+  {
+    code: 'change_environment',
+    label: 'Na chvíli změním prostředí',
+    priority: 1,
+    reminder_text: 'Vytvořím si krátký odstup od místa nebo zařízení spojeného s hraním.',
+  },
+  {
+    code: 'reach_out',
+    label: 'Ozvu se někomu, komu důvěřuji',
+    priority: 2,
+    reminder_text: 'Navážu krátký kontakt a nezůstanu s nutkáním bez podpory.',
+  },
+  {
+    code: 'let_urge_pass',
+    label: 'Nechám nutkání chvíli projít',
+    priority: 3,
+    reminder_text: 'Všimnu si nutkání, ale nemusím podle něj hned jednat.',
+  },
+  {
+    code: 'start_small_activity',
+    label: 'Začnu jinou krátkou činnost',
+    priority: 4,
+    reminder_text: 'Zaměřím pozornost na malý krok, se kterým lze začít hned.',
+  },
+  {
+    code: 'remember_why',
+    label: 'Připomenu si, co chci chránit',
+    priority: 5,
+    reminder_text: 'Vrátím pozornost k tomu, proč chci mít hraní více pod kontrolou.',
+  },
+  {
+    code: 'reduce_access',
+    label: 'Znesnadním si přístup ke hraní',
+    priority: 6,
+    reminder_text: 'Vytvořím mezi nutkáním a hraním praktickou překážku.',
+  },
 ]

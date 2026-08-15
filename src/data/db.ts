@@ -1,7 +1,9 @@
 import Dexie, { type Table } from 'dexie'
 
 import {
+  type CheckInEditEntity,
   type CheckInEntity,
+  type ContactEntity,
   type CopingStrategyEntity,
   type LimitEntity,
   type ProfileEntity,
@@ -26,6 +28,8 @@ export class AppDatabase extends Dexie {
   check_ins!: Table<CheckInEntity, string>
   reviews!: Table<ReviewEntity, string>
   usage_events!: Table<UsageEventEntity, string>
+  contacts!: Table<ContactEntity, string>
+  check_in_edits!: Table<CheckInEditEntity, string>
 
   constructor(name = 'nudz-gamble') {
     super(name)
@@ -37,6 +41,14 @@ export class AppDatabase extends Dexie {
         'check_in_id, &[user_id+behavior_date], user_id, behavior_date, week_no, submitted_at, updated_at',
       reviews: 'review_id, &[user_id+review_week_no], user_id, review_week_no, review_completed_at',
       usage_events: 'usage_event_id, [user_id+occurred_at], user_id, event_type',
+    })
+    // v2 adds the global contacts directory (help lines); prior stores carry over.
+    this.version(2).stores({
+      contacts: 'contact_id, category, priority',
+    })
+    // v3 adds the append-only check-in edit log.
+    this.version(3).stores({
+      check_in_edits: 'check_in_edit_id, user_id, check_in_id, edited_at',
     })
   }
 }

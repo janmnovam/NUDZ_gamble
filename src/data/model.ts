@@ -8,7 +8,14 @@
  * Field names are verbatim from the brief / `src/data/docs/data-model.md`.
  * Money is integer CZK, time is integer minutes, timestamps are ISO 8601.
  */
-import type { CopingType, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
+import type {
+  CheckInEditAction,
+  ContactCategory,
+  CopingType,
+  ISODate,
+  ISOTimestamp,
+  UserId,
+} from '@domain/model.ts'
 import type { UsageEventType } from '@domain/usageEventType.ts'
 
 export interface ProfileEntity {
@@ -83,4 +90,26 @@ export interface UsageEventEntity {
   occurred_at: ISOTimestamp
   screen: string | null
   detail: string | null
+}
+
+export interface ContactEntity {
+  contact_id: string
+  name: string
+  purpose: string | null
+  phone: string | null
+  url: string | null
+  availability: string | null
+  category: ContactCategory
+  priority: number
+}
+
+export interface CheckInEditEntity {
+  check_in_edit_id: string
+  user_id: UserId
+  check_in_id: string
+  action: CheckInEditAction
+  edited_at: ISOTimestamp
+  changed_fields: string[]
+  before: string | null
+  after: string | null
 }

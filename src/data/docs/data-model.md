@@ -17,6 +17,9 @@ Stance: MVP on IndexedDB, one demo user `A001`; schema modelled server-ready
 - `review (1:N)` — one per closed week; groups its week's check-ins
 - `usage_event (1:N)` — append-only interaction log (**required**)
 
+Plus one **global reference** table (not per-user, no `user_id`):
+- `contact` — help-line directory for the Kontakty tab; seeded from `content.md`, read-only in the app
+
 ```mermaid
 erDiagram
     PROFILE ||--|{ COPING_STRATEGY : "1:N (≥2)"
@@ -129,6 +132,8 @@ limits:          "limit_id, [user_id+week_no], user_id, week_no, limit_set_at"
 check_ins:       "check_in_id, [user_id+behavior_date], user_id, behavior_date, week_no, submitted_at, updated_at, played"
 reviews:         "review_id, [user_id+review_week_no], user_id, review_week_no, review_completed_at, incomplete"
 usage_events:    "usage_event_id, [user_id+occurred_at], user_id, event_type"
+contacts:        "contact_id, category, priority"
+check_in_edits:  "check_in_edit_id, user_id, check_in_id, edited_at"
 ```
 
 ## Rules
@@ -143,6 +148,9 @@ usage_events:    "usage_event_id, [user_id+occurred_at], user_id, event_type"
 - Export: person-day CSV (Příloha 2) **plus** the user's selected coping strategies.
 - Schema version = Dexie `db.version(n)`; export envelope carries `schema_version`.
 - Consistent time pickers across screens (UI concern, not data).
+- `contact`: global reference data, seeded (`seeds/contacts.ts`) from the UX/UI
+  content spec; `category` = `counselling` | `emergency`. Not per-user; the app
+  never records whether a user contacted a service.
 
 ## Open
 - Default coping content pending Dr. Kazmer (app not blocked — users add their own).
@@ -154,4 +162,6 @@ usage_events:    "usage_event_id, [user_id+occurred_at], user_id, event_type"
 - Edit already-submitted results (fuller edit UX beyond in-window fill).
 - Track retroactive edits: append-only `check_in_edit` log —
   `check_in_edit_id`, `user_id`, `check_in_id`, `action (created|updated)`,
-  `edited_at`, `changed_fields`, `before`/`after` (JSON). Designed, not built.
+  `edited_at`, `changed_fields`, `before`/`after` (JSON). Storage ready
+  (`check_in_edits` store + `CheckInEditAdapter`, set/get only); not yet wired
+  into the check-in write path.

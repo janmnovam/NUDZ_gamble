@@ -7,6 +7,9 @@
  */
 
 import type {
+  CheckIn,
+  CheckInEdit,
+  Contact,
   CopingStrategy,
   CopingStrategyDefault,
   CopingStrategyInput,
@@ -41,4 +44,23 @@ export interface LimitRepository {
 export interface OnboardingRepository {
   /** Persists profile + week-1 limit + ≥1 coping atomically, or nothing. */
   save(profile: Profile, limit: Limit, coping: CopingStrategy[]): Promise<void>
+}
+
+export interface ContactRepository {
+  /** Idempotent — safe to call on every boot. */
+  seed(): Promise<void>
+  list(): Promise<Contact[]>
+  get(contactId: string): Promise<Contact | undefined>
+}
+
+export interface CheckInRepository {
+  save(checkIn: CheckIn): Promise<void>
+  get(checkInId: string): Promise<CheckIn | undefined>
+  listByUser(userId: UserId): Promise<CheckIn[]>
+}
+
+export interface CheckInEditRepository {
+  save(edit: CheckInEdit): Promise<void>
+  get(checkInEditId: string): Promise<CheckInEdit | undefined>
+  listByCheckIn(checkInId: string): Promise<CheckInEdit[]>
 }

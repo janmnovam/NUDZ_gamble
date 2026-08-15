@@ -102,3 +102,32 @@ export interface UsageEvent {
   screen: string | null
   detail: string | null
 }
+
+export type ContactCategory = 'counselling' | 'emergency'
+
+export interface Contact {
+  contact_id: string
+  name: string
+  purpose: string | null
+  phone: string | null
+  url: string | null
+  availability: string | null
+  category: ContactCategory
+  priority: number
+}
+
+/** Whether an edit-log row records the first save of a check-in or a later change. */
+export type CheckInEditAction = 'created' | 'updated'
+
+export interface CheckInEdit {
+  check_in_edit_id: string
+  user_id: UserId
+  check_in_id: string
+  action: CheckInEditAction
+  edited_at: ISOTimestamp
+  changed_fields: string[]
+  /** JSON snapshot before the change; `null` for a `created` row. */
+  before: string | null
+  /** JSON snapshot after the change. */
+  after: string | null
+}
