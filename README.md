@@ -32,6 +32,9 @@ written relative to the config file (`./src/*`).
 
 ## Getting started
 
+Requires **Node ≥ 20.19** (Vite 8 / Vitest 4 need it; older Node fails on startup with a
+`styleText` import error from `node:util`).
+
 ```bash
 npm install
 npx playwright install    # once, downloads the e2e browsers
