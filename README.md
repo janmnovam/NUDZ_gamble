@@ -18,8 +18,7 @@ PWA for harm reduction in gambling — DigiWELL Hackathon 2026.
 | PWA           | `vite-plugin-pwa` (Workbox)               | Manifest + service worker, `devOptions.enabled` for dev      |
 | Linter        | ESLint 10 + typescript-eslint (type-aware)| `strictTypeChecked` + `stylisticTypeChecked`                 |
 | Formatter     | Prettier 3 + `prettier-plugin-tailwindcss`| `eslint-config-prettier` disables conflicting ESLint rules   |
-| Unit tests    | Vitest 4 (+ `fake-indexeddb`)             | Owns `src/**`                                                |
-| Unit tests    | Jest 30 + ts-jest                         | Owns `tests/jest/**`                                         |
+| Unit tests    | Jest 30 + ts-jest (+ `fake-indexeddb`)    | Owns `tests/jest/**`, mirrors the `src/` structure           |
 | E2E tests     | Playwright 1.62                           | Owns `tests/e2e/**`, runs against the production build       |
 
 ### Why TypeScript 6
@@ -32,7 +31,7 @@ written relative to the config file (`./src/*`).
 
 ## Getting started
 
-Requires **Node ≥ 20.19** (Vite 8 / Vitest 4 need it; older Node fails on startup with a
+Requires **Node ≥ 20.19** (Vite 8 needs it; older Node fails on startup with a
 `styleText` import error from `node:util`).
 
 ```bash
@@ -51,11 +50,11 @@ npm run dev               # http://localhost:5173 (also served on the LAN IP)
 | `npm run typecheck`     | Typechecks the app, the Jest project and the e2e project    |
 | `npm run lint`          | ESLint (type-aware); `lint:fix` to autofix                  |
 | `npm run format`        | Prettier write; `format:check` to verify                    |
-| `npm run test`          | Vitest — `src/**/*.test.ts(x)`                              |
-| `npm run test:jest`     | Jest — `tests/jest/**/*.test.ts(x)`                          |
+| `npm run test`          | Jest — `tests/jest/**/*.test.ts(x)`                          |
+| `npm run test:coverage` | Jest with coverage over `src/domain` and `src/data`          |
 | `npm run test:e2e`      | Playwright — `tests/e2e/**/*.spec.ts`                        |
-| `npm run test:all`      | All three runners                                           |
-| `npm run check`         | typecheck + lint + format:check + Vitest + Jest (CI gate)   |
+| `npm run test:all`      | Unit + e2e tests                                            |
+| `npm run check`         | typecheck + lint + format:check + Jest (CI gate)            |
 
 ## Layout
 
@@ -64,9 +63,8 @@ src/
   ui/        layer A — presentation (React)
   domain/    layer B — intervention logic (pure; empty for now)
   data/      layer C — persistence (Dexie/IndexedDB)
-  test/      Vitest setup + smoke test
 tests/
-  jest/      Jest project (own tsconfig + setup)
+  jest/      unit tests (own tsconfig + setup), mirror the src/ structure
   e2e/       Playwright specs (own tsconfig)
 public/      icons, favicon
 ```
@@ -81,12 +79,12 @@ is restated there).
 importing `react`, `dexie`, `@ui/*` or `@data/*`. The intervention logic stays pure and
 storage-agnostic, so swapping IndexedDB for a server later does not mean rewriting it.
 
-### Two unit runners
+### Unit tests
 
-Vitest and Jest both run unit tests but never see the same files, and their global typings
-are kept apart: `tsconfig.app.json` has no `@types/jest`, and `tests/jest/tsconfig.json` is
-the only tsconfig that pulls it in (and deliberately omits `vitest/globals`). Vitest is the
-default runner for application code — it reuses Vite's transform and aliases.
+Jest is the only unit-test runner. Tests live in `tests/jest/**` (mirroring `src/`), not
+next to the sources — `tests/jest/tsconfig.json` is the only tsconfig that pulls in
+`@types/jest`, so the app tsconfig stays free of test globals. IndexedDB is provided by
+`fake-indexeddb` in the Jest setup file.
 
 ## Dependency licenses
 
@@ -98,8 +96,8 @@ MIT-compatible; there is no GPL/LGPL/AGPL or share-alike code in the tree.
   `tailwindcss`, `@tailwindcss/vite`, `vite-plugin-pwa`, `eslint`, `@eslint/js`,
   `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-react-hooks`,
   `eslint-plugin-react-refresh`, `globals`, `prettier`, `prettier-plugin-tailwindcss`,
-  `vitest`, `@vitest/coverage-v8`, `jsdom`, `@testing-library/react`, `jest`, `ts-jest`,
-  `jest-environment-jsdom`, and the `@types/*` packages (DefinitelyTyped)
+  `@testing-library/react`, `jest`, `ts-jest`, `jest-environment-jsdom`, and the
+  `@types/*` packages (DefinitelyTyped)
 
 Icons in `public/` are generated for this repository and carry no third-party license.
 

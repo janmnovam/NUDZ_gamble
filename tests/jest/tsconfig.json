@@ -2,8 +2,8 @@
   "extends": "../../tsconfig.app.json",
   "compilerOptions": {
     // `vite/client` is needed for the CSS/asset module declarations in src.
-    // Note there is no `vitest/globals` here — that is what keeps the two
-    // runners' global typings from colliding.
+    // This is the only tsconfig pulling in `@types/jest`, so the app tsconfig
+    // stays free of test globals.
     "types": ["jest", "node", "vite/client"],
     "noEmit": true,
     "allowImportingTsExtensions": true,

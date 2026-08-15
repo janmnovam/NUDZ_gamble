@@ -1,12 +1,10 @@
 import type { Config } from 'jest'
 
 /**
- * Jest owns `tests/jest/**` only.
+ * All unit tests live in `tests/jest/**`, mirroring the `src/` structure.
  *
- * Vitest keeps `src/**` (it reuses the Vite transform and aliases), so the two
- * runners never see each other's files and their globals never collide — the
- * Jest tests compile against `tests/jest/tsconfig.json`, which is the only
- * tsconfig pulling in `@types/jest`.
+ * They compile against `tests/jest/tsconfig.json` — the only tsconfig pulling
+ * in `@types/jest` — so the app tsconfig stays free of test globals.
  */
 const config: Config = {
   testEnvironment: 'jsdom',
@@ -29,6 +27,8 @@ const config: Config = {
     '^@data/(.*)$': '<rootDir>/src/data/$1',
   },
   clearMocks: true,
+  coverageProvider: 'v8',
+  collectCoverageFrom: ['src/domain/**/*.ts', 'src/data/**/*.ts'],
 }
 
 export default config

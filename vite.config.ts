@@ -1,4 +1,3 @@
-/// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
 
 import tailwindcss from '@tailwindcss/vite'
@@ -53,15 +52,5 @@ export default defineConfig({
   server: {
     // Needed to open the app from a phone on the same network.
     host: true,
-  },
-  test: {
-    environment: 'jsdom',
-    globals: true,
-    setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    coverage: {
-      provider: 'v8',
-      include: ['src/domain/**', 'src/data/**'],
-    },
   },
 })
