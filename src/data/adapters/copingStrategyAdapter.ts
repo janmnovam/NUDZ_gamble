@@ -1,7 +1,7 @@
 import { type CopingStrategyEntity } from '@data/model.ts'
-import { type CopingStrategyRepository } from '@domain/ports.ts'
+import { type Clock, type CopingStrategyRepository } from '@domain/ports.ts'
 
-import { type Now, systemNow } from '../clock'
+import { systemNow } from '../clock'
 import { type AppDatabase, type Repository } from '../db'
 import { newId } from '../ids'
 import { DexieRepository } from '../repository'
@@ -19,9 +19,9 @@ import type {
  */
 export class CopingStrategyAdapter implements CopingStrategyRepository {
   private readonly repo: Repository<CopingStrategyEntity>
-  private readonly now: Now
+  private readonly now: Clock
 
-  constructor(db: AppDatabase, now: Now = systemNow) {
+  constructor(db: AppDatabase, now: Clock = systemNow) {
     this.repo = new DexieRepository(db.coping_strategy)
     this.now = now
   }
