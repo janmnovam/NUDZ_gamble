@@ -82,6 +82,15 @@ function fromUtcMs(ms: number): ISODate {
   return `${year}-${month}-${day}`
 }
 
+/**
+ * The calendar date after `date` (DST-immune, same UTC-anchored arithmetic as
+ * the rest of this module). Both inputs and outputs are bare `YYYY-MM-DD`, so
+ * this stays a pure calendar step with no timezone in play.
+ */
+export function nextDate(date: ISODate): ISODate {
+  return fromUtcMs(toUtcMs(date) + MS_PER_DAY)
+}
+
 /** Pure implementation of `StudyCalendar` for one user's `intervention_start_date`. */
 export function createStudyCalendar(
   intervention_start_date: ISODate,

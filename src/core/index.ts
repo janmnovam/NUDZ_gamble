@@ -59,6 +59,7 @@ export { systemNow, systemTodayClock } from '@data/clock.ts'
 export type { Clock } from '@domain/ports.ts'
 export {
   createStudyCalendar,
+  nextDate,
   type StudyCalendar,
   type StudyDay,
   type TodayClock,

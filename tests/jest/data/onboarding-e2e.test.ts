@@ -3,6 +3,7 @@ import { completeOnboarding } from '@domain/onboarding.ts'
 import type { OnboardingInput } from '@domain/onboarding.ts'
 
 const NOW = '2026-09-01T22:30:00.000Z'
+const TODAY = '2026-09-01'
 
 const input: OnboardingInput = {
   user_id: 'A001',
@@ -27,7 +28,12 @@ describe('onboarding end to end', () => {
 
   it('completeOnboarding writes profile, limit, and coping via data.onboarding', async () => {
     const data = createDataLayer(db, () => NOW)
-    await completeOnboarding(input, { repo: data.onboarding, now: () => NOW, newId })
+    await completeOnboarding(input, {
+      repo: data.onboarding,
+      now: () => NOW,
+      today: { today: () => TODAY },
+      newId,
+    })
 
     const profile = await data.profiles.get('A001')
     expect(profile?.intervention_start_date).toBe('2026-09-02')

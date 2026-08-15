@@ -1,8 +1,8 @@
+import { type TodayClock, nextDate } from '@domain/clock.ts'
 import { isWithinCap } from '@domain/limits.ts'
 import {
   type CopingStrategy,
   type CopingType,
-  type ISODate,
   type ISOTimestamp,
   type Limit,
   type Profile,
@@ -28,7 +28,10 @@ export interface OnboardingInput {
 
 export interface OnboardingDeps {
   repo: OnboardingRepository
+  /** UTC instant source — stamps `*_at` record timestamps. */
   now: () => ISOTimestamp
+  /** Local calendar date source — same anchor the study calendar reads back with. */
+  today: TodayClock
   newId: () => string
 }
 
@@ -56,7 +59,7 @@ export async function completeOnboarding(
   const profile: Profile = {
     user_id: input.user_id,
     onboarding_completed_at: at,
-    intervention_start_date: nextDay(at),
+    intervention_start_date: nextDate(deps.today.today()),
     reference_time_min: input.reference_time_min,
     reference_stakes_czk: input.reference_stakes_czk,
   }
@@ -82,15 +85,4 @@ export async function completeOnboarding(
   }))
 
   await deps.repo.save(profile, limit, coping)
-}
-
-/**
- * The first full calendar day after `iso` — the intervention's Day 1.
- * ponytail: UTC day boundary; swap for a tz-aware calc if the demo must roll
- * over at the user's local midnight instead of UTC.
- */
-export function nextDay(iso: ISOTimestamp): ISODate {
-  const d = new Date(iso)
-  d.setUTCDate(d.getUTCDate() + 1)
-  return d.toISOString().slice(0, 10)
 }
