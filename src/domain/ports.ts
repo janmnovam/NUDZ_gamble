@@ -33,3 +33,8 @@ export interface LimitRepository {
   save(limit: Limit): Promise<void>
   listByUser(userId: UserId): Promise<Limit[]>
 }
+
+export interface OnboardingRepository {
+  /** Persists profile + week-1 limit + ≥1 coping atomically, or nothing. */
+  save(profile: Profile, limit: Limit, coping: CopingStrategy[]): Promise<void>
+}
