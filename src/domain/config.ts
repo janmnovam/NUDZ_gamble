@@ -46,3 +46,18 @@ export const DEFAULT_CONFIG: DomainConfig = {
   PROGRAMME_DAYS: 28,
   EDIT_WINDOW_DAYS: 7,
 }
+
+/**
+ * Display-ready view of the limit-adjustment percentages (doc 04) — the same
+ * `DEFAULT_LIMIT_PCT`/`MAX_LIMIT_PCT` as whole numbers (80/90), so the
+ * onboarding/review slider labels them without re-multiplying by 100 itself.
+ */
+export interface LimitPercentView {
+  readonly suggested_pct: number
+  readonly max_pct: number
+}
+
+export const limitPercentView = (config: DomainConfig = DEFAULT_CONFIG): LimitPercentView => ({
+  suggested_pct: Math.round(config.DEFAULT_LIMIT_PCT * 100),
+  max_pct: Math.round(config.MAX_LIMIT_PCT * 100),
+})

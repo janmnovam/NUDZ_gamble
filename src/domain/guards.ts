@@ -6,6 +6,8 @@
  */
 import type { ISODate, Review } from '@domain/model.ts'
 import type { WeekNo } from '@domain/clock.ts'
+import { DEFAULT_CONFIG, limitPercentView, type DomainConfig } from '@domain/config.ts'
+import { isWithinCap, maxLimit, suggestLimit } from '@domain/limits.ts'
 
 export type CheckInEditability = 'allowed' | 'locked_week' | 'future_date'
 
@@ -41,3 +43,37 @@ export type ResolvePendingAction = (params: {
   reviewable_weeks: readonly WeekNo[]
   checkin_due: boolean
 }) => PendingAction
+
+/**
+ * Doc 04: what the limit-adjustment slider (onboarding + every review)
+ * renders — exact bounds in the reference's unit (minutes or CZK), the
+ * 80%/90% labels, and whether the user's current value is allowed. One
+ * implementation, reused at both call sites, so the review screen can't
+ * grow a second, slightly different 90% check.
+ */
+export interface LimitAdjustmentView {
+  suggested: number
+  suggested_pct: number
+  max: number
+  max_pct: number
+  allowed: boolean
+}
+
+export type EvaluateLimitAdjustment = (params: {
+  reference: number
+  proposed: number
+}) => LimitAdjustmentView
+
+export const evaluateLimitAdjustment = (
+  { reference, proposed }: { reference: number; proposed: number },
+  config: DomainConfig = DEFAULT_CONFIG,
+): LimitAdjustmentView => {
+  const { suggested_pct, max_pct } = limitPercentView(config)
+  return {
+    suggested: suggestLimit(reference, config),
+    suggested_pct,
+    max: maxLimit(reference, config),
+    max_pct,
+    allowed: isWithinCap(proposed, reference, config),
+  }
+}
