@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-status-ok: oklch(0.72 0.16 155);
+  --color-status-caution: oklch(0.78 0.16 75);
+  --color-status-exceeded: oklch(0.63 0.21 25);
+}
+
+@layer base {
+  html {
+    /* Keeps the app usable inside the phone safe area when installed. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-slate-950 text-slate-100 antialiased;
+  }
+}

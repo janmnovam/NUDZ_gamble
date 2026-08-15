@@ -1,2 +1,113 @@
 # NUDZ_gamble
-PWA for harm reduction in gambling
+
+PWA for harm reduction in gambling — DigiWELL Hackathon 2026.
+
+> **Status: technology bootstrap only.** The toolchain, build, PWA shell and the three
+> test runners are wired up and green. No intervention logic has been implemented yet;
+> `src/domain/` is intentionally empty.
+
+## Stack
+
+| Concern       | Choice                                    | Notes                                                       |
+| ------------- | ----------------------------------------- | ----------------------------------------------------------- |
+| Build / dev   | Vite 8                                    | `host: true` so the app opens from a phone on the same LAN   |
+| UI            | React 19                                  |                                                              |
+| Language      | TypeScript 6.0 (`~6.0.3`)                 | Pinned to 6.x — see "Why TypeScript 6" below                 |
+| Styling       | Tailwind CSS 4 (`@tailwindcss/vite`)      | No `tailwind.config.js`; theme lives in `src/index.css`      |
+| Local storage | Dexie 4 (IndexedDB)                       | Survives refresh; swappable for a server later               |
+| PWA           | `vite-plugin-pwa` (Workbox)               | Manifest + service worker, `devOptions.enabled` for dev      |
+| Linter        | ESLint 10 + typescript-eslint (type-aware)| `strictTypeChecked` + `stylisticTypeChecked`                 |
+| Formatter     | Prettier 3 + `prettier-plugin-tailwindcss`| `eslint-config-prettier` disables conflicting ESLint rules   |
+| Unit tests    | Vitest 4 (+ `fake-indexeddb`)             | Owns `src/**`                                                |
+| Unit tests    | Jest 30 + ts-jest                         | Owns `tests/jest/**`                                         |
+| E2E tests     | Playwright 1.62                           | Owns `tests/e2e/**`, runs against the production build       |
+
+### Why TypeScript 6
+
+TypeScript 7 (the native Go port) is the current `latest`, but `typescript-eslint` still
+declares `typescript@>=4.8.4 <6.1.0` as a peer — type-aware linting does not work on TS 7
+yet. The project is therefore pinned to `typescript@~6.0.3`, which is the newest release
+the linter supports. Note TS 6 deprecates `baseUrl`, so `paths` in `tsconfig.app.json` are
+written relative to the config file (`./src/*`).
+
+## Getting started
+
+```bash
+npm install
+npx playwright install    # once, downloads the e2e browsers
+npm run dev               # http://localhost:5173 (also served on the LAN IP)
+```
+
+## Scripts
+
+| Script                  | What it does                                                |
+| ----------------------- | ----------------------------------------------------------- |
+| `npm run dev`           | Vite dev server, PWA enabled                                |
+| `npm run build`         | `tsc -b` then production build + service worker             |
+| `npm run preview`       | Serve the production build locally                          |
+| `npm run typecheck`     | Typechecks the app, the Jest project and the e2e project    |
+| `npm run lint`          | ESLint (type-aware); `lint:fix` to autofix                  |
+| `npm run format`        | Prettier write; `format:check` to verify                    |
+| `npm run test`          | Vitest — `src/**/*.test.ts(x)`                              |
+| `npm run test:jest`     | Jest — `tests/jest/**/*.test.ts(x)`                          |
+| `npm run test:e2e`      | Playwright — `tests/e2e/**/*.spec.ts`                        |
+| `npm run test:all`      | All three runners                                           |
+| `npm run check`         | typecheck + lint + format:check + Vitest + Jest (CI gate)   |
+
+## Layout
+
+```
+src/
+  ui/        layer A — presentation (React)
+  domain/    layer B — intervention logic (pure; empty for now)
+  data/      layer C — persistence (Dexie/IndexedDB)
+  test/      Vitest setup + smoke test
+tests/
+  jest/      Jest project (own tsconfig + setup)
+  e2e/       Playwright specs (own tsconfig)
+public/      icons, favicon
+```
+
+Path aliases `@/`, `@ui/`, `@domain/`, `@data/` are configured in `tsconfig.app.json`,
+`vite.config.ts` and `jest.config.ts` (Jest does not read Vite's resolver, so the mapping
+is restated there).
+
+### Layer boundary is enforced by the linter
+
+`eslint.config.js` adds a `no-restricted-imports` rule that forbids `src/domain/**` from
+importing `react`, `dexie`, `@ui/*` or `@data/*`. The intervention logic stays pure and
+storage-agnostic, so swapping IndexedDB for a server later does not mean rewriting it.
+
+### Two unit runners
+
+Vitest and Jest both run unit tests but never see the same files, and their global typings
+are kept apart: `tsconfig.app.json` has no `@types/jest`, and `tests/jest/tsconfig.json` is
+the only tsconfig that pulls it in (and deliberately omits `vitest/globals`). Vitest is the
+default runner for application code — it reuses Vite's transform and aliases.
+
+## Dependency licenses
+
+The project is released under MIT (`LICENSE`). All direct dependencies are permissive and
+MIT-compatible; there is no GPL/LGPL/AGPL or share-alike code in the tree.
+
+- **Apache-2.0** — `typescript`, `dexie`, `fake-indexeddb`, `@playwright/test`
+- **MIT** — everything else: `react`, `react-dom`, `vite`, `@vitejs/plugin-react`,
+  `tailwindcss`, `@tailwindcss/vite`, `vite-plugin-pwa`, `eslint`, `@eslint/js`,
+  `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-react-hooks`,
+  `eslint-plugin-react-refresh`, `globals`, `prettier`, `prettier-plugin-tailwindcss`,
+  `vitest`, `@vitest/coverage-v8`, `jsdom`, `@testing-library/react`, `jest`, `ts-jest`,
+  `jest-environment-jsdom`, and the `@types/*` packages (DefinitelyTyped)
+
+Icons in `public/` are generated for this repository and carry no third-party license.
+
+## Known gaps
+
+- `src/domain/` is empty — no intervention logic, limits, check-in or review flow yet.
+- `src/data/db.ts` opens a placeholder store (`_bootstrap`); the real schema is not modelled.
+- CSV export, seed/demo mode and the reminder scenario required by the brief are not built.
+- Playwright's `mobile-safari` project needs `npx playwright install webkit`; only
+  Chromium was installed and exercised so far.
+
+## Tooling disclosure
+
+Project bootstrap was generated with the assistance of Claude (Anthropic).

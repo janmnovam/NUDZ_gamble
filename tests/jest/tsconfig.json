@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.app.json",
+  "compilerOptions": {
+    // `vite/client` is needed for the CSS/asset module declarations in src.
+    // Note there is no `vitest/globals` here — that is what keeps the two
+    // runners' global typings from colliding.
+    "types": ["jest", "node", "vite/client"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@/*": ["../../src/*"],
+      "@ui/*": ["../../src/ui/*"],
+      "@domain/*": ["../../src/domain/*"],
+      "@data/*": ["../../src/data/*"]
+    }
+  },
+  "include": ["."]
+}
