@@ -81,6 +81,8 @@ erDiagram
     }
 ```
 
+Rendered copies (print): [`data-model.svg`](data-model.svg) · [`data-model.png`](data-model.png)
+
 ## Keys / constraints
 - `check_in`: UNIQUE `(user_id, behavior_date)`
 - `check_in.week_no` → `review.review_week_no` (per user) — links a day to its review week
