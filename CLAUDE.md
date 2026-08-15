@@ -12,12 +12,27 @@ beats more half-finished features.**
 
 - Stack, commands, scripts, layout, licenses → [README.md](README.md).
 - Full requirements, data model, CSV export spec → [Zadání_Hackathon_2026_shared.docx.md](Zadání_Hackathon_2026_shared.docx.md) (Czech, authoritative). The rules below are an English digest, not a replacement.
+- Hexagon layout, ports, DTOs, per-port build status → [docs/architecture.md](docs/architecture.md) (authoritative). The Architecture section below is a digest, not a replacement — check that doc for the current status of any port before assuming it's implemented.
 - **Runtime stack:** TypeScript + Tailwind + React + Vite, persistence on IndexedDB via Dexie in `src/data/`. (Test runners, ESLint/Prettier, and `vite-plugin-pwa` are dev tooling, not runtime deps.)
 - **Architecture rule that bites:** the ESLint `no-restricted-imports` rule forbids `src/domain/**` from importing react/dexie/zustand/`@ui`/`@data`. Keep domain pure and storage-agnostic, or the lint gate fails.
+
+## Architecture (digest — [docs/architecture.md](docs/architecture.md) is the source of truth)
+
+Hexagonal (ports & adapters). Calls flow outward from the UI, dependencies point inward toward the domain.
+
+- **Flow**: React UI (`src/ui`) → dispatcher (`src/app`, proposed, one method per use case) → inbound ports → domain services (`src/domain`, pure, no I/O) → outbound ports → Dexie adapters (`src/data`, via a generic `DexieRepository`) → IndexedDB. A composition root (`src/core`: `createDataLayer()` / `createApp()`) wires dispatcher, services, and adapters together.
+- **Inbound ports** (driving side, one domain service each): `OnboardingService`, `CheckInService`, `DashboardService`, `ReviewService`, `ReminderService`, `ExportService`.
+- **Outbound ports** (driven side, each backed by a Dexie adapter): `ProfileRepository`, `LimitRepository`, `CopingStrategyRepository`, `CheckInRepository`, `ReviewRepository`, `UsageEventRepository`, and `Clock` (`SystemClock` for real time, `TimeMachineClock` — advanceable — for the jury's 28-day demo walkthrough). An `HttpApiAdapter` is a future, not-yet-built alternative to the Dexie adapters.
+- **Model seams**: DTO (`src/app/dto`, proposed, UI-shaped) ⟷ domain model (`src/domain/model.ts`, framework-free) ⟷ storage entity (`src/data/model.ts`) — one mapper per seam. Shapes are identical today but free to diverge later without touching the core.
+- Each port carries a build status (📝 DRAFT · 🚧 IN PROGRESS · 🔍 REVIEW · ✅ DONE) tracked only in the architecture doc — don't assume a port is wired up without checking it there.
 
 ## Workflow
 
 - Run `npm run check` (typecheck + type-aware ESLint + Prettier + Jest) before every commit — it's the CI gate. `npm run lint:fix` and `npm run format` autofix most of what it flags.
+
+## Naming convention
+
+Prefer **camelCase** over snake_case in new methods/identifiers going forward. Existing snake_case (`src/domain/model.ts`, CSV export field names) stays as-is for now — a refactor will be done later, not a rename-on-sight.
 
 ## Language
 

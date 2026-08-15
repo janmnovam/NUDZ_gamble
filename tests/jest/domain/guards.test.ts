@@ -1,5 +1,5 @@
 import { evaluateLimitAdjustment } from '@domain/guards.ts'
-import { limitPercentView } from '@domain/config.ts'
+import { limitPercentView } from '@domain/limits.ts'
 
 describe('limitPercentView', () => {
   it('exposes the 80/90 rule as whole-number percents', () => {

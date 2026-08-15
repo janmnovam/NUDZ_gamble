@@ -6,8 +6,8 @@
  */
 import type { ISODate, Review } from '@domain/model.ts'
 import type { WeekNo } from '@domain/clock.ts'
-import { DEFAULT_CONFIG, limitPercentView, type DomainConfig } from '@domain/config.ts'
-import { isWithinCap, maxLimit, suggestLimit } from '@domain/limits.ts'
+import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
+import { isWithinCap, limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
 
 export type CheckInEditability = 'allowed' | 'locked_week' | 'future_date'
 
