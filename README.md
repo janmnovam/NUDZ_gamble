@@ -1,6 +1,6 @@
 # NUDZ_gamble
 
-PWA for harm reduction in gambling — DigiWELL Hackathon 2026.
+PWA for harm reduction in gambling — DigiWELL Hackathon 2026. Accessible through https://janmnovam.github.io/NUDZ_gamble/ - open the website in a compatible browser, look for an install or share icon in the address bar or menu, and select "Install" or "Add to Home Screen"
 
 > **Status: technology bootstrap only.** The toolchain, build, PWA shell and the three
 > test runners are wired up and green. No intervention logic has been implemented yet;
@@ -134,6 +134,28 @@ Icons in `public/` are generated for this repository and carry no third-party li
 - CSV export, seed/demo mode and the reminder scenario required by the brief are not built.
 - Playwright's `mobile-safari` project needs `npx playwright install webkit`; only
   Chromium was installed and exercised so far.
+
+## Debug mode
+
+- What does it do
+- Where
+- How to start
+
+## Exporting data from app
+
+- How to
+- What format
+- What data
+
+## Technical debt
+
+## Suggested next steps
+
+Nice-to-have features (possible next steps before pilot):
+- Allowing user to edit already filled days (for both time and amount gambled).
+- Tracking what dates were edited and how.
+- Motivating user to lower their limits during every new week of intervention by 10% (meaning 1st week limit = 10 000 CZK, 2nd week limit suggestion 9 000 CZK).
+- User profile accessing during the intervention (with optional choice to set the time of notifications).
 
 ## Tooling disclosure
 
