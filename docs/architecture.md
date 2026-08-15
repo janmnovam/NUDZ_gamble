@@ -70,7 +70,7 @@ domain service. **Depends on** lists the ports the service needs, tagged by side
 
 ### OnboardingService
 
-**Status:** 📝 DRAFT
+**Status:** 🚧 IN PROGRESS — `completeOnboarding()` built & tested (`src/domain/onboarding.ts`, `tests/jest/domain/onboarding.test.ts`); `setReference`/`getSuggestedLimits` not wrapped as service methods yet (logic exists as `suggestLimit`/`limitPercentView` in `limits.ts`)
 
 **Depends on**
 - ProfileRepository — outbound
@@ -165,7 +165,7 @@ flowchart LR
 
 ### CheckInService
 
-**Status:** 📝 DRAFT
+**Status:** 📝 DRAFT — `src/domain/checkin.ts` has types/signatures only (`ValidateCheckIn`, `SubmitCheckIn`, `DayStateOf`, `IsBackfill`); no implementations yet. (Its outbound repos are further along — see `CheckInRepository`/`CheckInEditRepository` below.)
 
 **Depends on**
 - CheckInRepository — outbound
@@ -209,7 +209,7 @@ DTOs — in: `SubmitCheckInCommand`, `EditCheckInCommand` · out: `CheckInResult
 
 ### DashboardService
 
-**Status:** 📝 DRAFT
+**Status:** 📝 DRAFT — `src/domain/dashboard.ts` has the `DashboardVM`/`AxisView`/`DayCell` shapes and a `BuildDashboardVM` type only; no builder function yet
 
 **Depends on**
 - ProfileRepository — outbound
@@ -240,7 +240,7 @@ DTOs — out: `DashboardView`
 
 ### ReviewService
 
-**Status:** 📝 DRAFT
+**Status:** 📝 DRAFT — no `review.ts`; `CanReview`/`IsWeekClosed` signatures exist in `guards.ts` but are unimplemented
 
 **Depends on**
 - ProfileRepository — outbound
@@ -280,7 +280,7 @@ DTOs — in: `CompleteReviewCommand` · out: `ReviewView`, `FinalSummaryView`
 
 ### ReminderService
 
-**Status:** 📝 DRAFT
+**Status:** 📝 DRAFT — no `reminder.ts`; `PendingAction`/`ResolvePendingAction` type exists in `guards.ts` but is unimplemented
 
 **Depends on**
 - CheckInRepository — outbound
@@ -305,7 +305,7 @@ DTOs — out: `ReminderView`
 
 ### ExportService
 
-**Status:** 📝 DRAFT
+**Status:** 📝 DRAFT — no `PersonDayRow` builder / CSV row derivation logic exists yet
 
 **Depends on**
 - ProfileRepository — outbound
@@ -375,14 +375,39 @@ later, an HTTP adapter).
 
 ### CheckInRepository
 
-**Status:** 📝 DRAFT · adapter: `CheckInAdapter`
+**Status:** ✅ DONE · adapter: `CheckInAdapter` — tested (`tests/jest/data/checkin-adapters.test.ts`)
 
 | Method | Description |
 |---|---|
-| upsert | Insert or replace, keyed on (user, behavior_date) |
-| getByDate | One day's check-in |
-| listByUser | All check-ins for a user |
-| listByWeek | Check-ins for a given study week |
+| save | Insert or replace a check-in, keyed on (user, behavior_date) |
+| get | One check-in by id |
+| listByUser | All check-ins for a user, ordered by `behavior_date` |
+
+Note: method names above have drifted from the original draft (`upsert`/`getByDate`/`listByWeek`) — this reflects what's actually implemented today.
+
+### CheckInEditRepository
+
+**Status:** ✅ DONE · adapter: `CheckInEditAdapter` — tested (`tests/jest/data/checkin-adapters.test.ts`)
+
+Not in the original port list — added alongside `CheckInRepository` to log check-in edits (`CheckInEdit`: create/update, before/after snapshots, changed fields).
+
+| Method | Description |
+|---|---|
+| save | Append an edit-log row |
+| get | One edit-log row by id |
+| listByCheckIn | A check-in's edit history, oldest first |
+
+### ContactRepository
+
+**Status:** ✅ DONE · adapter: `ContactAdapter` — tested (`tests/jest/data/contactAdapter.test.ts`)
+
+Not in the original port list — supports a counselling/emergency contacts list (`Contact` model: category, phone, url, availability, priority).
+
+| Method | Description |
+|---|---|
+| seed | Idempotent seed from `CONTACTS`, safe on every boot |
+| list | All contacts, by priority |
+| get | One contact by id |
 
 ### ReviewRepository
 
@@ -414,3 +439,15 @@ later, an HTTP adapter).
 - **SystemClock** — real wall-clock time (`systemNow`), for production.
 - **TimeMachineClock** — demo/dev clock that can be advanced, so the jury can walk
   days 1–28 (missing day, backfill, weekly review, final summary) without waiting.
+
+## TODO — domain
+
+Everything downstream of onboarding is still unimplemented in `src/domain`. In priority order (each blocks a "must work" jury flow):
+
+1. **CheckInService** (`checkin.ts`) — implement `validateCheckIn`, `submitCheckIn`, `dayStateOf`, `isBackfill` against the existing type signatures. Its outbound repos (`CheckInRepository`, `CheckInEditRepository`) are already built, so this is the next unblocked piece.
+2. **DashboardService** (`dashboard.ts`) — implement `buildDashboardVM`: derive cumulative usage, net loss, weekly totals, and overall state from check-ins + limit history (never stored, per CLAUDE.md).
+3. **guards.ts implementations** — only `evaluateLimitAdjustment` is built. Still missing: `canEditCheckIn`, `isWeekClosed`, `canReview`, `resolvePendingAction`. These block both `CheckInService` (edit window) and `ReviewService` (week-closing).
+4. **ReviewService** (new `review.ts`) — `getPendingReview`, `completeReview`, `getFinalSummary`; depends on guards #3 and a `ReviewRepository` adapter (currently 📝 DRAFT, no adapter yet).
+5. **ReminderService** (new `reminder.ts`) — `getDueReminder`; depends on `resolvePendingAction` from guards #3.
+6. **ExportService** (new `export.ts`) — `PersonDayRow` builder for the CSV export; depends on #1–#2 for source data, and must respect the missing-vs-no-play blank/zero distinction (CLAUDE.md CSV gotcha).
+7. **Outbound gaps**: `ReviewRepository` and `UsageEventRepository` have no adapters yet (`src/data/adapters` has no `reviewAdapter.ts`/`usageEventAdapter.ts`); `TimeMachineClock` (the demo/jury clock) is still 📝 DRAFT — needed before any 28-day walkthrough can be demoed without waiting real days.
