@@ -7,5 +7,5 @@ import type { TranslationKey } from './cs.ts'
 export const en: Record<TranslationKey, string> = {
   'app.title': 'NUDZ Gamble',
   'app.subtitle':
-    'Bootstrap running: React, TypeScript, Vite, Tailwind, Dexie, ESLint, Prettier, Vitest.',
+    'Bootstrap running: React, TypeScript, Vite, Tailwind, Dexie, ESLint, Prettier, Jest.',
 }
