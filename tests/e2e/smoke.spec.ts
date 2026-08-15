@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 
-test('app shell renders', async ({ page }) => {
+test('onboarding renders the intro screen', async ({ page }) => {
   await page.goto('/')
 
-  await expect(page.getByRole('heading', { name: 'NUDZ Gamble' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Získej přehled nad svým hraním' })).toBeVisible()
 })
 
 test('serves a PWA manifest', async ({ page }) => {
