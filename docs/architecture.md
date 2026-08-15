@@ -253,12 +253,36 @@ flowchart LR
     "status": "POZOR"
   },
   "overallStatus": "POZOR",
+  "days": [
+    {
+      "studyDay": 1,
+      "date": "2026-09-01",
+      "state": "completed",
+      "played": true,
+      "timeMinutes": 60,
+      "stakesAmount": 500
+    },
+    {
+      "studyDay": 2,
+      "date": "2026-09-02",
+      "state": "missing"
+    }
+  ],
   "missingDays": [
     "2026-09-02"
   ],
   "pendingAction": "checkin_due"
 }
 ```
+
+`days` is always exactly 7 entries — the current week's strip, study-day order. Mirrors
+the domain's `DayCell` (`src/domain/dashboard.ts`): `played`/`timeMinutes`/`stakesAmount`
+are present only when `state` is `completed` or `backfilled`; `state` is one of
+`completed` · `backfilled` · `missing` · `future` (`DayState`, `src/domain/checkin.ts`).
+`buildDayCell()` builds one cell at a time so the same shape can later drive a 28-cell
+month/final-summary view, not just this 7-cell week strip. Not yet carried by a real DTO
+mapper — `src/app` doesn't exist yet, so this is the shape `getDashboard` should produce
+once it does, camelCase per this doc's DTO convention.
 
 ### ReviewService
 
