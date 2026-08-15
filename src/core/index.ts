@@ -18,6 +18,7 @@ import { CopingStrategyAdapter } from '@data/adapters/copingStrategyAdapter.ts'
 import { LimitAdapter } from '@data/adapters/limitAdapter.ts'
 import { OnboardingAdapter } from '@data/adapters/onboardingAdapter.ts'
 import { ProfileAdapter } from '@data/adapters/profileAdapter.ts'
+import { ReviewAdapter } from '@data/adapters/reviewAdapter.ts'
 import { UsageEventAdapter } from '@data/adapters/usageEventAdapter.ts'
 import { systemNow } from '@data/clock.ts'
 import { type AppDatabase, db as defaultDb } from '@data/db.ts'
@@ -30,6 +31,7 @@ import type {
   LimitRepository,
   OnboardingRepository,
   ProfileRepository,
+  ReviewRepository,
   UsageEventRepository,
 } from '@domain/ports.ts'
 
@@ -52,6 +54,7 @@ export function createDataLayer(
     checkIns: new CheckInAdapter(database),
     checkInEdits: new CheckInEditAdapter(database),
     usageEvents: new UsageEventAdapter(database),
+    reviews: new ReviewAdapter(database),
   }
 }
 
@@ -67,6 +70,7 @@ export interface DataLayer {
   checkIns: CheckInRepository
   checkInEdits: CheckInEditRepository
   usageEvents: UsageEventRepository
+  reviews: ReviewRepository
 }
 
 export { AppDatabase, db } from '@data/db.ts'
