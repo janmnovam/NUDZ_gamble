@@ -24,8 +24,21 @@ export type CanEditCheckIn = (params: {
   week_closed: boolean
 }) => CheckInEditability
 
+/**
+ * Future/today first (a day that isn't over yet can't be checked in), then a
+ * review-closed week, else editable. ISO dates compare lexicographically.
+ */
+export const canEditCheckIn: CanEditCheckIn = ({ behavior_date, today, week_closed }) => {
+  if (behavior_date >= today) return 'future_date'
+  if (week_closed) return 'locked_week'
+  return 'allowed'
+}
+
 /** `isWeekClosed(N) = review_for(N).completed` — a review row exists for that week. */
 export type IsWeekClosed = (week_no: WeekNo, reviews: readonly Review[]) => boolean
+
+export const isWeekClosed: IsWeekClosed = (week_no, reviews) =>
+  reviews.some((r) => r.review_week_no === week_no)
 
 /** Doc 09: review N opens once day 7N has elapsed, and stays open until it's completed. */
 export type CanReview = (params: {
@@ -33,6 +46,9 @@ export type CanReview = (params: {
   week_elapsed: boolean
   already_reviewed: boolean
 }) => boolean
+
+export const canReview: CanReview = ({ week_elapsed, already_reviewed }) =>
+  week_elapsed && !already_reviewed
 
 /** Doc 08: exactly one primary call-to-action, resolved by a fixed priority order. */
 export type PendingAction = 'final_summary' | 'review_available' | 'checkin_due' | 'none'
