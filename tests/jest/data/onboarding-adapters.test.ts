@@ -1,6 +1,5 @@
 import { type LimitEntity, type ProfileEntity } from '@data/model.ts'
-import { AppDatabase, createDataLayer } from '@/core'
-import type {DataLayer} from "@/core/dataLayer.ts";
+import { AppDatabase, createDataLayer, type DataLayer } from '@/core'
 
 /** Exercises the onboarding write path end to end against fake-indexeddb. */
 describe('onboarding adapters', () => {

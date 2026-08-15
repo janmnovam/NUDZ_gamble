@@ -8,7 +8,7 @@
  * Field names are verbatim from the brief / `src/data/docs/data-model.md`.
  * Money is integer CZK, time is integer minutes, timestamps are ISO 8601.
  */
-import type {UsageEventType} from "@domain/usageEventType.ts";
+import type { UsageEventType } from '@domain/usageEventType.ts'
 
 export type UserId = string
 /** ISO 8601 date, `YYYY-MM-DD`. */
@@ -20,76 +20,85 @@ export type ISOTimestamp = string
 export type CopingType = 'default' | 'custom'
 
 export interface Profile {
-    user_id: UserId
-    onboarding_completed_at: ISOTimestamp
-    intervention_start_date: ISODate
-    reference_time_min: number
-    reference_stakes_czk: number
+  user_id: UserId
+  onboarding_completed_at: ISOTimestamp
+  intervention_start_date: ISODate
+  reference_time_min: number
+  reference_stakes_czk: number
 }
 
 export interface CopingStrategy {
-    coping_strategy_id: string
-    user_id: UserId
-    /** Free text — shown to the user as the reminder. */
-    label: string
-    type: CopingType
-    /** Ordering; lower sorts first. */
-    priority: number
-    active: boolean
-    created_at: ISOTimestamp
-    updated_at: ISOTimestamp | null
+  coping_strategy_id: string
+  user_id: UserId
+  /** Free text — shown to the user as the reminder. */
+  label: string
+  type: CopingType
+  /** Ordering; lower sorts first. */
+  priority: number
+  active: boolean
+  created_at: ISOTimestamp
+  updated_at: ISOTimestamp | null
 }
+
+/**
+ * Fields a caller supplies when creating a coping strategy. The adapter
+ * generates `coping_strategy_id`, defaults `active` to `true`, and stamps
+ * `created_at` / `updated_at`.
+ */
+export type CopingStrategyInput = Pick<
+  CopingStrategy,
+  'user_id' | 'label' | 'type' | 'priority'
+> & { active?: boolean }
 
 /**
  * A predefined suggestion (Dr. Kazmer's list). Seed data, never persisted on
  * its own — adopting one writes a `CopingStrategy` row with `type: 'default'`.
  */
 export interface CopingStrategyDefault {
-    code: string
-    label: string
-    priority: number
-    reminder_text?: string
+  code: string
+  label: string
+  priority: number
+  reminder_text?: string
 }
 
 export interface Limit {
-    limit_id: string
-    user_id: UserId
-    /** 1..4. Append-only: exactly one row per (user, week). */
-    week_no: number
-    weekly_limit_time_min: number
-    weekly_limit_stakes_czk: number
-    limit_set_at: ISOTimestamp
+  limit_id: string
+  user_id: UserId
+  /** 1..4. Append-only: exactly one row per (user, week). */
+  week_no: number
+  weekly_limit_time_min: number
+  weekly_limit_stakes_czk: number
+  limit_set_at: ISOTimestamp
 }
 
 export interface CheckIn {
-    check_in_id: string
-    user_id: UserId
-    behavior_date: ISODate
-    /** 1..4 — links the day to its review week. */
-    week_no: number
-    played: boolean
-    time_min: number
-    stakes_czk: number
-    winnings_czk: number
-    submitted_at: ISOTimestamp
-    updated_at: ISOTimestamp | null
+  check_in_id: string
+  user_id: UserId
+  behavior_date: ISODate
+  /** 1..4 — links the day to its review week. */
+  week_no: number
+  played: boolean
+  time_min: number
+  stakes_czk: number
+  winnings_czk: number
+  submitted_at: ISOTimestamp
+  updated_at: ISOTimestamp | null
 }
 
 export interface Review {
-    review_id: string
-    user_id: UserId
-    review_week_no: number
-    review_completed_at: ISOTimestamp
-    limit_changed: boolean
-    incomplete: boolean
+  review_id: string
+  user_id: UserId
+  review_week_no: number
+  review_completed_at: ISOTimestamp
+  limit_changed: boolean
+  incomplete: boolean
 }
 
 export interface UsageEvent {
-    usage_event_id: string
-    user_id: UserId
-    event_type: UsageEventType
-    occurred_at: ISOTimestamp
-    screen: string | null
-    detail: string | null
+  usage_event_id: string
+  user_id: UserId
+  event_type: UsageEventType
+  occurred_at: ISOTimestamp
+  screen: string | null
+  detail: string | null
 }
-

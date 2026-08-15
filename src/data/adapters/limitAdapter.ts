@@ -1,9 +1,9 @@
 import { type LimitEntity } from '@data/model.ts'
 import { type LimitRepository } from '@domain/ports.ts'
 
-import {type AppDatabase, type Repository} from '../db'
+import { type AppDatabase, type Repository } from '../db'
 import { DexieRepository } from '../repository'
-import type {Limit, UserId} from "@domain/model.ts";
+import type { Limit, UserId } from '@domain/model.ts'
 
 /**
  * Weekly limits. Append-only: the `&[user_id+week_no]` unique index rejects a

@@ -8,8 +8,8 @@
  * Field names are verbatim from the brief / `src/data/docs/data-model.md`.
  * Money is integer CZK, time is integer minutes, timestamps are ISO 8601.
  */
-import type {CopingType, ISODate, ISOTimestamp, UserId} from "@domain/model.ts";
-import type {UsageEventType} from "@domain/usageEventType.ts";
+import type { CopingType, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
+import type { UsageEventType } from '@domain/usageEventType.ts'
 
 export interface ProfileEntity {
   user_id: UserId

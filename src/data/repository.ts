@@ -1,5 +1,5 @@
 import { type Collection, type Table } from 'dexie'
-import type {IndexableValue, Query, Repository} from "@data/db.ts";
+import type { IndexableValue, Query, Repository } from '@data/db.ts'
 
 /**
  * Generic repository over a single Dexie table — the reusable read/write

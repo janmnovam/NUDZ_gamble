@@ -41,6 +41,8 @@ npx playwright install    # once, downloads the e2e browsers
 npm run dev               # http://localhost:5173 (also served on the LAN IP)
 ```
 
+`npm install` also wires the Git hooks (see [Git hooks](#git-hooks)).
+
 ## Scripts
 
 | Script                  | What it does                                                |
@@ -111,6 +113,20 @@ Jest is the only unit-test runner. Tests live in `tests/jest/**` (mirroring `src
 next to the sources — `tests/jest/tsconfig.json` is the only tsconfig that pulls in
 `@types/jest`, so the app tsconfig stays free of test globals. IndexedDB is provided by
 `fake-indexeddb` in the Jest setup file.
+
+## Git hooks
+
+Native hooks live in `.githooks/` (no dependency). The `prepare` script points Git at them
+on `npm install` (`git config core.hooksPath .githooks`), so contributors get them
+automatically — no manual setup.
+
+| Hook | Runs | Blocks |
+| ---- | ---- | ------ |
+| `pre-commit` | `npm run lint` | the commit if ESLint fails |
+| `pre-push` | `npm run test` (Jest unit; **e2e excluded**) | the push if a unit test fails |
+
+Bypass in a pinch with `git commit --no-verify` / `git push --no-verify`. E2E runs only in
+CI and via `npm run test:e2e`, never on push.
 
 ## Dependency licenses
 

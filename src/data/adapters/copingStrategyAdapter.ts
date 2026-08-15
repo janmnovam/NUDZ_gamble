@@ -2,11 +2,16 @@ import { type CopingStrategyEntity } from '@data/model.ts'
 import { type CopingStrategyRepository } from '@domain/ports.ts'
 
 import { type Now, systemNow } from '../clock'
-import {type AppDatabase, type Repository} from '../db'
+import { type AppDatabase, type Repository } from '../db'
 import { newId } from '../ids'
 import { DexieRepository } from '../repository'
 import { COPING_STRATEGY_DEFAULTS } from '../seeds/copingDefaults'
-import type {CopingStrategy, CopingStrategyDefault, UserId} from "@domain/model.ts";
+import type {
+  CopingStrategy,
+  CopingStrategyDefault,
+  CopingStrategyInput,
+  UserId,
+} from '@domain/model.ts'
 
 /**
  * Per-user coping strategies: load the predefined suggestions, write the
@@ -25,7 +30,7 @@ export class CopingStrategyAdapter implements CopingStrategyRepository {
     return Promise.resolve([...COPING_STRATEGY_DEFAULTS])
   }
 
-  async create(input: CopingStrategy): Promise<CopingStrategy> {
+  async create(input: CopingStrategyInput): Promise<CopingStrategy> {
     const strategy: CopingStrategy = {
       coping_strategy_id: newId(),
       user_id: input.user_id,

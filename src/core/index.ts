@@ -16,7 +16,7 @@ import { LimitAdapter } from '@data/adapters/limitAdapter.ts'
 import { ProfileAdapter } from '@data/adapters/profileAdapter.ts'
 import { type Now, systemNow } from '@data/clock.ts'
 import { type AppDatabase, db as defaultDb } from '@data/db.ts'
-import type {CopingStrategyRepository, LimitRepository, ProfileRepository} from "@domain/ports.ts";
+import type { CopingStrategyRepository, LimitRepository, ProfileRepository } from '@domain/ports.ts'
 
 export function createDataLayer(
   database: AppDatabase = defaultDb,

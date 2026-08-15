@@ -1,0 +1,6 @@
+#!/bin/sh
+# Runs the unit test suite (Jest) before pushing.
+# E2E is intentionally excluded — run `npm run test:e2e` separately.
+# Bypass in a pinch with: git push --no-verify
+echo "› pre-push: npm run test (unit)"
+npm run test

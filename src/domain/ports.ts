@@ -6,7 +6,14 @@
  * storage engine. Every method speaks domain objects, never storage rows.
  */
 
-import type {CopingStrategy, CopingStrategyDefault, Limit, Profile, UserId} from "@domain/model.ts";
+import type {
+  CopingStrategy,
+  CopingStrategyDefault,
+  CopingStrategyInput,
+  Limit,
+  Profile,
+  UserId,
+} from '@domain/model.ts'
 
 export interface ProfileRepository {
   save(profile: Profile): Promise<void>
@@ -16,7 +23,7 @@ export interface ProfileRepository {
 export interface CopingStrategyRepository {
   /** Predefined suggestions (Dr. Kazmer's list) for the onboarding picker. */
   loadDefaults(): Promise<CopingStrategyDefault[]>
-  create(input: CopingStrategy): Promise<CopingStrategy>
+  create(input: CopingStrategyInput): Promise<CopingStrategy>
   setActive(copingStrategyId: string, active: boolean): Promise<void>
   listByUser(userId: UserId): Promise<CopingStrategy[]>
 }
@@ -26,4 +33,3 @@ export interface LimitRepository {
   save(limit: Limit): Promise<void>
   listByUser(userId: UserId): Promise<Limit[]>
 }
-
