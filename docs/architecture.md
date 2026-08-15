@@ -216,7 +216,7 @@ flowchart LR
 
 ### DashboardService
 
-**Status:** 📝 DRAFT — `src/domain/dashboard.ts` has the `DashboardVM`/`AxisView`/`DayCell` shapes and a `BuildDashboardVM` type only; no builder function yet
+**Status:** 🚧 IN PROGRESS — `buildDashboardVM()` builds the current week's 7-day `DashboardVM` (`src/domain/dashboard.ts`, tested in `tests/jest/domain/dashboard.test.ts`), built on a new `buildDayCell()` (one day → `DayCell`, reused for both the 7-cell week strip and, later, a 28-cell month/final-summary view), `dayStateOf`/`isBackfill` (`checkin.ts`), `classifyStatus`/`worseStatus` (`limits.ts`), and `resolvePendingAction` (`guards.ts`). Not yet wired: `reviewable_weeks` is hardcoded empty until `ReviewRepository`/`ReviewService` exist (TODO #4/#7 below), and there's no inbound-port/dispatcher wrapper yet — same style gap as `OnboardingService`.
 
 **Depends on**
 - Inbound
@@ -631,9 +631,9 @@ never called by the domain.
 
 Everything downstream of onboarding is still unimplemented in `src/domain`. In priority order (each blocks a "must work" jury flow):
 
-1. **CheckInService** (`checkin.ts`) — implement `validateCheckIn`, `submitCheckIn`, `dayStateOf`, `isBackfill` against the existing type signatures. Its outbound repos (`CheckInRepository`, `CheckInEditRepository`) are already built, so this is the next unblocked piece.
-2. **DashboardService** (`dashboard.ts`) — implement `buildDashboardVM`: derive cumulative usage, net loss, weekly totals, and overall state from check-ins + limit history (never stored, per CLAUDE.md).
-3. **guards.ts implementations** — only `evaluateLimitAdjustment` is built. Still missing: `canEditCheckIn`, `isWeekClosed`, `canReview`, `resolvePendingAction`. These block both `CheckInService` (edit window) and `ReviewService` (week-closing).
+1. **CheckInService** (`checkin.ts`) — `dayStateOf`/`isBackfill` are now implemented (pulled forward as a `DashboardService` dependency); `validateCheckIn`/`submitCheckIn` still need implementing against the existing type signatures. Its outbound repos (`CheckInRepository`, `CheckInEditRepository`) are already built, so this is the next unblocked piece.
+2. **DashboardService** (`dashboard.ts`) — ✅ `buildDashboardVM` builds the current week's `DashboardVM` from check-ins + limit history (never stored, per CLAUDE.md). Remaining: wire `reviewable_weeks` once `ReviewRepository` exists (#4/#7), and give it an inbound-port/dispatcher wrapper.
+3. **guards.ts implementations** — `evaluateLimitAdjustment` and `resolvePendingAction` are built. Still missing: `canEditCheckIn`, `isWeekClosed`, `canReview`. These block both `CheckInService` (edit window) and `ReviewService` (week-closing).
 4. **ReviewService** (new `review.ts`) — `getPendingReview`, `completeReview`, `getFinalSummary`; depends on guards #3 and a `ReviewRepository` adapter (currently 📝 DRAFT, no adapter yet).
 5. **ReminderService** (new `reminder.ts`) — `getDueReminder`; depends on `resolvePendingAction` from guards #3.
 6. **ExportService** (new `export.ts`) — `PersonDayRow` builder for the CSV export; depends on #1–#2 for source data, and must respect the missing-vs-no-play blank/zero distinction (CLAUDE.md CSV gotcha).

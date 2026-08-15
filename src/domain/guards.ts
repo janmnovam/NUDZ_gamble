@@ -44,6 +44,17 @@ export type ResolvePendingAction = (params: {
   checkin_due: boolean
 }) => PendingAction
 
+export const resolvePendingAction: ResolvePendingAction = ({
+  in_final_summary,
+  reviewable_weeks,
+  checkin_due,
+}) => {
+  if (in_final_summary) return 'final_summary'
+  if (reviewable_weeks.length > 0) return 'review_available'
+  if (checkin_due) return 'checkin_due'
+  return 'none'
+}
+
 /**
  * Doc 04: what the limit-adjustment slider (onboarding + every review)
  * renders — exact bounds in the reference's unit (minutes or CZK), the

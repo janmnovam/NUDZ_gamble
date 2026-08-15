@@ -1,4 +1,4 @@
-import { evaluateLimitAdjustment } from '@domain/guards.ts'
+import { evaluateLimitAdjustment, resolvePendingAction } from '@domain/guards.ts'
 import { limitPercentView } from '@domain/limits.ts'
 
 describe('limitPercentView', () => {
@@ -48,5 +48,31 @@ describe('evaluateLimitAdjustment', () => {
       allowed: true,
     })
     expect(evaluateLimitAdjustment({ reference: 0, proposed: 1 }).allowed).toBe(false)
+  })
+})
+
+describe('resolvePendingAction', () => {
+  const base = { in_final_summary: false, reviewable_weeks: [], checkin_due: false }
+
+  it('prioritizes final_summary over everything else', () => {
+    expect(
+      resolvePendingAction({
+        ...base,
+        in_final_summary: true,
+        reviewable_weeks: [1],
+        checkin_due: true,
+      }),
+    ).toBe('final_summary')
+  })
+
+  it('prioritizes review_available over checkin_due', () => {
+    expect(resolvePendingAction({ ...base, reviewable_weeks: [2], checkin_due: true })).toBe(
+      'review_available',
+    )
+  })
+
+  it('falls back to checkin_due, then none', () => {
+    expect(resolvePendingAction({ ...base, checkin_due: true })).toBe('checkin_due')
+    expect(resolvePendingAction(base)).toBe('none')
   })
 })

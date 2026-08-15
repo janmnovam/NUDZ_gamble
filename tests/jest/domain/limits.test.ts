@@ -1,4 +1,4 @@
-import { isWithinCap, maxLimit, suggestLimit } from '@domain/limits.ts'
+import { classifyStatus, isWithinCap, maxLimit, suggestLimit, worseStatus } from '@domain/limits.ts'
 
 describe('limit rules', () => {
   it('suggests 80% of the reference (time & money), rounded', () => {
@@ -32,5 +32,33 @@ describe('limit rules', () => {
 
   it('rejects a negative limit', () => {
     expect(isWithinCap(-1, 600)).toBe(false)
+  })
+})
+
+describe('classifyStatus', () => {
+  it("matches doc 06's boundary discipline table (480 min limit)", () => {
+    expect(classifyStatus(383, 480)).toBe('OK') // 79.79%
+    expect(classifyStatus(384, 480)).toBe('POZOR') // 80.00% — lower bound inclusive
+    expect(classifyStatus(480, 480)).toBe('POZOR') // 100.00% — upper bound inclusive
+    expect(classifyStatus(481, 480)).toBe('PREKROCENO') // 100.2%
+  })
+
+  it('matches the reference scenario (350/480 min, 6500/8000 CZK)', () => {
+    expect(classifyStatus(350, 480)).toBe('OK') // 72.9%
+    expect(classifyStatus(6_500, 8_000)).toBe('POZOR') // 81.25%
+  })
+
+  it('with limit 0, any positive usage is PREKROCENO and zero usage is OK', () => {
+    expect(classifyStatus(0, 0)).toBe('OK')
+    expect(classifyStatus(1, 0)).toBe('PREKROCENO')
+  })
+})
+
+describe('worseStatus', () => {
+  it('picks the worse of the two statuses, order-independent', () => {
+    expect(worseStatus('OK', 'POZOR')).toBe('POZOR')
+    expect(worseStatus('POZOR', 'OK')).toBe('POZOR')
+    expect(worseStatus('POZOR', 'PREKROCENO')).toBe('PREKROCENO')
+    expect(worseStatus('OK', 'OK')).toBe('OK')
   })
 })

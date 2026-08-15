@@ -4,6 +4,7 @@
  * and signatures only; implementations are plain functions, no I/O — the
  * app-service layer is the one that persists the result.
  */
+import { nextDate } from '@domain/clock.ts'
 import type { CheckIn, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
 
 /** What the check-in form collects before it becomes a `CheckIn` record. */
@@ -50,9 +51,25 @@ export type DayState = 'completed' | 'backfilled' | 'missing' | 'future'
 /** Derived, never stored: `date(submitted_at) > behavior_date + 1 day`. */
 export type IsBackfill = (behavior_date: ISODate, submitted_at: ISOTimestamp) => boolean
 
+/** The calendar date a timestamp was recorded on, in the offset it carries. */
+const dateOfTimestamp = (timestamp: ISOTimestamp): ISODate => timestamp.slice(0, 10)
+
+export const isBackfill: IsBackfill = (behavior_date, submitted_at) =>
+  dateOfTimestamp(submitted_at) > nextDate(behavior_date)
+
 /** `future` if `behavior_date > today − 1`; `missing` if no record and not future; else completed/backfilled. */
 export type DayStateOf = (params: {
   behavior_date: ISODate
   today: ISODate
   check_in: CheckIn | undefined
 }) => DayState
+
+/**
+ * `behavior_date > today − 1` is equivalent to `behavior_date >= today` for
+ * whole calendar dates, so no separate "yesterday" arithmetic is needed.
+ */
+export const dayStateOf: DayStateOf = ({ behavior_date, today, check_in }) => {
+  if (behavior_date >= today) return 'future'
+  if (!check_in) return 'missing'
+  return isBackfill(behavior_date, check_in.submitted_at) ? 'backfilled' : 'completed'
+}
