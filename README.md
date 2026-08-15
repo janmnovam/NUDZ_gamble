@@ -159,9 +159,15 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Exporting data from app
 
-- How to
-- What format
-- What data
+- User can export data at any point of the intervention via dedicated button at the bottom of screen "overview" or during weekly review.
+- Fields: user_id, intervention_start_date, reference_time_min, reference_stakes_czk, study_day, week_no, behavior_date, weekly_limit_time_min, weekly_limit_stakes_czk, checkin_status, played, time_min, stakes_czk, winnings_czk, submitted_at, updated_at, is_backfill.
+- Exported into .csv
+- UTF-8
+- date YYYY-MM-DD
+- timestamps ISO 8601 including timezone
+- time_min as whole minutes
+- amounts in whole CZK
+- separator comma
 
 ## Technical debt
 
