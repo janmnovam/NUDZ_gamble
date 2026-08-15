@@ -18,6 +18,7 @@
  * is driven by a completed review record, not the calendar (doc 09's
  * "ordering trap") — that check lives in guards.ts instead.
  */
+import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
 import type { ISODate } from '@domain/model.ts'
 
 /** Injected "today" source — real clock in production, fixed/offset clock in tests and the demo drawer. */
@@ -56,11 +57,6 @@ export interface StudyCalendar {
   isFinalSummary(): boolean
 }
 
-/** Study days per week (doc 02: W1 = 1–7, …, W4 = 22–28). */
-const WEEK_LENGTH_DAYS = 7
-/** Total programme length; day 29 is the final summary, not a study day. */
-const PROGRAMME_DAYS = 28
-
 const MS_PER_DAY = 86_400_000
 
 /**
@@ -90,8 +86,10 @@ function fromUtcMs(ms: number): ISODate {
 export function createStudyCalendar(
   intervention_start_date: ISODate,
   clock: TodayClock,
+  config: DomainConfig = DEFAULT_CONFIG,
 ): StudyCalendar {
   const startMs = toUtcMs(intervention_start_date)
+  const { WEEK_LENGTH_DAYS, PROGRAMME_DAYS } = config
 
   const studyDay = (date: ISODate): StudyDay =>
     Math.round((toUtcMs(date) - startMs) / MS_PER_DAY) + 1

@@ -135,8 +135,9 @@ usage_events:    "usage_event_id, [user_id+occurred_at], user_id, event_type"
 - Money/time = integers; % is float, display-time only, never persisted.
 - Value objects `Minutes` / `Czk`.
 - Normalized stores; wrap multi-row writes (week-close review) in one transaction.
-- Editing allowed only within `EDIT_WINDOW_DAYS` (X, float) of the day; the user
-  always sees the deadline. Edits bump `updated_at`. Closed weeks: immutable.
+- Editing allowed only within `EDIT_WINDOW_DAYS` (7, `src/domain/config.ts`) of the
+  day; the user always sees the deadline. Edits bump `updated_at`. Closed weeks:
+  immutable.
 - `coping_strategy`: one per-user table; `type` = `default` (Dr. Kazmer, seeded) or
   `custom` (user-written). ≥ 2 selected. Both editable/retireable and exportable.
 - Export: person-day CSV (Příloha 2) **plus** the user's selected coping strategies.
@@ -144,7 +145,6 @@ usage_events:    "usage_event_id, [user_id+occurred_at], user_id, event_type"
 - Consistent time pickers across screens (UI concern, not data).
 
 ## Open
-- `EDIT_WINDOW_DAYS` value (X) — TBD.
 - Default coping content pending Dr. Kazmer (app not blocked — users add their own).
 - Reference week editable after onboarding? Default no.
 - Demo clock persistence: `app_meta` vs localStorage (`demo_day_offset` must survive refresh).

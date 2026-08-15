@@ -1,7 +1,8 @@
 /**
- * Centrally managed constants (docs 04 & 06) — the single source of truth
- * for every percentage/threshold in the spec. Referenced everywhere, never
- * inlined as a magic number at a call site.
+ * Centrally managed constants (docs 02, 04, 05 & 06) — the single source of
+ * truth for every magic number in the spec, from percentage thresholds to
+ * the programme calendar. Referenced everywhere, never inlined at a call
+ * site.
  */
 
 /** Weekly evaluation status. Ordered worst-to-best so `overall = max(...)` is one line. */
@@ -16,6 +17,18 @@ export interface DomainConfig {
   readonly POZOR_THRESHOLD: number
   /** pct > this → PREKROCENO (doc 06). Inclusive upper bound for POZOR. */
   readonly PREKROCENO_THRESHOLD: number
+  /** Study days per week (doc 02: W1 = 1–7, …, W4 = 22–28). */
+  readonly WEEK_LENGTH_DAYS: number
+  /** Total programme length; day 29 is the final summary, not a study day (doc 02). */
+  readonly PROGRAMME_DAYS: number
+  /**
+   * How many days after `behavior_date` a check-in stays editable (doc 05 /
+   * `data-model.md`'s `EDIT_WINDOW_DAYS`, float — was left `TBD`). Set equal
+   * to `WEEK_LENGTH_DAYS`: editing is allowed anywhere in the still-open
+   * week, no separate day-count cutoff on top of `week_closed` (doc 05's
+   * default reading — one boundary, not two overlapping ones).
+   */
+  readonly EDIT_WINDOW_DAYS: number
 }
 
 /**
@@ -29,4 +42,7 @@ export const DEFAULT_CONFIG: DomainConfig = {
   MAX_LIMIT_PCT: 0.9,
   POZOR_THRESHOLD: 0.8,
   PREKROCENO_THRESHOLD: 1.0,
+  WEEK_LENGTH_DAYS: 7,
+  PROGRAMME_DAYS: 28,
+  EDIT_WINDOW_DAYS: 7,
 }

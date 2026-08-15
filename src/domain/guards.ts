@@ -12,7 +12,9 @@ export type CheckInEditability = 'allowed' | 'locked_week' | 'future_date'
 /**
  * Doc 09: a week is closed by its completed review, not by the calendar
  * (the "ordering trap") — pass `week_closed` in via `IsWeekClosed`, don't
- * derive it from the day number here.
+ * derive it from the day number here. No separate day-count cutoff on top:
+ * `config.ts`'s `EDIT_WINDOW_DAYS` is set equal to `WEEK_LENGTH_DAYS`, so
+ * `week_closed` alone already enforces it.
  */
 export type CanEditCheckIn = (params: {
   behavior_date: ISODate
