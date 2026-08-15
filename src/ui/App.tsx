@@ -4,7 +4,7 @@ import { OnboardingFlow } from '@ui/onboarding/OnboardingFlow.tsx'
 export function App() {
   return (
     <I18nProvider>
-      <OnboardingFlow />
+      <OnboardingFlow onComplete={() => null} />
     </I18nProvider>
   )
 }

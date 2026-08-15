@@ -66,6 +66,14 @@ export const cs = {
   'onboarding.coping.selected.few': 'Vybráno: {count} strategie',
   'onboarding.coping.selected.other': 'Vybráno: {count} strategií',
 
-  'onboarding.placeholder.title': 'Tato obrazovka se připravuje',
-  'onboarding.placeholder.body': 'Další kroky onboardingu doplníme v navazující iteraci.',
+  'onboarding.done.title': 'Vše je nastaveno',
+  'onboarding.done.row.reference': 'Referenční týden',
+  'onboarding.done.row.limits': 'Limity na týden 1',
+  'onboarding.done.row.coping': 'Copingové strategie',
+  'onboarding.done.coping.one': '{count} vybraná',
+  'onboarding.done.coping.few': '{count} vybrané',
+  'onboarding.done.coping.other': '{count} vybraných',
+  'onboarding.done.banner.title': 'Začínáme zítra, {date}',
+  'onboarding.done.banner.body': 'Každý den se počítá, nezapomeň si zítra zapsat svůj pokrok.',
+  'onboarding.done.cta': 'Rozumím',
 } as const

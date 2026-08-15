@@ -62,6 +62,14 @@ export const en: Record<TranslationKey, string> = {
   'onboarding.coping.selected.few': 'Selected: {count} strategies',
   'onboarding.coping.selected.other': 'Selected: {count} strategies',
 
-  'onboarding.placeholder.title': 'This screen is coming soon',
-  'onboarding.placeholder.body': "We'll add the remaining onboarding steps in a follow-up.",
+  'onboarding.done.title': "You're all set",
+  'onboarding.done.row.reference': 'Reference week',
+  'onboarding.done.row.limits': 'Week 1 limits',
+  'onboarding.done.row.coping': 'Coping strategies',
+  'onboarding.done.coping.one': '{count} selected',
+  'onboarding.done.coping.few': '{count} selected',
+  'onboarding.done.coping.other': '{count} selected',
+  'onboarding.done.banner.title': 'We start tomorrow, {date}',
+  'onboarding.done.banner.body': "Every day counts — don't forget to log your progress tomorrow.",
+  'onboarding.done.cta': 'Got it',
 }
