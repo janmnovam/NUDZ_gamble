@@ -55,7 +55,16 @@ export default tseslint.config(
         {
           patterns: [
             {
-              group: ['@data/*', '@ui/*', '../data/*', '../ui/*', 'dexie', 'react', 'react-dom'],
+              group: [
+                '@data/*',
+                '@ui/*',
+                '../data/*',
+                '../ui/*',
+                'dexie',
+                'react',
+                'react-dom',
+                'zustand',
+              ],
               message:
                 'src/domain is the intervention-logic layer: keep it free of UI and storage dependencies.',
             },

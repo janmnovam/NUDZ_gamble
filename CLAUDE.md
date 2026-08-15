@@ -13,11 +13,11 @@ beats more half-finished features.**
 - Stack, commands, scripts, layout, licenses → [README.md](README.md).
 - Full requirements, data model, CSV export spec → [Zadání_Hackathon_2026_shared.docx.md](Zadání_Hackathon_2026_shared.docx.md) (Czech, authoritative). The rules below are an English digest, not a replacement.
 - **Runtime stack:** TypeScript + Tailwind + React + Vite, persistence on IndexedDB via Dexie in `src/data/`. (Test runners, ESLint/Prettier, and `vite-plugin-pwa` are dev tooling, not runtime deps.)
-- **Architecture rule that bites:** the ESLint `no-restricted-imports` rule forbids `src/domain/**` from importing react/dexie/`@ui`/`@data`. Keep domain pure and storage-agnostic, or the lint gate fails.
+- **Architecture rule that bites:** the ESLint `no-restricted-imports` rule forbids `src/domain/**` from importing react/dexie/zustand/`@ui`/`@data`. Keep domain pure and storage-agnostic, or the lint gate fails.
 
 ## Workflow
 
-- Run `npm run check` (typecheck + type-aware ESLint + Prettier + Vitest + Jest) before every commit — it's the CI gate. `npm run lint:fix` and `npm run format` autofix most of what it flags.
+- Run `npm run check` (typecheck + type-aware ESLint + Prettier + Jest) before every commit — it's the CI gate. `npm run lint:fix` and `npm run format` autofix most of what it flags.
 
 ## Language
 

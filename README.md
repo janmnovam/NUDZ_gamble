@@ -12,6 +12,7 @@ PWA for harm reduction in gambling — DigiWELL Hackathon 2026.
 | ------------- | ----------------------------------------- | ----------------------------------------------------------- |
 | Build / dev   | Vite 8                                    | `host: true` so the app opens from a phone on the same LAN   |
 | UI            | React 19                                  |                                                              |
+| State         | Zustand 5                                 | UI/app state; persistent data stays in Dexie                 |
 | Language      | TypeScript 6.0 (`~6.0.3`)                 | Pinned to 6.x — see "Why TypeScript 6" below                 |
 | Styling       | Tailwind CSS 4 (`@tailwindcss/vite`)      | No `tailwind.config.js`; theme lives in `src/index.css`      |
 | Local storage | Dexie 4 (IndexedDB)                       | Survives refresh; swappable for a server later               |
@@ -76,7 +77,7 @@ is restated there).
 ### Layer boundary is enforced by the linter
 
 `eslint.config.js` adds a `no-restricted-imports` rule that forbids `src/domain/**` from
-importing `react`, `dexie`, `@ui/*` or `@data/*`. The intervention logic stays pure and
+importing `react`, `dexie`, `zustand`, `@ui/*` or `@data/*`. The intervention logic stays pure and
 storage-agnostic, so swapping IndexedDB for a server later does not mean rewriting it.
 
 ### Unit tests
@@ -92,7 +93,7 @@ The project is released under MIT (`LICENSE`). All direct dependencies are permi
 MIT-compatible; there is no GPL/LGPL/AGPL or share-alike code in the tree.
 
 - **Apache-2.0** — `typescript`, `dexie`, `fake-indexeddb`, `@playwright/test`
-- **MIT** — everything else: `react`, `react-dom`, `vite`, `@vitejs/plugin-react`,
+- **MIT** — everything else: `react`, `react-dom`, `zustand`, `vite`, `@vitejs/plugin-react`,
   `tailwindcss`, `@tailwindcss/vite`, `vite-plugin-pwa`, `eslint`, `@eslint/js`,
   `typescript-eslint`, `eslint-config-prettier`, `eslint-plugin-react-hooks`,
   `eslint-plugin-react-refresh`, `globals`, `prettier`, `prettier-plugin-tailwindcss`,
