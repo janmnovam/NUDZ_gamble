@@ -1,32 +1,30 @@
-import { useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
-import { dictionaries } from './dictionaries/index.ts'
-import type { TranslationKey } from './dictionaries/index.ts'
-import { I18nContext } from './I18nContext.ts'
-import { DEFAULT_LOCALE } from './locale.ts'
-import type { Locale } from './locale.ts'
+import { I18nContext, type I18nContextValue } from '@ui/i18n/context.ts'
+import { interpolate } from '@ui/i18n/interpolate.ts'
+import { cs } from '@ui/i18n/locales/cs.ts'
+import { en } from '@ui/i18n/locales/en.ts'
+import { type Locale, type TranslationKey } from '@ui/i18n/types.ts'
 
-function interpolate(template: string, params?: Record<string, string | number>): string {
-  if (!params) return template
-  return template.replace(/\{\{(\w+)\}\}/g, (match, name: string) => {
-    const value = params[name]
-    return value === undefined ? match : String(value)
-  })
+const TRANSLATIONS: Record<Locale, Record<TranslationKey, string>> = { cs, en }
+
+interface I18nProviderProps {
+  children: ReactNode
+  initialLocale?: Locale
 }
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE)
+/** Provides the translator to the tree. Czech by default; switchable at runtime. */
+export function I18nProvider({ children, initialLocale = 'cs' }: I18nProviderProps) {
+  const [locale, setLocale] = useState<Locale>(initialLocale)
 
-  const value = useMemo(() => {
-    const dictionary = dictionaries[locale]
-    return {
+  const value = useMemo<I18nContextValue>(
+    () => ({
       locale,
       setLocale,
-      t: (key: TranslationKey, params?: Record<string, string | number>) =>
-        interpolate(dictionary[key], params),
-    }
-  }, [locale])
+      t: (key, vars) => interpolate(TRANSLATIONS[locale][key], vars),
+    }),
+    [locale],
+  )
 
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
+  return <I18nContext value={value}>{children}</I18nContext>
 }
