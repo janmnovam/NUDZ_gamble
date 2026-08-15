@@ -8,24 +8,23 @@ Stance: MVP on IndexedDB, one demo user `A001`; schema modelled server-ready
 
 ## Entities
 
-7 tables, cardinality relative to their parent:
+6 tables, cardinality relative to their parent:
 
 - `profile` — root (1)
-- `coping_strategy (1:N)` — user-owned, free text or adopted; has `priority`; exportable; source of truth for the reminder
-- `coping_strategy_default (1:N, opt)` — seed-only suggestion list, no `user_id`
+- `coping_strategy (1:N, ≥2)` — per user, ≥2 selected; `type` marks default (Dr. Kazmer) vs custom (user); exportable
 - `limit (1:N)` — one per week, append-only
-- `check_in (1:N)` — one per reported day
-- `review (1:N)` — one per closed week
-- `usage_event (1:N)` — append-only interaction log (**required**; key events TBD)
+- `check_in (1:N)` — one per reported day; carries `week_no` linking it to its review week
+- `review (1:N)` — one per closed week; groups its week's check-ins
+- `usage_event (1:N)` — append-only interaction log (**required**)
 
 ```mermaid
 erDiagram
-    PROFILE ||--|{ COPING_STRATEGY : "1:N"
-    COPING_STRATEGY_DEFAULT |o--o{ COPING_STRATEGY : "1:N (opt)"
+    PROFILE ||--|{ COPING_STRATEGY : "1:N (≥2)"
     PROFILE ||--|{ LIMIT : "1:N"
     PROFILE ||--o{ CHECK_IN : "1:N"
     PROFILE ||--o{ REVIEW : "1:N"
     PROFILE ||--o{ USAGE_EVENT : "1:N"
+    REVIEW |o--o{ CHECK_IN : "week 1:N"
 
     PROFILE {
         uuid user_id PK
@@ -38,19 +37,11 @@ erDiagram
         uuid coping_strategy_id PK
         uuid user_id FK
         string label "free text, shown as reminder"
+        string type "default (Dr. Kazmer) | custom (user)"
         int priority "ordering; lower = higher"
-        string source "custom | from_default"
-        string default_code FK "nullable; provenance"
         bool active
         timestamp created_at
         timestamp updated_at "nullable"
-    }
-    COPING_STRATEGY_DEFAULT {
-        string default_code PK
-        string label
-        string reminder_text "optional"
-        int priority "default ordering"
-        bool active
     }
     LIMIT {
         uuid limit_id PK
@@ -64,6 +55,7 @@ erDiagram
         uuid check_in_id PK
         uuid user_id FK "UK (user_id, behavior_date)"
         date behavior_date UK
+        int week_no "1..4 → review.review_week_no"
         bool played
         int time_min "0 iff !played; ≥1 if played"
         int stakes_czk "0 iff !played; may be 0 if played"
@@ -84,7 +76,6 @@ erDiagram
         uuid user_id FK
         string event_type "exposed | onboarding_completed | app_opened | review_reached"
         timestamp occurred_at
-        string session_id "nullable"
         string screen "nullable"
         string detail "nullable JSON"
     }
@@ -92,10 +83,10 @@ erDiagram
 
 ## Keys / constraints
 - `check_in`: UNIQUE `(user_id, behavior_date)`
+- `check_in.week_no` → `review.review_week_no` (per user) — links a day to its review week
 - `limit`: UNIQUE `(user_id, week_no)`, append-only
 - `review`: UNIQUE `(user_id, review_week_no)`
-- `coping_strategy_default`: UNIQUE `default_code`
-- `coping_strategy.default_code`: nullable FK → default (null = custom)
+- `coping_strategy`: PK only (`type` distinguishes default vs custom)
 - `usage_event`: no uniqueness (append-only)
 
 Dexie `&[…]` compound index now → server `UNIQUE` later; same shape.
@@ -108,11 +99,13 @@ Dexie `&[…]` compound index now → server `UNIQUE` later; same shape.
 5. 1 `limit` per `(user_id, week_no)`; earlier rows never mutate
 6. `winnings_czk` never enters a limit calc
 7. no record ≠ a zero record (two distinct states)
+8. ≥ 2 active `coping_strategy` per user (enforced at onboarding)
 
 ## Not stored — computed on read
 Weekly used/totals, % vs limit, per-axis + overall status (worse of two),
 remaining, `net_loss`, `is_backfill` (`date(submitted_at) > behavior_date + 1d`),
 missing-day set + `has_missing`, `usage_event` aggregates.
+(`check_in.week_no` is a stored classifier for the review join, not an aggregate.)
 
 ## usage_event — tracked events
 | event_type | fires | feeds metric |
@@ -128,13 +121,12 @@ missing-day set + `has_missing`, `usage_event` aggregates.
 
 ## Dexie stores
 ```txt
-profile:                 "user_id"
-coping_strategy:         "coping_strategy_id, user_id, source, default_code, active, priority"
-coping_strategy_default: "default_code, active, priority"
-limits:                  "limit_id, [user_id+week_no], user_id, week_no, limit_set_at"
-check_ins:               "check_in_id, [user_id+behavior_date], user_id, behavior_date, submitted_at, updated_at, played"
-reviews:                 "review_id, [user_id+review_week_no], user_id, review_week_no, review_completed_at, incomplete"
-usage_events:            "usage_event_id, [user_id+occurred_at], user_id, event_type, session_id"
+profile:         "user_id"
+coping_strategy: "coping_strategy_id, user_id, type, priority, active"
+limits:          "limit_id, [user_id+week_no], user_id, week_no, limit_set_at"
+check_ins:       "check_in_id, [user_id+behavior_date], user_id, behavior_date, week_no, submitted_at, updated_at, played"
+reviews:         "review_id, [user_id+review_week_no], user_id, review_week_no, review_completed_at, incomplete"
+usage_events:    "usage_event_id, [user_id+occurred_at], user_id, event_type"
 ```
 
 ## Rules
@@ -143,13 +135,15 @@ usage_events:            "usage_event_id, [user_id+occurred_at], user_id, event_
 - Normalized stores; wrap multi-row writes (week-close review) in one transaction.
 - Editing allowed only within `EDIT_WINDOW_DAYS` (X, float) of the day; the user
   always sees the deadline. Edits bump `updated_at`. Closed weeks: immutable.
-- Export: person-day CSV (Příloha 2) **plus** coping strategies (incl. custom).
+- `coping_strategy`: one per-user table; `type` = `default` (Dr. Kazmer, seeded) or
+  `custom` (user-written). ≥ 2 selected. Both editable/retireable and exportable.
+- Export: person-day CSV (Příloha 2) **plus** the user's selected coping strategies.
 - Schema version = Dexie `db.version(n)`; export envelope carries `schema_version`.
 - Consistent time pickers across screens (UI concern, not data).
 
 ## Open
 - `EDIT_WINDOW_DAYS` value (X) — TBD.
-- Default suggestion content pending Ladislav (app not blocked — users add their own).
+- Default coping content pending Dr. Kazmer (app not blocked — users add their own).
 - Reference week editable after onboarding? Default no.
 - Demo clock persistence: `app_meta` vs localStorage (`demo_day_offset` must survive refresh).
 - Demo-drawer actions in `usage_event`: don't-log vs `origin` tag.
