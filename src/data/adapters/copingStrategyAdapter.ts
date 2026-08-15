@@ -1,18 +1,19 @@
-import { type CopingStrategy, type CopingStrategyDefault, type UserId } from '@/core/model'
-import { type CopingStrategyPort, type NewCopingStrategy, type Repository } from '@/core/ports'
+import { type CopingStrategyEntity } from '@data/model.ts'
+import { type CopingStrategyRepository } from '@domain/ports.ts'
 
 import { type Now, systemNow } from '../clock'
-import { type AppDatabase } from '../db'
+import {type AppDatabase, type Repository} from '../db'
 import { newId } from '../ids'
 import { DexieRepository } from '../repository'
 import { COPING_STRATEGY_DEFAULTS } from '../seeds/copingDefaults'
+import type {CopingStrategy, CopingStrategyDefault, UserId} from "@domain/model.ts";
 
 /**
  * Per-user coping strategies: load the predefined suggestions, write the
  * user's own (custom or adopted), and toggle active/inactive.
  */
-export class CopingStrategyAdapter implements CopingStrategyPort {
-  private readonly repo: Repository<CopingStrategy>
+export class CopingStrategyAdapter implements CopingStrategyRepository {
+  private readonly repo: Repository<CopingStrategyEntity>
   private readonly now: Now
 
   constructor(db: AppDatabase, now: Now = systemNow) {
@@ -24,7 +25,7 @@ export class CopingStrategyAdapter implements CopingStrategyPort {
     return Promise.resolve([...COPING_STRATEGY_DEFAULTS])
   }
 
-  async create(input: NewCopingStrategy): Promise<CopingStrategy> {
+  async create(input: CopingStrategy): Promise<CopingStrategy> {
     const strategy: CopingStrategy = {
       coping_strategy_id: newId(),
       user_id: input.user_id,
@@ -47,7 +48,7 @@ export class CopingStrategyAdapter implements CopingStrategyPort {
     await this.repo.put({ ...existing, active, updated_at: this.now() })
   }
 
-  listByUser(userId: UserId): Promise<CopingStrategy[]> {
+  listByUser(userId: UserId): Promise<CopingStrategyEntity[]> {
     return this.repo.query({ where: { field: 'user_id', equals: userId }, sortBy: 'priority' })
   }
 }

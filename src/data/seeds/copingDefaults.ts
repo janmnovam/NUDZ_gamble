@@ -1,4 +1,4 @@
-import { type CopingStrategyDefault } from '@/core/model'
+import { type CopingStrategyDefaultEntity } from '@data/model.ts'
 
 /**
  * Predefined coping strategies offered in onboarding.
@@ -7,7 +7,7 @@ import { type CopingStrategyDefault } from '@/core/model'
  * blocked by this: users can always write their own. Replace the contents
  * (labels/codes/priority/reminder_text) once the canonical list arrives.
  */
-export const COPING_STRATEGY_DEFAULTS: readonly CopingStrategyDefault[] = [
+export const COPING_STRATEGY_DEFAULTS: readonly CopingStrategyDefaultEntity[] = [
   { code: 'walk_15min', label: 'Jít na 15 minut ven', priority: 1 },
   { code: 'call_someone', label: 'Zavolat někomu blízkému', priority: 2 },
   { code: 'breathing', label: 'Dechové cvičení', priority: 3 },

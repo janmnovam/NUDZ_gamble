@@ -1,6 +1,6 @@
-import { type DataLayer } from '@/core/ports'
-import { type Limit, type Profile } from '@/core/model'
-import { AppDatabase, createDataLayer } from '@data/index'
+import { type LimitEntity, type ProfileEntity } from '@data/model.ts'
+import { AppDatabase, createDataLayer } from '@/core'
+import type {DataLayer} from "@/core/dataLayer.ts";
 
 /** Exercises the onboarding write path end to end against fake-indexeddb. */
 describe('onboarding adapters', () => {
@@ -18,7 +18,7 @@ describe('onboarding adapters', () => {
     await db.delete()
   })
 
-  const profile: Profile = {
+  const profile: ProfileEntity = {
     user_id: 'A001',
     onboarding_completed_at: FIXED_NOW,
     intervention_start_date: '2026-09-02',
@@ -76,7 +76,7 @@ describe('onboarding adapters', () => {
     await expect(data.copingStrategies.setActive('nope', true)).rejects.toThrow('not found')
   })
 
-  const week1Limit: Limit = {
+  const week1Limit: LimitEntity = {
     limit_id: 'limit-1',
     user_id: 'A001',
     week_no: 1,

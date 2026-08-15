@@ -8,20 +8,10 @@
  * Field names are verbatim from the brief / `src/data/docs/data-model.md`.
  * Money is integer CZK, time is integer minutes, timestamps are ISO 8601.
  */
+import type {CopingType, ISODate, ISOTimestamp, UserId} from "@domain/model.ts";
+import type {UsageEventType} from "@domain/usageEventType.ts";
 
-export type UserId = string
-/** ISO 8601 date, `YYYY-MM-DD`. */
-export type ISODate = string
-/** ISO 8601 timestamp with timezone. */
-export type ISOTimestamp = string
-
-/** Origin of a coping strategy row. */
-export type CopingType = 'default' | 'custom'
-
-/** Interaction tracked in the engagement log. */
-export type UsageEventType = 'exposed' | 'onboarding_completed' | 'app_opened' | 'review_reached'
-
-export interface Profile {
+export interface ProfileEntity {
   user_id: UserId
   onboarding_completed_at: ISOTimestamp
   intervention_start_date: ISODate
@@ -29,7 +19,7 @@ export interface Profile {
   reference_stakes_czk: number
 }
 
-export interface CopingStrategy {
+export interface CopingStrategyEntity {
   coping_strategy_id: string
   user_id: UserId
   /** Free text — shown to the user as the reminder. */
@@ -46,14 +36,14 @@ export interface CopingStrategy {
  * A predefined suggestion (Dr. Kazmer's list). Seed data, never persisted on
  * its own — adopting one writes a `CopingStrategy` row with `type: 'default'`.
  */
-export interface CopingStrategyDefault {
+export interface CopingStrategyDefaultEntity {
   code: string
   label: string
   priority: number
   reminder_text?: string
 }
 
-export interface Limit {
+export interface LimitEntity {
   limit_id: string
   user_id: UserId
   /** 1..4. Append-only: exactly one row per (user, week). */
@@ -63,7 +53,7 @@ export interface Limit {
   limit_set_at: ISOTimestamp
 }
 
-export interface CheckIn {
+export interface CheckInEntity {
   check_in_id: string
   user_id: UserId
   behavior_date: ISODate
@@ -77,7 +67,7 @@ export interface CheckIn {
   updated_at: ISOTimestamp | null
 }
 
-export interface Review {
+export interface ReviewEntity {
   review_id: string
   user_id: UserId
   review_week_no: number
@@ -86,7 +76,7 @@ export interface Review {
   incomplete: boolean
 }
 
-export interface UsageEvent {
+export interface UsageEventEntity {
   usage_event_id: string
   user_id: UserId
   event_type: UsageEventType

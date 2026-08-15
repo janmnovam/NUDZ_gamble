@@ -1,13 +1,13 @@
 import Dexie, { type Table } from 'dexie'
 
 import {
-  type CheckIn,
-  type CopingStrategy,
-  type Limit,
-  type Profile,
-  type Review,
-  type UsageEvent,
-} from '@/core/model'
+  type CheckInEntity,
+  type CopingStrategyEntity,
+  type LimitEntity,
+  type ProfileEntity,
+  type ReviewEntity,
+  type UsageEventEntity,
+} from '@data/model.ts'
 
 /**
  * IndexedDB wiring for the NUDZ Gamble data model (see
@@ -20,12 +20,12 @@ import {
  *   IndexedDB cannot index boolean keys. Filter them in memory (data is tiny).
  */
 export class AppDatabase extends Dexie {
-  profile!: Table<Profile, string>
-  coping_strategy!: Table<CopingStrategy, string>
-  limits!: Table<Limit, string>
-  check_ins!: Table<CheckIn, string>
-  reviews!: Table<Review, string>
-  usage_events!: Table<UsageEvent, string>
+  profile!: Table<ProfileEntity, string>
+  coping_strategy!: Table<CopingStrategyEntity, string>
+  limits!: Table<LimitEntity, string>
+  check_ins!: Table<CheckInEntity, string>
+  reviews!: Table<ReviewEntity, string>
+  usage_events!: Table<UsageEventEntity, string>
 
   constructor(name = 'nudz-gamble') {
     super(name)
@@ -39,6 +39,40 @@ export class AppDatabase extends Dexie {
       usage_events: 'usage_event_id, [user_id+occurred_at], user_id, event_type',
     })
   }
+}
+
+/** Value types IndexedDB (and a future SQL backend) can index on. */
+export type IndexableValue = string | number
+
+/**
+ * Generic query spec for a store. Kept small on purpose; richer needs
+ * (joins, aggregations) compose these calls or drop to the repository's
+ * escape hatch in the adapter that needs them.
+ */
+export interface Query<T> {
+  /** Equality match on a single indexed field. */
+  where?: { field: keyof T & string; equals: IndexableValue }
+  /** In-memory predicate applied after the indexed narrowing. */
+  filter?: (item: T) => boolean
+  sortBy?: keyof T & string
+  reverse?: boolean
+  offset?: number
+  limit?: number
+}
+
+/**
+ * General read/write repository over one store. The building block every
+ * future adapter reuses; specific ports below add domain semantics on top.
+ */
+export interface Repository<T, K extends IndexableValue = string> {
+  get(key: K): Promise<T | undefined>
+  getAll(): Promise<T[]>
+  query(spec?: Query<T>): Promise<T[]>
+  count(spec?: Pick<Query<T>, 'where' | 'filter'>): Promise<number>
+  /** Insert or replace by primary key; returns the key. */
+  put(item: T): Promise<K>
+  bulkPut(items: T[]): Promise<void>
+  remove(key: K): Promise<void>
 }
 
 export const db = new AppDatabase()

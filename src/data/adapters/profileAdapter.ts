@@ -1,12 +1,13 @@
-import { type Profile, type UserId } from '@/core/model'
-import { type ProfilePort, type Repository } from '@/core/ports'
+import { type ProfileEntity } from '@data/model.ts'
+import { type ProfileRepository } from '@domain/ports.ts'
 
-import { type AppDatabase } from '../db'
+import {type AppDatabase, type Repository} from '../db'
 import { DexieRepository } from '../repository'
+import type {Profile, UserId} from "@domain/model.ts";
 
 /** Writes and reads the single per-user profile row. */
-export class ProfileAdapter implements ProfilePort {
-  private readonly repo: Repository<Profile>
+export class ProfileAdapter implements ProfileRepository {
+  private readonly repo: Repository<ProfileEntity>
 
   constructor(db: AppDatabase) {
     this.repo = new DexieRepository(db.profile)
