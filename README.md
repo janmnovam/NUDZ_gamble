@@ -74,6 +74,31 @@ Path aliases `@/`, `@ui/`, `@domain/`, `@data/` are configured in `tsconfig.app.
 `vite.config.ts` and `jest.config.ts` (Jest does not read Vite's resolver, so the mapping
 is restated there).
 
+## CI / CD
+
+Two GitHub Actions workflows live in `.github/workflows/`:
+
+- **`ci.yml`** — runs on every push and PR to `main`. A `quality` job (typecheck, lint,
+  format check, Vitest, Jest, build) and a parallel `e2e` job (Playwright on Chromium +
+  WebKit, report uploaded as an artifact). Both run on Node 22.
+- **`deploy.yml`** — runs on push to `main` (or manually via _Run workflow_). Builds with
+  `BASE_PATH=/NUDZ_gamble/`, adds `404.html` (SPA fallback) and `.nojekyll`, then publishes
+  to GitHub Pages via `actions/deploy-pages`.
+
+### Base path
+
+The app is served from `https://janmnovam.github.io/NUDZ_gamble/`, so the production build
+needs a matching base. `vite.config.ts` reads `process.env.BASE_PATH` (default `/`), and the
+deploy workflow sets it to `/NUDZ_gamble/`. Dev, unit tests and local `npm run build` keep
+the `/` base. The PWA `start_url` and `scope` are derived from the base automatically. If the
+repository is renamed or moved to a custom domain, update `BASE_PATH` in `deploy.yml`.
+
+### One-time repository setup
+
+GitHub Pages must be switched to the Actions source before the first deploy:
+**Settings → Pages → Build and deployment → Source → GitHub Actions**. No branch or
+`gh-pages` folder is used — the site is served straight from the workflow artifact.
+
 ### Layer boundary is enforced by the linter
 
 `eslint.config.js` adds a `no-restricted-imports` rule that forbids `src/domain/**` from

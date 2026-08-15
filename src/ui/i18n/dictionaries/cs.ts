@@ -2,7 +2,7 @@
 export const cs = {
   'app.title': 'NUDZ Gamble',
   'app.subtitle':
-    'Bootstrap běží: React, TypeScript, Vite, Tailwind, Dexie, ESLint, Prettier, Vitest.',
+    'Bootstrap běží: React, TypeScript, Vite, Tailwind, Dexie, ESLint, Prettier, Jest.',
 } as const
 
 export type TranslationKey = keyof typeof cs
