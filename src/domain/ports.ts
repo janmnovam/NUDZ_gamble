@@ -15,6 +15,7 @@ import type {
   ISOTimestamp,
   Limit,
   Profile,
+  Review,
   UserId,
 } from '@domain/model.ts'
 
@@ -51,4 +52,11 @@ export interface CheckInRepository {
   getByDate(userId: UserId, behaviorDate: ISODate): Promise<CheckIn | undefined>
   listByUser(userId: UserId): Promise<CheckIn[]>
   listByWeek(userId: UserId, weekNo: number): Promise<CheckIn[]>
+}
+
+export interface ReviewRepository {
+  /** Append-only: one review per (user, week); a duplicate week is rejected by the unique index. */
+  save(review: Review): Promise<void>
+  getByWeek(userId: UserId, weekNo: number): Promise<Review | undefined>
+  listByUser(userId: UserId): Promise<Review[]>
 }

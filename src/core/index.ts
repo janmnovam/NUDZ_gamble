@@ -16,6 +16,7 @@ import { CopingStrategyAdapter } from '@data/adapters/copingStrategyAdapter.ts'
 import { LimitAdapter } from '@data/adapters/limitAdapter.ts'
 import { OnboardingAdapter } from '@data/adapters/onboardingAdapter.ts'
 import { ProfileAdapter } from '@data/adapters/profileAdapter.ts'
+import { ReviewAdapter } from '@data/adapters/reviewAdapter.ts'
 import { systemNow } from '@data/clock.ts'
 import { type AppDatabase, db as defaultDb } from '@data/db.ts'
 import type {
@@ -25,6 +26,7 @@ import type {
   LimitRepository,
   OnboardingRepository,
   ProfileRepository,
+  ReviewRepository,
 } from '@domain/ports.ts'
 
 // `TodayClock`/`StudyCalendar` aren't part of `DataLayer`: the study
@@ -43,6 +45,7 @@ export function createDataLayer(
     now,
     onboarding: new OnboardingAdapter(database),
     checkIns: new CheckInAdapter(database),
+    reviews: new ReviewAdapter(database),
   }
 }
 
@@ -55,6 +58,7 @@ export interface DataLayer {
   now: Clock
   onboarding: OnboardingRepository
   checkIns: CheckInRepository
+  reviews: ReviewRepository
 }
 
 export { AppDatabase, db } from '@data/db.ts'
