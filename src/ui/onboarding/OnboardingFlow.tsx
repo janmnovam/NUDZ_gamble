@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
-import { type CopingSuggestionDto } from '@/app/dto/coping.ts'
-import { type SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
-import { clientNow } from '@ui/clock.ts'
-import { app } from '@ui/services.ts'
+import { useCopingService, useOnboardingService } from '@ui/app/AppContext.ts'
 import { CopingStep } from '@ui/onboarding/steps/CopingStep.tsx'
 import { DoneStep } from '@ui/onboarding/steps/DoneStep.tsx'
 import { IntroStep } from '@ui/onboarding/steps/IntroStep.tsx'
 import { RefLimitsStep } from '@ui/onboarding/steps/RefLimitsStep.tsx'
 import { RefStakesStep } from '@ui/onboarding/steps/RefStakesStep.tsx'
 import { RefTimeStep } from '@ui/onboarding/steps/RefTimeStep.tsx'
+import type { CopingDto, SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
+import type { CopingSuggestionDto } from '@/app/dto/coping.ts'
 
 const TOTAL_STEPS = 6
 
@@ -23,33 +22,36 @@ interface OnboardingFlowProps {
  * so far (UI state only), and hands each step its navigation callbacks.
  */
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
+  const onboarding = useOnboardingService()
+  const coping = useCopingService()
+  const submittingRef = useRef(false)
+
   const [step, setStep] = useState(0)
   const [refTimeMinutes, setRefTimeMinutes] = useState(0)
   const [refStakesCzk, setRefStakesCzk] = useState(0)
   const [timeLimitMin, setTimeLimitMin] = useState<number | null>(null)
   const [stakesLimitCzk, setStakesLimitCzk] = useState<number | null>(null)
-  const [copingSelected, setCopingSelected] = useState<string[]>([])
-  const [copingOptions, setCopingOptions] = useState<CopingSuggestionDto[]>([])
-  const [customStrategy, setCustomStrategy] = useState('')
   const [suggestedLimits, setSuggestedLimits] = useState<SuggestedLimitsResponse | null>(null)
+  const [copingStrategies, setCopingStrategies] = useState<CopingSuggestionDto[]>([])
+  const [copingSelected, setCopingSelected] = useState<CopingSuggestionDto[]>([])
+  const [customCoping, setCustomCoping] = useState<CopingDto | null>(null)
   const [interventionStartDate, setInterventionStartDate] = useState<Date | null>(null)
-  const [submitting, setSubmitting] = useState(false)
 
-  // Load the predefined coping suggestions from the service once.
+  // Load the predefined coping suggestions once; map each to the domain-shaped
   useEffect(() => {
     let active = true
-    void app.coping.getSuggestions().then((suggestions) => {
-      if (active) setCopingOptions(suggestions)
+    void coping.getSuggestions().then((suggestions) => {
+      if (active) setCopingStrategies(suggestions)
     })
     return () => {
       active = false
     }
-  }, [])
+  }, [coping])
 
-  // Recompute the 80% suggested limits and 90% cap whenever the reference changes.
+  // Derive the suggested limits and absolute cap from the reference whenever it changes.
   useEffect(() => {
     let active = true
-    void app.onboarding
+    void onboarding
       .getSuggestedLimits({ timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk })
       .then((limits) => {
         if (active) setSuggestedLimits(limits)
@@ -57,7 +59,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     return () => {
       active = false
     }
-  }, [refTimeMinutes, refStakesCzk])
+  }, [onboarding, refTimeMinutes, refStakesCzk])
 
   const goNext = () => {
     setStep((current) => Math.min(current + 1, TOTAL_STEPS - 1))
@@ -68,39 +70,26 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const resolvedTimeLimit = timeLimitMin ?? suggestedLimits?.timeMinutes ?? 0
   const resolvedStakesLimit = stakesLimitCzk ?? suggestedLimits?.stakesAmount ?? 0
-  const copingCount = copingSelected.length + (customStrategy.trim().length > 0 ? 1 : 0)
+  const copingCount = copingSelected.length + (customCoping ? 1 : 0)
 
-  // Hand the collected answers to the OnboardingService, then confirm.
+  // Persist via the onboarding service, then confirm.
   const finishSetup = async () => {
-    // Guards against a double-tap firing `complete` twice: the second call would
-    // hit the store's append-only `[user_id+week_no]` limit and throw.
-    if (submitting) return
-    setSubmitting(true)
-
-    // Selected predefined strategies (by id) + the optional custom one → domain coping DTOs.
-    const selected = copingSelected
-      .map((id) => copingOptions.find((option) => option.id === id))
-      .filter((option): option is CopingSuggestionDto => option !== undefined)
-      .map((option) => ({ id: option.id, label: option.label, type: 'default' as const }))
-    const custom = customStrategy.trim()
-    const coping = custom
-      ? [...selected, { id: 'custom', label: custom, type: 'custom' as const }]
-      : selected
-
+    if (submittingRef.current) return
+    submittingRef.current = true
     try {
-      const { interventionStartDate: startDate } = await app.onboarding.complete(
+      const res = await onboarding.complete(
         {
           reference: { timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk },
           limits: { timeMinutes: resolvedTimeLimit, stakesAmount: resolvedStakesLimit },
-          coping,
+          coping: [...copingSelected, ...(customCoping ? [customCoping] : [])],
         },
-        clientNow(),
+        new Date().toISOString(),
       )
-      setInterventionStartDate(new Date(startDate))
+      setInterventionStartDate(new Date(res.interventionStartDate))
       goNext()
     } catch (error) {
-      console.error('[onboarding] complete failed', error)
-      setSubmitting(false)
+      submittingRef.current = false
+      console.error('Onboarding completion failed', error)
     }
   }
 
@@ -144,16 +133,15 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     case 4:
       return (
         <CopingStep
-          options={copingOptions}
+          strategies={copingStrategies}
           selected={copingSelected}
           onSelectedChange={setCopingSelected}
-          customStrategy={customStrategy}
-          onCustomStrategyChange={setCustomStrategy}
+          customCoping={customCoping}
+          onCustomCopingChange={setCustomCoping}
           onFinish={() => {
             void finishSetup()
           }}
           onBack={goBack}
-          submitting={submitting}
         />
       )
     case 5:

@@ -4,46 +4,39 @@ import { Screen } from '@ui/components/Screen.tsx'
 import { StepHeader } from '@ui/components/StepHeader.tsx'
 import { TextField } from '@ui/components/TextField.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
-import { pluralCategory, type PluralCategory } from '@ui/i18n/plural.ts'
-import { type TranslationKey } from '@ui/i18n/types.ts'
-import { type CopingSuggestionDto } from '@/app/dto/coping.ts'
-
-const SELECTED_KEYS = {
-  one: 'onboarding.coping.selected.one',
-  few: 'onboarding.coping.selected.few',
-  other: 'onboarding.coping.selected.other',
-} as const satisfies Record<PluralCategory, TranslationKey>
+import type { CopingDto } from '@/app/dto/onboarding.ts'
+import type { CopingSuggestionDto } from '@/app/dto/coping.ts'
 
 interface CopingStepProps {
-  /** Predefined strategies, provided by the CopingStrategyService. */
-  options: CopingSuggestionDto[]
-  /** Ids of the selected predefined strategies. */
-  selected: string[]
-  onSelectedChange: (selected: string[]) => void
-  customStrategy: string
-  onCustomStrategyChange: (value: string) => void
+  strategies: CopingSuggestionDto[]
+  selected: CopingSuggestionDto[]
+  onSelectedChange: (selected: CopingSuggestionDto[]) => void
+  customCoping: CopingDto | null
+  onCustomCopingChange: (value: CopingDto) => void
   onFinish: () => void
   onBack: () => void
-  submitting?: boolean
 }
 
 /** Onboarding step 5 — coping strategies (Figma "05 Copingová strategie"). */
 export function CopingStep({
-  options,
+  strategies,
   selected,
   onSelectedChange,
-  customStrategy,
-  onCustomStrategyChange,
+  customCoping,
+  onCustomCopingChange,
   onFinish,
   onBack,
-  submitting = false,
 }: CopingStepProps) {
-  const { t, locale } = useTranslation()
+  const { t, t_plural } = useTranslation()
 
-  const count = selected.length + (customStrategy.trim().length > 0 ? 1 : 0)
+  const count = selected.length + (customCoping ? 1 : 0)
 
-  const toggle = (id: string) => {
-    onSelectedChange(selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id])
+  const toggle = (strategy: CopingSuggestionDto) => {
+    onSelectedChange(
+      selected.find((s) => s.id === strategy.id)
+        ? selected.filter((s) => s.id !== strategy.id)
+        : [...selected, strategy],
+    )
   }
 
   return (
@@ -52,11 +45,11 @@ export function CopingStep({
       contentClassName="gap-4"
       footer={
         <div className="flex flex-col items-center gap-2">
-          <Button size="md" fullWidth onClick={onFinish} disabled={count === 0 || submitting}>
+          <Button size="md" fullWidth onClick={onFinish} disabled={count === 0}>
             {t('onboarding.coping.cta')}
           </Button>
           <p className="type-body-sm text-faint text-center">
-            {t(SELECTED_KEYS[pluralCategory(locale, count)], { count })}
+            {t_plural('onboarding.coping.count', count)}
           </p>
         </div>
       }
@@ -65,13 +58,13 @@ export function CopingStep({
       <p className="text-muted text-sm leading-5">{t('onboarding.coping.lead')}</p>
 
       <div className="flex flex-col gap-1.5">
-        {options.map((option) => (
+        {strategies.map((strategy) => (
           <CheckboxOption
-            key={option.id}
-            label={option.label}
-            checked={selected.includes(option.id)}
+            key={strategy.label}
+            label={strategy.label}
+            checked={!!selected.find((s) => s.label === strategy.label)}
             onChange={() => {
-              toggle(option.id)
+              toggle(strategy)
             }}
           />
         ))}
@@ -79,8 +72,11 @@ export function CopingStep({
 
       <TextField
         label={t('onboarding.coping.custom.label')}
-        value={customStrategy}
-        onChange={onCustomStrategyChange}
+        value={customCoping?.label ?? ''}
+        onChange={(value) => {
+          // TODO
+          onCustomCopingChange({ id: 'TODO', label: value, type: 'custom' })
+        }}
         placeholder={t('onboarding.coping.custom.placeholder')}
       />
     </Screen>
