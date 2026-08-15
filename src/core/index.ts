@@ -13,10 +13,16 @@
 
 import { CopingStrategyAdapter } from '@data/adapters/copingStrategyAdapter.ts'
 import { LimitAdapter } from '@data/adapters/limitAdapter.ts'
+import { OnboardingAdapter } from '@data/adapters/onboardingAdapter.ts'
 import { ProfileAdapter } from '@data/adapters/profileAdapter.ts'
 import { type Now, systemNow } from '@data/clock.ts'
 import { type AppDatabase, db as defaultDb } from '@data/db.ts'
-import type { CopingStrategyRepository, LimitRepository, ProfileRepository } from '@domain/ports.ts'
+import type {
+  CopingStrategyRepository,
+  LimitRepository,
+  OnboardingRepository,
+  ProfileRepository,
+} from '@domain/ports.ts'
 
 export function createDataLayer(
   database: AppDatabase = defaultDb,
@@ -26,6 +32,7 @@ export function createDataLayer(
     profiles: new ProfileAdapter(database),
     copingStrategies: new CopingStrategyAdapter(database, now),
     limits: new LimitAdapter(database),
+    onboarding: new OnboardingAdapter(database),
   }
 }
 
@@ -34,6 +41,7 @@ export interface DataLayer {
   profiles: ProfileRepository
   copingStrategies: CopingStrategyRepository
   limits: LimitRepository
+  onboarding: OnboardingRepository
 }
 
 export { AppDatabase, db } from '@data/db.ts'
