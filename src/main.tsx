@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { App } from '@ui/App.tsx'
+import { I18nProvider } from '@ui/i18n/index.ts'
 
 import './index.css'
 
@@ -10,6 +11,8 @@ if (!rootElement) throw new Error('Root element #root not found')
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <I18nProvider>
+      <App />
+    </I18nProvider>
   </StrictMode>,
 )
