@@ -12,7 +12,7 @@ these exact names.
 | intervention_start_date | date | = day after onboarding completed |
 | reference_time_min | int minutes | weekly reference |
 | reference_stakes_czk | int CZK | weekly reference |
-| coping_strategy | string / list | at least one chosen |
+| coping_strategy | string / list | ≥2 active, chosen at onboarding |
 
 ## limit (one record per week, append-only — never overwritten)
 | Field | Type | Notes |
@@ -80,7 +80,5 @@ Round for display only; classify status on the raw ratio, or you'll get a
 is exactly the kind of thing that gets noticed on stage.
 
 ## Open questions
-- One coping strategy or several? Brief says "at least one" — model it as a
-  list, confirm at Saturday kickoff whether multi-select matters.
 - Can the reference week be edited after onboarding? Not addressed. Default
   to no, note it as a known limitation in the README.

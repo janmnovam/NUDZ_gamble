@@ -1,13 +1,15 @@
 # 03 — Onboarding
 
 Captures the reference week, proposes and confirms week-1 limits, captures
-at least one coping strategy, and stamps `intervention_start_date`.
+at least two coping strategies, and stamps `intervention_start_date`.
 
 ## Inputs (from the user)
 - reference time: hours + minutes → `reference_time_min` (int)
 - reference stakes: whole CZK → `reference_stakes_czk` (int)
 - limit adjustments (see doc 04 for the ceiling rule)
-- coping strategy selection (≥1, from a list, ideally + free text)
+- coping strategy selection (≥2 active, from a list, ideally + free text) —
+  raised from the brief's "at least one" per `src/data/docs/data-model.md`
+  invariant #8; confirm this deviation is intentional before submission.
 
 ## Outputs
 - complete `profile` record, including `onboarding_completed_at` and
@@ -27,8 +29,8 @@ over extra polish — onboarding is the first place that priority gets tested.
 - Reference values are the baseline everything else measures against — they
   are not the limit.
 - Proposed limit = 80% of reference, both dimensions (doc 04).
-- At least one coping strategy required. Brief's own examples: step outside
-  for fifteen minutes, call someone.
+- At least two coping strategies required, both active. Brief's own examples:
+  step outside for fifteen minutes, call someone.
 - `intervention_start_date` = the day after onboarding completes, always.
 
 ## Validation
@@ -37,7 +39,7 @@ over extra polish — onboarding is the first place that priority gets tested.
 | hours | int ≥ 0 | block, inline message |
 | minutes | 0..59 int | block |
 | stakes | int ≥ 0 | block |
-| coping | ≥ 1 selected | block continue |
+| coping | ≥ 2 selected | block continue |
 
 **Zero reference is a legal state**, and the brief says so explicitly: limit
 is then 0, no percentage is displayed, and any positive value counts as
@@ -66,5 +68,6 @@ in evaluation (doc 06), and on the dashboard (doc 08), not just in one place.
 
 ## Open questions
 - Fixed coping-strategy list acceptable, or does the user need to write
-  their own? Brief only requires selecting at least one. Default: fixed
-  list plus optional free text.
+  their own? Default: fixed list (`CopingStrategyDefault`, pending Dr.
+  Kazmer's content) plus optional free text — the user can always write a
+  custom one, so the ≥2 minimum is never blocked on the seed list existing.

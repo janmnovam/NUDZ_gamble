@@ -31,7 +31,7 @@ Multilanguage, **Czech-first**. Czech is the source of truth; every user-facing 
 - **Daily check-in** covers the *previous* calendar day. Default question: "did you play yesterday?" No → store zeros, valid record. Yes → time, stakes, winnings. ~45s.
 - **Missing ≠ no-play.** A no-play day is a valid record (played=false, zeros). A missing check-in is NA — must be surfaced on the dashboard and via a reminder. Backfill allowed only for still-missing days of the *current* week; closed weeks cannot be edited. Backfill status is never shown to the user.
 - **States**: OK ≤ 80%, POZOR (warning) > 80% ≤ 100%, PŘEKROČENO (exceeded) > 100%. Computed separately for time and stakes; overall = the worse of the two, but UI always shows both + remaining. Percentages are vs the **weekly limit**, not the reference.
-- **Coping strategy**: chosen at onboarding (≥1). Feedback reminds it on POZOR/PŘEKROČENO.
+- **Coping strategy**: chosen at onboarding (≥2, active). Feedback reminds it on POZOR/PŘEKROČENO.
 - **28-day self-tracking, individual weeks.** Day 1 = first full calendar day after onboarding (`intervention_start_date`). Week 1 = days 1–7, …, Week 4 = days 22–28. Not calendar weeks, not rolling 7 days.
 - **Reviews** offered after days 7/14/21 (e.g. week-1 review opens during day 8, even if day-7 check-in is missing). Set both limits for next week, again ≤ 90% of reference. Previous limits are never overwritten — one historical record per week. Final summary opens during day 29, no next-week limits. Reviews must be completable even with missing check-ins (saved as `incomplete`).
 - **Derived, never stored**: cumulative usage, net loss, weekly totals, overall state — always computed from source records + limit history.
