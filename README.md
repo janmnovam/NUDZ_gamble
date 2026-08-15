@@ -172,6 +172,10 @@ Nice-to-have features (possible next steps before pilot):
 - Tracking what dates were edited and how.
 - Motivating user to lower their limits during every new week of intervention by 10% (meaning 1st week limit = 10 000 CZK, 2nd week limit suggestion 9 000 CZK).
 - User profile accessing during the intervention (with optional choice to set the time of notifications).
+- Graphs for each review week.
+- Consents (for the RCT user consent in paper form f2f)
+- Opt-out of notifications.
+- Change notification time.
 
 ## Tooling disclosure
 
