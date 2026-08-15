@@ -82,7 +82,7 @@ erDiagram
     USAGE_EVENT {
         uuid usage_event_id PK
         uuid user_id FK
-        string event_type "key interaction; vocab TBD"
+        string event_type "exposed | onboarding_completed | app_opened | review_reached"
         timestamp occurred_at
         string session_id "nullable"
         string screen "nullable"
@@ -114,6 +114,18 @@ Weekly used/totals, % vs limit, per-axis + overall status (worse of two),
 remaining, `net_loss`, `is_backfill` (`date(submitted_at) > behavior_date + 1d`),
 missing-day set + `has_missing`, `usage_event` aggregates.
 
+## usage_event — tracked events
+| event_type | fires | feeds metric |
+|---|---|---|
+| `exposed` | first arrival to the app (once) | N exposed |
+| `onboarding_completed` | user finishes onboarding (consent) | N consented |
+| `app_opened` | every PWA open | N used > x times (count); N used > y weeks (span of `occurred_at`) |
+| `review_reached` | reaches a review milestone; `detail.day ∈ {7,14,21,28}` | N "used" at pre-defined time points |
+
+- Counts/spans are derived from rows + `occurred_at` — nothing aggregated is stored.
+- "Use" of the intervention = ≥ 1 `app_opened`; milestone engagement = `review_reached`.
+- `exposed` may instead be derived as a user's first `app_opened`.
+
 ## Dexie stores
 ```txt
 profile:                 "user_id"
@@ -137,7 +149,6 @@ usage_events:            "usage_event_id, [user_id+occurred_at], user_id, event_
 
 ## Open
 - `EDIT_WINDOW_DAYS` value (X) — TBD.
-- `usage_event` key-interaction vocab — TBD (BE+FE+UX).
 - Default suggestion content pending Ladislav (app not blocked — users add their own).
 - Reference week editable after onboarding? Default no.
 - Demo clock persistence: `app_meta` vs localStorage (`demo_day_offset` must survive refresh).
