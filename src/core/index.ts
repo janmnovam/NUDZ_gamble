@@ -11,6 +11,7 @@
  * for an HTTP backend later means a different factory here, nothing upstream.
  */
 
+import { CheckInAdapter } from '@data/adapters/checkInAdapter.ts'
 import { CopingStrategyAdapter } from '@data/adapters/copingStrategyAdapter.ts'
 import { LimitAdapter } from '@data/adapters/limitAdapter.ts'
 import { OnboardingAdapter } from '@data/adapters/onboardingAdapter.ts'
@@ -18,6 +19,7 @@ import { ProfileAdapter } from '@data/adapters/profileAdapter.ts'
 import { systemNow } from '@data/clock.ts'
 import { type AppDatabase, db as defaultDb } from '@data/db.ts'
 import type {
+  CheckInRepository,
   Clock,
   CopingStrategyRepository,
   LimitRepository,
@@ -40,6 +42,7 @@ export function createDataLayer(
     limits: new LimitAdapter(database),
     now,
     onboarding: new OnboardingAdapter(database),
+    checkIns: new CheckInAdapter(database),
   }
 }
 
@@ -51,6 +54,7 @@ export interface DataLayer {
   /** Shared clock — pass to domain services instead of reading wall-clock time directly. */
   now: Clock
   onboarding: OnboardingRepository
+  checkIns: CheckInRepository
 }
 
 export { AppDatabase, db } from '@data/db.ts'

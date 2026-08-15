@@ -7,9 +7,11 @@
  */
 
 import type {
+  CheckIn,
   CopingStrategy,
   CopingStrategyDefault,
   CopingStrategyInput,
+  ISODate,
   ISOTimestamp,
   Limit,
   Profile,
@@ -41,4 +43,12 @@ export interface LimitRepository {
 export interface OnboardingRepository {
   /** Persists profile + week-1 limit + ≥1 coping atomically, or nothing. */
   save(profile: Profile, limit: Limit, coping: CopingStrategy[]): Promise<void>
+}
+
+export interface CheckInRepository {
+  /** Insert or replace, keyed on (user, behavior_date). Caller reuses an existing row's check_in_id so the unique index isn't tripped. */
+  upsert(checkIn: CheckIn): Promise<void>
+  getByDate(userId: UserId, behaviorDate: ISODate): Promise<CheckIn | undefined>
+  listByUser(userId: UserId): Promise<CheckIn[]>
+  listByWeek(userId: UserId, weekNo: number): Promise<CheckIn[]>
 }
