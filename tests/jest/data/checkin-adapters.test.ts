@@ -1,6 +1,5 @@
-import { type CheckInEntity } from '@data/model.ts'
 import { AppDatabase, createDataLayer, type DataLayer } from '@/core'
-import type { CheckInEdit } from '@domain/model.ts'
+import type { CheckIn, CheckInEdit } from '@domain/model.ts'
 
 /** Set/get round-trips for the check-in and check-in-edit adapters. */
 describe('check-in adapters', () => {
@@ -17,17 +16,17 @@ describe('check-in adapters', () => {
     await db.delete()
   })
 
-  const checkIn: CheckInEntity = {
-    check_in_id: 'ci-1',
-    user_id: 'A001',
-    behavior_date: '2026-09-02',
-    week_no: 1,
+  const checkIn: CheckIn = {
+    checkInId: 'ci-1',
+    userId: 'A001',
+    behaviorDate: '2026-09-02',
+    weekNo: 1,
     played: true,
-    time_min: 45,
-    stakes_czk: 500,
-    winnings_czk: 0,
-    submitted_at: '2026-09-03T08:00:00.000Z',
-    updated_at: null,
+    timeMin: 45,
+    stakesCzk: 500,
+    winningsCzk: 0,
+    submittedAt: '2026-09-03T08:00:00.000Z',
+    updatedAt: null,
   }
 
   it('saves and reads a check-in by id', async () => {
@@ -35,39 +34,39 @@ describe('check-in adapters', () => {
     await expect(data.checkIns.get('ci-1')).resolves.toEqual(checkIn)
   })
 
-  it('lists a user’s check-ins ordered by behavior_date', async () => {
-    await data.checkIns.save({ ...checkIn, check_in_id: 'ci-2', behavior_date: '2026-09-04' })
+  it('lists a user’s check-ins ordered by behaviorDate', async () => {
+    await data.checkIns.save({ ...checkIn, checkInId: 'ci-2', behaviorDate: '2026-09-04' })
     await data.checkIns.save(checkIn)
     const list = await data.checkIns.listByUser('A001')
-    expect(list.map((c) => c.behavior_date)).toEqual(['2026-09-02', '2026-09-04'])
+    expect(list.map((c) => c.behaviorDate)).toEqual(['2026-09-02', '2026-09-04'])
   })
 
   it('enforces one check-in per (user, day)', async () => {
     await data.checkIns.save(checkIn)
-    await expect(data.checkIns.save({ ...checkIn, check_in_id: 'ci-dup' })).rejects.toThrow()
+    await expect(data.checkIns.save({ ...checkIn, checkInId: 'ci-dup' })).rejects.toThrow()
   })
 
   const edit: CheckInEdit = {
-    check_in_edit_id: 'e-1',
-    user_id: 'A001',
-    check_in_id: 'ci-1',
+    checkInEditId: 'e-1',
+    userId: 'A001',
+    checkInId: 'ci-1',
     action: 'created',
-    edited_at: '2026-09-03T08:00:00.000Z',
-    changed_fields: ['played', 'time_min', 'stakes_czk'],
+    editedAt: '2026-09-03T08:00:00.000Z',
+    changedFields: ['played', 'timeMin', 'stakesCzk'],
     before: null,
-    after: JSON.stringify({ played: true, time_min: 45 }),
+    after: JSON.stringify({ played: true, timeMin: 45 }),
   }
 
   it('appends and reads check-in edits, oldest first', async () => {
     await data.checkInEdits.save(edit)
     await data.checkInEdits.save({
       ...edit,
-      check_in_edit_id: 'e-2',
+      checkInEditId: 'e-2',
       action: 'updated',
-      edited_at: '2026-09-05T09:00:00.000Z',
-      changed_fields: ['time_min'],
-      before: JSON.stringify({ time_min: 45 }),
-      after: JSON.stringify({ time_min: 60 }),
+      editedAt: '2026-09-05T09:00:00.000Z',
+      changedFields: ['timeMin'],
+      before: JSON.stringify({ timeMin: 45 }),
+      after: JSON.stringify({ timeMin: 60 }),
     })
     await expect(data.checkInEdits.get('e-1')).resolves.toEqual(edit)
     const log = await data.checkInEdits.listByCheckIn('ci-1')

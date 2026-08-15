@@ -1,0 +1,68 @@
+/**
+ * Concrete OnboardingService. Wraps the existing domain use-cases —
+ * `completeOnboarding` for `complete`, `suggestLimit`/`limitPercentView` for
+ * `getSuggestedLimits` — and translates DTOs at the boundary.
+ *
+ * Note on dependencies: docs/architecture.md lists Profile/Limit/Coping repos
+ * separately, but the built `completeOnboarding` persists all three atomically
+ * through the single `OnboardingRepository`, so that is what this impl injects
+ * (via `DataLayer.onboarding`). The service stays free of `@data`/`@ui`.
+ */
+import type { OnboardingService } from '@/app/ports/onboardingService.ts'
+import type {
+  OnboardingProfileRequest,
+  OnboardingProfileResponse,
+  ReferenceWeekRequest,
+  SuggestedLimitsResponse,
+} from '@/app/dto/onboarding.ts'
+import { DEMO_USER_ID } from '@/app/constants.ts'
+import { toOnboardingInput, toOnboardingProfileResponse } from '@/app/mappers/onboardingMapper.ts'
+import { type TodayClock, nextDate } from '@domain/clock.ts'
+import { limitPercentView, suggestLimit } from '@domain/limits.ts'
+import type { UserId } from '@domain/model.ts'
+import { completeOnboarding } from '@domain/onboarding.ts'
+import type { Clock, OnboardingRepository } from '@domain/ports.ts'
+
+export interface OnboardingServiceDeps {
+  repo: OnboardingRepository
+  /** UTC instant source — stamps the record `*_at` timestamps. */
+  now: Clock
+  /** Local calendar date source — anchors the intervention start date. */
+  today: TodayClock
+  newId: () => string
+  /** The single demo user these records belong to. */
+  userId?: UserId
+}
+
+export class OnboardingServiceImpl implements OnboardingService {
+  private readonly deps: OnboardingServiceDeps
+  private readonly userId: UserId
+
+  constructor(deps: OnboardingServiceDeps) {
+    this.deps = deps
+    this.userId = deps.userId ?? DEMO_USER_ID
+  }
+
+  getSuggestedLimits(req: ReferenceWeekRequest): Promise<SuggestedLimitsResponse> {
+    const pct = limitPercentView().suggestedPct
+    return Promise.resolve({
+      timeMinutes: suggestLimit(req.timeMinutes),
+      stakesAmount: suggestLimit(req.stakesAmount),
+      timePercent: pct,
+      stakePercent: pct,
+    })
+  }
+
+  async complete(req: OnboardingProfileRequest): Promise<OnboardingProfileResponse> {
+    const input = toOnboardingInput(req, this.userId)
+    await completeOnboarding(input, {
+      repo: this.deps.repo,
+      now: this.deps.now,
+      today: this.deps.today,
+      newId: this.deps.newId,
+    })
+    // Same value the domain just persisted: the day after the local `today`.
+    const interventionStartDate = nextDate(this.deps.today.today())
+    return toOnboardingProfileResponse(req, interventionStartDate)
+  }
+}

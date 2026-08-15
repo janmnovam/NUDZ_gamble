@@ -9,12 +9,12 @@ import type { CheckIn, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
 
 /** What the check-in form collects before it becomes a `CheckIn` record. */
 export interface CheckInDraft {
-  behavior_date: ISODate
+  behaviorDate: ISODate
   played: boolean
   /** Forced to 0 when `played` is false — the form shouldn't even show these fields then. */
-  time_min: number
-  stakes_czk: number
-  winnings_czk: number
+  timeMin: number
+  stakesCzk: number
+  winningsCzk: number
 }
 
 export type CheckInFieldErrorField = keyof CheckInDraft
@@ -28,19 +28,19 @@ export type CheckInValidation = { valid: true } | { valid: false; errors: CheckI
 
 /**
  * Doc 05's validation table: numeric bounds, `played=false ⟹ all zero`, and
- * `behavior_date` must fall in the current week and be ≤ `today − 1`.
- * `week_first_day` comes from `StudyCalendar.dateOf(firstDay(currentWeek()))`.
+ * `behaviorDate` must fall in the current week and be ≤ `today − 1`.
+ * `weekFirstDay` comes from `StudyCalendar.dateOf(firstDay(currentWeek()))`.
  */
 export type ValidateCheckIn = (
   draft: CheckInDraft,
-  context: { today: ISODate; week_first_day: ISODate },
+  context: { today: ISODate; weekFirstDay: ISODate },
 ) => CheckInValidation
 
-/** Pure command handler: a validated draft + `now` → the record to persist (upsert on `behavior_date`). */
+/** Pure command handler: a validated draft + `now` → the record to persist (upsert on `behaviorDate`). */
 export type SubmitCheckIn = (
-  user_id: UserId,
+  userId: UserId,
   draft: CheckInDraft,
-  week_no: number,
+  weekNo: number,
   now: ISOTimestamp,
   existing?: CheckIn,
 ) => CheckIn
@@ -48,28 +48,28 @@ export type SubmitCheckIn = (
 /** A day's presentation state. Never confuse `missing` (no record) with a zero-filled record. */
 export type DayState = 'completed' | 'backfilled' | 'missing' | 'future'
 
-/** Derived, never stored: `date(submitted_at) > behavior_date + 1 day`. */
-export type IsBackfill = (behavior_date: ISODate, submitted_at: ISOTimestamp) => boolean
+/** Derived, never stored: `date(submittedAt) > behaviorDate + 1 day`. */
+export type IsBackfill = (behaviorDate: ISODate, submittedAt: ISOTimestamp) => boolean
 
 /** The calendar date a timestamp was recorded on, in the offset it carries. */
 const dateOfTimestamp = (timestamp: ISOTimestamp): ISODate => timestamp.slice(0, 10)
 
-export const isBackfill: IsBackfill = (behavior_date, submitted_at) =>
-  dateOfTimestamp(submitted_at) > nextDate(behavior_date)
+export const isBackfill: IsBackfill = (behaviorDate, submittedAt) =>
+  dateOfTimestamp(submittedAt) > nextDate(behaviorDate)
 
-/** `future` if `behavior_date > today − 1`; `missing` if no record and not future; else completed/backfilled. */
+/** `future` if `behaviorDate > today − 1`; `missing` if no record and not future; else completed/backfilled. */
 export type DayStateOf = (params: {
-  behavior_date: ISODate
+  behaviorDate: ISODate
   today: ISODate
-  check_in: CheckIn | undefined
+  checkIn: CheckIn | undefined
 }) => DayState
 
 /**
- * `behavior_date > today − 1` is equivalent to `behavior_date >= today` for
+ * `behaviorDate > today − 1` is equivalent to `behaviorDate >= today` for
  * whole calendar dates, so no separate "yesterday" arithmetic is needed.
  */
-export const dayStateOf: DayStateOf = ({ behavior_date, today, check_in }) => {
-  if (behavior_date >= today) return 'future'
-  if (!check_in) return 'missing'
-  return isBackfill(behavior_date, check_in.submitted_at) ? 'backfilled' : 'completed'
+export const dayStateOf: DayStateOf = ({ behaviorDate, today, checkIn }) => {
+  if (behaviorDate >= today) return 'future'
+  if (!checkIn) return 'missing'
+  return isBackfill(behaviorDate, checkIn.submittedAt) ? 'backfilled' : 'completed'
 }

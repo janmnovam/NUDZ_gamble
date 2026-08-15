@@ -1,4 +1,5 @@
 import { type UsageEventEntity } from '@data/model.ts'
+import { usageEventToDomain, usageEventToEntity } from '@data/mappers.ts'
 import type { UsageEvent, UserId } from '@domain/model.ts'
 import { type UsageEventRepository } from '@domain/ports.ts'
 
@@ -13,14 +14,19 @@ export class UsageEventAdapter implements UsageEventRepository {
   }
 
   async save(event: UsageEvent): Promise<void> {
-    await this.repo.put(event)
+    await this.repo.put(usageEventToEntity(event))
   }
 
-  get(usageEventId: string): Promise<UsageEvent | undefined> {
-    return this.repo.get(usageEventId)
+  async get(usageEventId: string): Promise<UsageEvent | undefined> {
+    const entity = await this.repo.get(usageEventId)
+    return entity && usageEventToDomain(entity)
   }
 
-  listByUser(userId: UserId): Promise<UsageEvent[]> {
-    return this.repo.query({ where: { field: 'user_id', equals: userId }, sortBy: 'occurred_at' })
+  async listByUser(userId: UserId): Promise<UsageEvent[]> {
+    const rows = await this.repo.query({
+      where: { field: 'user_id', equals: userId },
+      sortBy: 'occurred_at',
+    })
+    return rows.map(usageEventToDomain)
   }
 }

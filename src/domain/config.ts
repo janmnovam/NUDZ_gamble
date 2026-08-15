@@ -22,10 +22,10 @@ export interface DomainConfig {
   /** Total programme length; day 29 is the final summary, not a study day (doc 02). */
   readonly PROGRAMME_DAYS: number
   /**
-   * How many days after `behavior_date` a check-in stays editable (doc 05 /
+   * How many days after `behaviorDate` a check-in stays editable (doc 05 /
    * `data-model.md`'s `EDIT_WINDOW_DAYS`, float — was left `TBD`). Set equal
    * to `WEEK_LENGTH_DAYS`: editing is allowed anywhere in the still-open
-   * week, no separate day-count cutoff on top of `week_closed` (doc 05's
+   * week, no separate day-count cutoff on top of `weekClosed` (doc 05's
    * default reading — one boundary, not two overlapping ones).
    */
   readonly EDIT_WINDOW_DAYS: number

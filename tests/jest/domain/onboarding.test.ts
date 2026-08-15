@@ -25,11 +25,11 @@ function fakeDeps() {
 }
 
 const baseInput: OnboardingInput = {
-  user_id: 'A001',
-  reference_time_min: 600,
-  reference_stakes_czk: 10_000,
-  limit_time_min: 480,
-  limit_stakes_czk: 8_000,
+  userId: 'A001',
+  referenceTimeMin: 600,
+  referenceStakesCzk: 10_000,
+  limitTimeMin: 480,
+  limitStakesCzk: 8_000,
   coping: [
     { label: 'Jít na 15 minut ven', type: 'default' },
     { label: 'Zavolat bratrovi', type: 'custom' },
@@ -41,11 +41,11 @@ describe('completeOnboarding', () => {
     const { deps, saved } = fakeDeps()
     await completeOnboarding(baseInput, deps)
     expect(saved.profile).toMatchObject({
-      user_id: 'A001',
-      onboarding_completed_at: FIXED_NOW,
-      intervention_start_date: '2026-09-02',
-      reference_time_min: 600,
-      reference_stakes_czk: 10_000,
+      userId: 'A001',
+      onboardingCompletedAt: FIXED_NOW,
+      interventionStartDate: '2026-09-02',
+      referenceTimeMin: 600,
+      referenceStakesCzk: 10_000,
     })
   })
 
@@ -53,13 +53,13 @@ describe('completeOnboarding', () => {
     const { deps, saved } = fakeDeps()
     await completeOnboarding(baseInput, deps)
     expect(saved.limit).toMatchObject({
-      user_id: 'A001',
-      week_no: 1,
-      weekly_limit_time_min: 480,
-      weekly_limit_stakes_czk: 8_000,
-      limit_set_at: FIXED_NOW,
+      userId: 'A001',
+      weekNo: 1,
+      weeklyLimitTimeMin: 480,
+      weeklyLimitStakesCzk: 8_000,
+      limitSetAt: FIXED_NOW,
     })
-    expect(saved.limit?.limit_id).toBeTruthy()
+    expect(saved.limit?.limitId).toBeTruthy()
   })
 
   it('writes coping strategies in order, active, priority 1..n', async () => {
@@ -73,13 +73,13 @@ describe('completeOnboarding', () => {
 
   it('accepts a limit exactly at the 90% cap', async () => {
     const { deps, saved } = fakeDeps()
-    await completeOnboarding({ ...baseInput, limit_time_min: 540, limit_stakes_czk: 9_000 }, deps)
-    expect(saved.limit?.weekly_limit_time_min).toBe(540)
+    await completeOnboarding({ ...baseInput, limitTimeMin: 540, limitStakesCzk: 9_000 }, deps)
+    expect(saved.limit?.weeklyLimitTimeMin).toBe(540)
   })
 
   it('rejects a time limit above the 90% cap and writes nothing', async () => {
     const { deps, saved } = fakeDeps()
-    await expect(completeOnboarding({ ...baseInput, limit_time_min: 541 }, deps)).rejects.toThrow(
+    await expect(completeOnboarding({ ...baseInput, limitTimeMin: 541 }, deps)).rejects.toThrow(
       /time limit/,
     )
     expect(saved.profile).toBeUndefined()
@@ -87,9 +87,9 @@ describe('completeOnboarding', () => {
 
   it('rejects a stakes limit above the 90% cap', async () => {
     const { deps } = fakeDeps()
-    await expect(
-      completeOnboarding({ ...baseInput, limit_stakes_czk: 9_001 }, deps),
-    ).rejects.toThrow(/stakes limit/)
+    await expect(completeOnboarding({ ...baseInput, limitStakesCzk: 9_001 }, deps)).rejects.toThrow(
+      /stakes limit/,
+    )
   })
 
   it('requires at least one coping strategy', async () => {
@@ -103,6 +103,6 @@ describe('completeOnboarding', () => {
     const { deps, saved } = fakeDeps()
     deps.today = { today: () => '2026-09-02' }
     await completeOnboarding(baseInput, deps)
-    expect(saved.profile?.intervention_start_date).toBe('2026-09-03')
+    expect(saved.profile?.interventionStartDate).toBe('2026-09-03')
   })
 })

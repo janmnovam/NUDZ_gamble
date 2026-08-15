@@ -16,11 +16,11 @@ describe('review adapter', () => {
   })
 
   const review: Review = {
-    review_id: 'r-1',
-    user_id: 'A001',
-    review_week_no: 1,
-    review_completed_at: '2026-09-08T09:00:00.000Z',
-    limit_changed: true,
+    reviewId: 'r-1',
+    userId: 'A001',
+    reviewWeekNo: 1,
+    reviewCompletedAt: '2026-09-08T09:00:00.000Z',
+    limitChanged: true,
     incomplete: false,
   }
 
@@ -34,14 +34,14 @@ describe('review adapter', () => {
   })
 
   it('lists a user’s reviews ordered by week', async () => {
-    await data.reviews.save({ ...review, review_id: 'r-2', review_week_no: 2 })
+    await data.reviews.save({ ...review, reviewId: 'r-2', reviewWeekNo: 2 })
     await data.reviews.save(review)
     const list = await data.reviews.listByUser('A001')
-    expect(list.map((r) => r.review_week_no)).toEqual([1, 2])
+    expect(list.map((r) => r.reviewWeekNo)).toEqual([1, 2])
   })
 
   it('enforces one review per (user, week)', async () => {
     await data.reviews.save(review)
-    await expect(data.reviews.save({ ...review, review_id: 'r-dup' })).rejects.toThrow()
+    await expect(data.reviews.save({ ...review, reviewId: 'r-dup' })).rejects.toThrow()
   })
 })

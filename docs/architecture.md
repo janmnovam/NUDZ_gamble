@@ -5,7 +5,7 @@
 Every port lists its contract as **Method · Accepts · Returns · Description**, where
 Accepts/Returns name a definition shown as JSON below the table (`—` = nothing, `?` =
 nullable, `[]` = array). Inbound services speak camelCase DTOs; outbound repositories
-speak the snake_case domain models they store.
+speak the camelCase domain model and map it to the snake_case rows they store.
 
 ## Layers & flow
 
@@ -56,8 +56,9 @@ flowchart TB
 
 ## Model seams — DTO ⟷ Domain ⟷ Entity
 
-One model shape per boundary with a mapper at each seam — identical today, free to
-diverge later without touching the core.
+One model shape per boundary with a mapper at each seam. The domain model is
+camelCase; the storage entity keeps the brief's snake_case column names, so the
+entity ⇄ domain mapper (`src/data/mappers.ts`) does a real field rename.
 
 ```mermaid
 flowchart LR

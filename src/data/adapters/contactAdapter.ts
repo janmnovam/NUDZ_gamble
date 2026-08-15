@@ -1,4 +1,5 @@
 import { type ContactEntity } from '@data/model.ts'
+import { contactToDomain } from '@data/mappers.ts'
 import type { Contact } from '@domain/model.ts'
 import { type ContactRepository } from '@domain/ports.ts'
 
@@ -17,11 +18,13 @@ export class ContactAdapter implements ContactRepository {
     await this.repo.bulkPut([...CONTACTS])
   }
 
-  list(): Promise<Contact[]> {
-    return this.repo.query({ sortBy: 'priority' })
+  async list(): Promise<Contact[]> {
+    const rows = await this.repo.query({ sortBy: 'priority' })
+    return rows.map(contactToDomain)
   }
 
-  get(contactId: string): Promise<Contact | undefined> {
-    return this.repo.get(contactId)
+  async get(contactId: string): Promise<Contact | undefined> {
+    const entity = await this.repo.get(contactId)
+    return entity && contactToDomain(entity)
   }
 }

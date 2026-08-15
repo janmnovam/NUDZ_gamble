@@ -1,4 +1,5 @@
 import { type CheckInEntity } from '@data/model.ts'
+import { checkInToDomain, checkInToEntity } from '@data/mappers.ts'
 import type { CheckIn, UserId } from '@domain/model.ts'
 import { type CheckInRepository } from '@domain/ports.ts'
 
@@ -13,14 +14,19 @@ export class CheckInAdapter implements CheckInRepository {
   }
 
   async save(checkIn: CheckIn): Promise<void> {
-    await this.repo.put(checkIn)
+    await this.repo.put(checkInToEntity(checkIn))
   }
 
-  get(checkInId: string): Promise<CheckIn | undefined> {
-    return this.repo.get(checkInId)
+  async get(checkInId: string): Promise<CheckIn | undefined> {
+    const entity = await this.repo.get(checkInId)
+    return entity && checkInToDomain(entity)
   }
 
-  listByUser(userId: UserId): Promise<CheckIn[]> {
-    return this.repo.query({ where: { field: 'user_id', equals: userId }, sortBy: 'behavior_date' })
+  async listByUser(userId: UserId): Promise<CheckIn[]> {
+    const rows = await this.repo.query({
+      where: { field: 'user_id', equals: userId },
+      sortBy: 'behavior_date',
+    })
+    return rows.map(checkInToDomain)
   }
 }

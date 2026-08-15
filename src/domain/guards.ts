@@ -13,61 +13,61 @@ export type CheckInEditability = 'allowed' | 'locked_week' | 'future_date'
 
 /**
  * Doc 09: a week is closed by its completed review, not by the calendar
- * (the "ordering trap") — pass `week_closed` in via `IsWeekClosed`, don't
+ * (the "ordering trap") — pass `weekClosed` in via `IsWeekClosed`, don't
  * derive it from the day number here. No separate day-count cutoff on top:
  * `config.ts`'s `EDIT_WINDOW_DAYS` is set equal to `WEEK_LENGTH_DAYS`, so
- * `week_closed` alone already enforces it.
+ * `weekClosed` alone already enforces it.
  */
 export type CanEditCheckIn = (params: {
-  behavior_date: ISODate
+  behaviorDate: ISODate
   today: ISODate
-  week_closed: boolean
+  weekClosed: boolean
 }) => CheckInEditability
 
 /**
  * Future/today first (a day that isn't over yet can't be checked in), then a
  * review-closed week, else editable. ISO dates compare lexicographically.
  */
-export const canEditCheckIn: CanEditCheckIn = ({ behavior_date, today, week_closed }) => {
-  if (behavior_date >= today) return 'future_date'
-  if (week_closed) return 'locked_week'
+export const canEditCheckIn: CanEditCheckIn = ({ behaviorDate, today, weekClosed }) => {
+  if (behaviorDate >= today) return 'future_date'
+  if (weekClosed) return 'locked_week'
   return 'allowed'
 }
 
 /** `isWeekClosed(N) = review_for(N).completed` — a review row exists for that week. */
-export type IsWeekClosed = (week_no: WeekNo, reviews: readonly Review[]) => boolean
+export type IsWeekClosed = (weekNo: WeekNo, reviews: readonly Review[]) => boolean
 
-export const isWeekClosed: IsWeekClosed = (week_no, reviews) =>
-  reviews.some((r) => r.review_week_no === week_no)
+export const isWeekClosed: IsWeekClosed = (weekNo, reviews) =>
+  reviews.some((r) => r.reviewWeekNo === weekNo)
 
 /** Doc 09: review N opens once day 7N has elapsed, and stays open until it's completed. */
 export type CanReview = (params: {
-  week_no: WeekNo
-  week_elapsed: boolean
-  already_reviewed: boolean
+  weekNo: WeekNo
+  weekElapsed: boolean
+  alreadyReviewed: boolean
 }) => boolean
 
-export const canReview: CanReview = ({ week_elapsed, already_reviewed }) =>
-  week_elapsed && !already_reviewed
+export const canReview: CanReview = ({ weekElapsed, alreadyReviewed }) =>
+  weekElapsed && !alreadyReviewed
 
 /** Doc 08: exactly one primary call-to-action, resolved by a fixed priority order. */
 export type PendingAction = 'final_summary' | 'review_available' | 'checkin_due' | 'none'
 
 /** Priority: `final_summary > review_available > checkin_due > none`. */
 export type ResolvePendingAction = (params: {
-  in_final_summary: boolean
-  reviewable_weeks: readonly WeekNo[]
-  checkin_due: boolean
+  inFinalSummary: boolean
+  reviewableWeeks: readonly WeekNo[]
+  checkinDue: boolean
 }) => PendingAction
 
 export const resolvePendingAction: ResolvePendingAction = ({
-  in_final_summary,
-  reviewable_weeks,
-  checkin_due,
+  inFinalSummary,
+  reviewableWeeks,
+  checkinDue,
 }) => {
-  if (in_final_summary) return 'final_summary'
-  if (reviewable_weeks.length > 0) return 'review_available'
-  if (checkin_due) return 'checkin_due'
+  if (inFinalSummary) return 'final_summary'
+  if (reviewableWeeks.length > 0) return 'review_available'
+  if (checkinDue) return 'checkin_due'
   return 'none'
 }
 
@@ -80,9 +80,9 @@ export const resolvePendingAction: ResolvePendingAction = ({
  */
 export interface LimitAdjustmentView {
   suggested: number
-  suggested_pct: number
+  suggestedPct: number
   max: number
-  max_pct: number
+  maxPct: number
   allowed: boolean
 }
 
@@ -95,12 +95,12 @@ export const evaluateLimitAdjustment = (
   { reference, proposed }: { reference: number; proposed: number },
   config: DomainConfig = DEFAULT_CONFIG,
 ): LimitAdjustmentView => {
-  const { suggested_pct, max_pct } = limitPercentView(config)
+  const { suggestedPct, maxPct } = limitPercentView(config)
   return {
     suggested: suggestLimit(reference, config),
-    suggested_pct,
+    suggestedPct,
     max: maxLimit(reference, config),
-    max_pct,
+    maxPct,
     allowed: isWithinCap(proposed, reference, config),
   }
 }

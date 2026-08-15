@@ -1,4 +1,5 @@
 import { type ProfileEntity } from '@data/model.ts'
+import { profileToDomain, profileToEntity } from '@data/mappers.ts'
 import { type ProfileRepository } from '@domain/ports.ts'
 
 import { type AppDatabase, type Repository } from '../db'
@@ -14,10 +15,11 @@ export class ProfileAdapter implements ProfileRepository {
   }
 
   async save(profile: Profile): Promise<void> {
-    await this.repo.put(profile)
+    await this.repo.put(profileToEntity(profile))
   }
 
-  get(userId: UserId): Promise<Profile | undefined> {
-    return this.repo.get(userId)
+  async get(userId: UserId): Promise<Profile | undefined> {
+    const entity = await this.repo.get(userId)
+    return entity && profileToDomain(entity)
   }
 }

@@ -1,4 +1,5 @@
 import { type AppDatabase } from '@data/db.ts'
+import { copingToEntity, limitToEntity, profileToEntity } from '@data/mappers.ts'
 import { type CopingStrategy, type Limit, type Profile } from '@domain/model.ts'
 import { type OnboardingRepository } from '@domain/ports.ts'
 
@@ -22,9 +23,9 @@ export class OnboardingAdapter implements OnboardingRepository {
       this.db.limits,
       this.db.coping_strategy,
       async () => {
-        await this.db.profile.put(profile)
-        await this.db.limits.add(limit)
-        await this.db.coping_strategy.bulkAdd(coping)
+        await this.db.profile.put(profileToEntity(profile))
+        await this.db.limits.add(limitToEntity(limit))
+        await this.db.coping_strategy.bulkAdd(coping.map(copingToEntity))
       },
     )
   }

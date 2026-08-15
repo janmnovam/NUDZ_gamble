@@ -1,4 +1,5 @@
 import { type CheckInEditEntity } from '@data/model.ts'
+import { checkInEditToDomain, checkInEditToEntity } from '@data/mappers.ts'
 import type { CheckInEdit } from '@domain/model.ts'
 import { type CheckInEditRepository } from '@domain/ports.ts'
 
@@ -13,17 +14,19 @@ export class CheckInEditAdapter implements CheckInEditRepository {
   }
 
   async save(edit: CheckInEdit): Promise<void> {
-    await this.repo.put(edit)
+    await this.repo.put(checkInEditToEntity(edit))
   }
 
-  get(checkInEditId: string): Promise<CheckInEdit | undefined> {
-    return this.repo.get(checkInEditId)
+  async get(checkInEditId: string): Promise<CheckInEdit | undefined> {
+    const entity = await this.repo.get(checkInEditId)
+    return entity && checkInEditToDomain(entity)
   }
 
-  listByCheckIn(checkInId: string): Promise<CheckInEdit[]> {
-    return this.repo.query({
+  async listByCheckIn(checkInId: string): Promise<CheckInEdit[]> {
+    const rows = await this.repo.query({
       where: { field: 'check_in_id', equals: checkInId },
       sortBy: 'edited_at',
     })
+    return rows.map(checkInEditToDomain)
   }
 }

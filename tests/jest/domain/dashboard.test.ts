@@ -6,35 +6,35 @@ const USER_ID = 'A001'
 
 function checkIn(overrides: Partial<CheckIn>): CheckIn {
   return {
-    check_in_id: `c-${overrides.behavior_date ?? ''}`,
-    user_id: USER_ID,
-    week_no: 1,
+    checkInId: `c-${overrides.behaviorDate ?? ''}`,
+    userId: USER_ID,
+    weekNo: 1,
     played: true,
-    winnings_czk: 0,
-    submitted_at: '2026-09-01T08:00:00+02:00',
-    updated_at: null,
-    time_min: 0,
-    stakes_czk: 0,
-    behavior_date: '2026-09-01',
+    winningsCzk: 0,
+    submittedAt: '2026-09-01T08:00:00+02:00',
+    updatedAt: null,
+    timeMin: 0,
+    stakesCzk: 0,
+    behaviorDate: '2026-09-01',
     ...overrides,
   }
 }
 
 function fakeDeps(params: { checkIns: CheckIn[]; today: string }): DashboardDeps {
   const profile: Profile = {
-    user_id: USER_ID,
-    onboarding_completed_at: '2026-08-31T21:30:00+02:00',
-    intervention_start_date: '2026-09-01',
-    reference_time_min: 600,
-    reference_stakes_czk: 10_000,
+    userId: USER_ID,
+    onboardingCompletedAt: '2026-08-31T21:30:00+02:00',
+    interventionStartDate: '2026-09-01',
+    referenceTimeMin: 600,
+    referenceStakesCzk: 10_000,
   }
   const limit: Limit = {
-    limit_id: 'l1',
-    user_id: USER_ID,
-    week_no: 1,
-    weekly_limit_time_min: 480,
-    weekly_limit_stakes_czk: 8_000,
-    limit_set_at: '2026-08-31T21:30:00+02:00',
+    limitId: 'l1',
+    userId: USER_ID,
+    weekNo: 1,
+    weeklyLimitTimeMin: 480,
+    weeklyLimitStakesCzk: 8_000,
+    limitSetAt: '2026-08-31T21:30:00+02:00',
   }
   const profileRepo: ProfileRepository = {
     get: (userId) => Promise.resolve(userId === USER_ID ? profile : undefined),
@@ -50,7 +50,7 @@ function fakeDeps(params: { checkIns: CheckIn[]; today: string }): DashboardDeps
     save: () => Promise.resolve(),
   }
   return {
-    user_id: USER_ID,
+    userId: USER_ID,
     profileRepo,
     limitRepo,
     checkInRepo,
@@ -61,30 +61,30 @@ function fakeDeps(params: { checkIns: CheckIn[]; today: string }): DashboardDeps
 describe('buildDayCell', () => {
   it('carries played/time/stakes only for completed or backfilled cells', () => {
     const record = checkIn({
-      behavior_date: '2026-09-02',
-      submitted_at: '2026-09-03T08:00:00+02:00',
-      time_min: 60,
-      stakes_czk: 500,
+      behaviorDate: '2026-09-02',
+      submittedAt: '2026-09-03T08:00:00+02:00',
+      timeMin: 60,
+      stakesCzk: 500,
     })
     expect(
-      buildDayCell({ study_day: 2, date: '2026-09-02', today: '2026-09-04', check_in: record }),
+      buildDayCell({ studyDay: 2, date: '2026-09-02', today: '2026-09-04', checkIn: record }),
     ).toEqual({
-      study_day: 2,
+      studyDay: 2,
       date: '2026-09-02',
       state: 'completed',
       played: true,
-      time_min: 60,
-      stakes_czk: 500,
+      timeMin: 60,
+      stakesCzk: 500,
     })
   })
 
   it('is a bare cell (no usage fields) for missing and future days', () => {
     expect(
-      buildDayCell({ study_day: 3, date: '2026-09-03', today: '2026-09-04', check_in: undefined }),
-    ).toEqual({ study_day: 3, date: '2026-09-03', state: 'missing' })
+      buildDayCell({ studyDay: 3, date: '2026-09-03', today: '2026-09-04', checkIn: undefined }),
+    ).toEqual({ studyDay: 3, date: '2026-09-03', state: 'missing' })
     expect(
-      buildDayCell({ study_day: 5, date: '2026-09-05', today: '2026-09-04', check_in: undefined }),
-    ).toEqual({ study_day: 5, date: '2026-09-05', state: 'future' })
+      buildDayCell({ studyDay: 5, date: '2026-09-05', today: '2026-09-04', checkIn: undefined }),
+    ).toEqual({ studyDay: 5, date: '2026-09-05', state: 'future' })
   })
 })
 
@@ -94,33 +94,33 @@ describe('buildDashboardVM', () => {
       today: '2026-09-05',
       checkIns: [
         checkIn({
-          behavior_date: '2026-09-01',
-          submitted_at: '2026-09-02T08:00:00+02:00',
-          time_min: 60,
-          stakes_czk: 500,
+          behaviorDate: '2026-09-01',
+          submittedAt: '2026-09-02T08:00:00+02:00',
+          timeMin: 60,
+          stakesCzk: 500,
         }),
         // 2026-09-02 deliberately has no record — the missing-record case.
         checkIn({
-          behavior_date: '2026-09-03',
-          submitted_at: '2026-09-04T08:00:00+02:00',
-          time_min: 150,
-          stakes_czk: 3_000,
+          behaviorDate: '2026-09-03',
+          submittedAt: '2026-09-04T08:00:00+02:00',
+          timeMin: 150,
+          stakesCzk: 3_000,
         }),
         checkIn({
-          behavior_date: '2026-09-04',
-          submitted_at: '2026-09-05T08:00:00+02:00',
-          time_min: 140,
-          stakes_czk: 3_000,
+          behaviorDate: '2026-09-04',
+          submittedAt: '2026-09-05T08:00:00+02:00',
+          timeMin: 140,
+          stakesCzk: 3_000,
         }),
       ],
     })
 
     const vm = await buildDashboardVM(deps)
 
-    expect(vm.study_day).toBe(5)
-    expect(vm.week_no).toBe(1)
+    expect(vm.studyDay).toBe(5)
+    expect(vm.weekNo).toBe(1)
     expect(vm.days).toHaveLength(7)
-    expect(vm.missing_days).toEqual(['2026-09-02'])
+    expect(vm.missingDays).toEqual(['2026-09-02'])
     expect(vm.time).toEqual({ used: 350, limit: 480, pct: 73, status: 'OK', remaining: 130 })
     expect(vm.stakes).toEqual({
       used: 6_500,
@@ -129,18 +129,18 @@ describe('buildDashboardVM', () => {
       status: 'POZOR',
       remaining: 1_500,
     })
-    expect(vm.overall_status).toBe('POZOR')
-    expect(vm.pending_action).toBe('checkin_due')
+    expect(vm.overallStatus).toBe('POZOR')
+    expect(vm.pendingAction).toBe('checkin_due')
   })
 
   it('clamps to week 1 before day 1, reading as all-future rather than a broken 0/0 week', async () => {
     const deps = fakeDeps({ today: '2026-08-31', checkIns: [] })
     const vm = await buildDashboardVM(deps)
 
-    expect(vm.study_day).toBeLessThanOrEqual(0)
-    expect(vm.week_no).toBe(1)
+    expect(vm.studyDay).toBeLessThanOrEqual(0)
+    expect(vm.weekNo).toBe(1)
     expect(vm.days.every((d) => d.state === 'future')).toBe(true)
-    expect(vm.missing_days).toEqual([])
-    expect(vm.pending_action).toBe('none')
+    expect(vm.missingDays).toEqual([])
+    expect(vm.pendingAction).toBe('none')
   })
 })

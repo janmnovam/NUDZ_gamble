@@ -5,7 +5,7 @@
  * `TodayClock` is the only way domain code ever learns "today"; nothing in
  * this layer calls `new Date()` or `Date.now()` directly. It's named
  * distinctly from `Clock` in `ports.ts` (`() => ISOTimestamp`, used to stamp
- * `created_at`/`submitted_at` on writes) — the two answer different
+ * `createdAt`/`submittedAt` on writes) — the two answer different
  * questions and must never be conflated: a record timestamp is a UTC
  * instant, "today" is a local calendar date (doc 02's timezone warning is
  * exactly about not blurring these two).
@@ -37,7 +37,7 @@ export type StudyDay = number
 export type WeekNo = number
 
 export interface StudyCalendar {
-  /** `(date - intervention_start_date) + 1`, whole calendar days. */
+  /** `(date - interventionStartDate) + 1`, whole calendar days. */
   studyDay(date: ISODate): StudyDay
   /** `ceil(day / 7)`. Throws on `day <= 0` — there is no week 0; callers must guard before calling. */
   weekNo(day: StudyDay): WeekNo
@@ -91,13 +91,13 @@ export function nextDate(date: ISODate): ISODate {
   return fromUtcMs(toUtcMs(date) + MS_PER_DAY)
 }
 
-/** Pure implementation of `StudyCalendar` for one user's `intervention_start_date`. */
+/** Pure implementation of `StudyCalendar` for one user's `interventionStartDate`. */
 export function createStudyCalendar(
-  intervention_start_date: ISODate,
+  interventionStartDate: ISODate,
   clock: TodayClock,
   config: DomainConfig = DEFAULT_CONFIG,
 ): StudyCalendar {
-  const startMs = toUtcMs(intervention_start_date)
+  const startMs = toUtcMs(interventionStartDate)
   const { WEEK_LENGTH_DAYS, PROGRAMME_DAYS } = config
 
   const studyDay = (date: ISODate): StudyDay =>

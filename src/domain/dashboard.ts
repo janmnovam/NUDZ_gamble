@@ -21,27 +21,27 @@ export interface AxisView {
 }
 
 export interface DayCell {
-  study_day: StudyDay
+  studyDay: StudyDay
   date: ISODate
   state: DayState
   /** Present for `completed` / `backfilled` cells only. */
   played?: boolean
-  time_min?: number
-  stakes_czk?: number
+  timeMin?: number
+  stakesCzk?: number
 }
 
 export interface DashboardVM {
-  study_day: StudyDay
-  week_no: WeekNo
-  limits: { time_min: number; stakes_czk: number }
+  studyDay: StudyDay
+  weekNo: WeekNo
+  limits: { timeMin: number; stakesCzk: number }
   time: AxisView
   stakes: AxisView
-  overall_status: Status
+  overallStatus: Status
   /** Always 7 entries: the current week's days. */
   days: DayCell[]
   /** Only days ≤ `today - 1` — future days are "not yet due", never missing. */
-  missing_days: ISODate[]
-  pending_action: PendingAction
+  missingDays: ISODate[]
+  pendingAction: PendingAction
 }
 
 export type BuildDashboardVM = () => DashboardVM
@@ -52,24 +52,24 @@ export type BuildDashboardVM = () => DashboardVM
  * loops over as many study days as it needs; this only ever knows about one.
  */
 export function buildDayCell(params: {
-  study_day: StudyDay
+  studyDay: StudyDay
   date: ISODate
   today: ISODate
-  check_in: CheckIn | undefined
+  checkIn: CheckIn | undefined
 }): DayCell {
-  const { study_day, date, today, check_in } = params
-  const state = dayStateOf({ behavior_date: date, today, check_in })
-  if (check_in && (state === 'completed' || state === 'backfilled')) {
+  const { studyDay, date, today, checkIn } = params
+  const state = dayStateOf({ behaviorDate: date, today, checkIn })
+  if (checkIn && (state === 'completed' || state === 'backfilled')) {
     return {
-      study_day,
+      studyDay,
       date,
       state,
-      played: check_in.played,
-      time_min: check_in.time_min,
-      stakes_czk: check_in.stakes_czk,
+      played: checkIn.played,
+      timeMin: checkIn.timeMin,
+      stakesCzk: checkIn.stakesCzk,
     }
   }
-  return { study_day, date, state }
+  return { studyDay, date, state }
 }
 
 /**
@@ -90,7 +90,7 @@ function axisView(used: number, limit: number, config: DomainConfig): AxisView {
 }
 
 export interface DashboardDeps {
-  user_id: UserId
+  userId: UserId
   profileRepo: ProfileRepository
   limitRepo: LimitRepository
   checkInRepo: CheckInRepository
@@ -106,56 +106,56 @@ export interface DashboardDeps {
  */
 export async function buildDashboardVM(deps: DashboardDeps): Promise<DashboardVM> {
   const config = deps.config ?? DEFAULT_CONFIG
-  const profile = await deps.profileRepo.get(deps.user_id)
+  const profile = await deps.profileRepo.get(deps.userId)
   if (!profile) {
-    throw new Error(`buildDashboardVM: no profile for user ${deps.user_id}`)
+    throw new Error(`buildDashboardVM: no profile for user ${deps.userId}`)
   }
 
-  const calendar = createStudyCalendar(profile.intervention_start_date, deps.today, config)
+  const calendar = createStudyCalendar(profile.interventionStartDate, deps.today, config)
   const today = deps.today.today()
-  const study_day = calendar.currentDay()
+  const studyDay = calendar.currentDay()
   // Before day 1, currentDay() is <= 0 and weekNo() throws — clamp to week 1
   // (its days all classify as `future` against `today`, so this reads as the
   // doc-08 "waiting state", not a divide-by-zero week).
-  const week_no = calendar.weekNo(Math.max(study_day, 1))
+  const weekNo = calendar.weekNo(Math.max(studyDay, 1))
 
-  const limits = await deps.limitRepo.listByUser(deps.user_id)
-  const limit = limits.find((l) => l.week_no === week_no)
+  const limits = await deps.limitRepo.listByUser(deps.userId)
+  const limit = limits.find((l) => l.weekNo === weekNo)
   if (!limit) {
-    throw new Error(`buildDashboardVM: no limit set for week ${String(week_no)}`)
+    throw new Error(`buildDashboardVM: no limit set for week ${String(weekNo)}`)
   }
 
-  const checkIns = await deps.checkInRepo.listByUser(deps.user_id)
-  const checkInsByDate = new Map(checkIns.map((c) => [c.behavior_date, c]))
+  const checkIns = await deps.checkInRepo.listByUser(deps.userId)
+  const checkInsByDate = new Map(checkIns.map((c) => [c.behaviorDate, c]))
 
   const days: DayCell[] = []
-  for (let day = calendar.firstDay(week_no); day <= calendar.lastDay(week_no); day += 1) {
+  for (let day = calendar.firstDay(weekNo); day <= calendar.lastDay(weekNo); day += 1) {
     const date = calendar.dateOf(day)
-    days.push(buildDayCell({ study_day: day, date, today, check_in: checkInsByDate.get(date) }))
+    days.push(buildDayCell({ studyDay: day, date, today, checkIn: checkInsByDate.get(date) }))
   }
 
-  const missing_days = days.filter((d) => d.state === 'missing').map((d) => d.date)
-  const used_time_min = days.reduce((sum, d) => sum + (d.time_min ?? 0), 0)
-  const used_stakes_czk = days.reduce((sum, d) => sum + (d.stakes_czk ?? 0), 0)
+  const missingDays = days.filter((d) => d.state === 'missing').map((d) => d.date)
+  const usedTimeMin = days.reduce((sum, d) => sum + (d.timeMin ?? 0), 0)
+  const usedStakesCzk = days.reduce((sum, d) => sum + (d.stakesCzk ?? 0), 0)
 
-  const time = axisView(used_time_min, limit.weekly_limit_time_min, config)
-  const stakes = axisView(used_stakes_czk, limit.weekly_limit_stakes_czk, config)
+  const time = axisView(usedTimeMin, limit.weeklyLimitTimeMin, config)
+  const stakes = axisView(usedStakesCzk, limit.weeklyLimitStakesCzk, config)
 
   return {
-    study_day,
-    week_no,
-    limits: { time_min: limit.weekly_limit_time_min, stakes_czk: limit.weekly_limit_stakes_czk },
+    studyDay,
+    weekNo,
+    limits: { timeMin: limit.weeklyLimitTimeMin, stakesCzk: limit.weeklyLimitStakesCzk },
     time,
     stakes,
-    overall_status: worseStatus(time.status, stakes.status),
+    overallStatus: worseStatus(time.status, stakes.status),
     days,
-    missing_days,
-    pending_action: resolvePendingAction({
-      in_final_summary: calendar.isFinalSummary(),
+    missingDays,
+    pendingAction: resolvePendingAction({
+      inFinalSummary: calendar.isFinalSummary(),
       // ReviewRepository/ReviewService don't exist yet (architecture.md TODO
       // #4/#7) — always "none due" until that's wired in.
-      reviewable_weeks: [],
-      checkin_due: missing_days.length > 0,
+      reviewableWeeks: [],
+      checkinDue: missingDays.length > 0,
     }),
   }
 }

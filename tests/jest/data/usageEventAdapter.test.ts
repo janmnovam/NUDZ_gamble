@@ -1,4 +1,4 @@
-import { type UsageEventEntity } from '@data/model.ts'
+import type { UsageEvent } from '@domain/model.ts'
 import { AppDatabase, createDataLayer, type DataLayer } from '@/core'
 
 describe('UsageEventAdapter', () => {
@@ -15,11 +15,11 @@ describe('UsageEventAdapter', () => {
     await db.delete()
   })
 
-  const opened: UsageEventEntity = {
-    usage_event_id: 'ue-1',
-    user_id: 'A001',
-    event_type: 'app_opened',
-    occurred_at: '2026-09-02T08:00:00.000Z',
+  const opened: UsageEvent = {
+    usageEventId: 'ue-1',
+    userId: 'A001',
+    eventType: 'app_opened',
+    occurredAt: '2026-09-02T08:00:00.000Z',
     screen: null,
     detail: null,
   }
@@ -29,15 +29,15 @@ describe('UsageEventAdapter', () => {
     await expect(data.usageEvents.get('ue-1')).resolves.toEqual(opened)
   })
 
-  it('lists a user’s events ordered by occurred_at', async () => {
+  it('lists a user’s events ordered by occurredAt', async () => {
     await data.usageEvents.save({
       ...opened,
-      usage_event_id: 'ue-2',
-      occurred_at: '2026-09-03T20:00:00.000Z',
+      usageEventId: 'ue-2',
+      occurredAt: '2026-09-03T20:00:00.000Z',
     })
     await data.usageEvents.save(opened)
     const list = await data.usageEvents.listByUser('A001')
-    expect(list.map((e) => e.occurred_at)).toEqual([
+    expect(list.map((e) => e.occurredAt)).toEqual([
       '2026-09-02T08:00:00.000Z',
       '2026-09-03T20:00:00.000Z',
     ])
@@ -45,15 +45,15 @@ describe('UsageEventAdapter', () => {
 
   it('records a review milestone with a day detail', async () => {
     await data.usageEvents.save({
-      usage_event_id: 'ue-3',
-      user_id: 'A001',
-      event_type: 'review_reached',
-      occurred_at: '2026-09-09T09:00:00.000Z',
+      usageEventId: 'ue-3',
+      userId: 'A001',
+      eventType: 'review_reached',
+      occurredAt: '2026-09-09T09:00:00.000Z',
       screen: 'review',
       detail: JSON.stringify({ day: 7 }),
     })
     const event = await data.usageEvents.get('ue-3')
-    expect(event?.event_type).toBe('review_reached')
+    expect(event?.eventType).toBe('review_reached')
     expect(JSON.parse(event?.detail ?? '{}')).toEqual({ day: 7 })
   })
 })

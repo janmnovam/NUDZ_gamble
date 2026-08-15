@@ -36,7 +36,7 @@ import type {
 } from '@domain/ports.ts'
 
 // `TodayClock`/`StudyCalendar` aren't part of `DataLayer`: the study
-// calendar needs a user's `intervention_start_date`, which isn't known
+// calendar needs a user's `interventionStartDate`, which isn't known
 // until a `Profile` is loaded, so it's built per-user at the call site
 // instead of once at composition-root startup.
 
@@ -88,3 +88,6 @@ export {
 export { newId } from '@data/ids.ts'
 export { COPING_STRATEGY_DEFAULTS } from '@data/seeds/copingDefaults.ts'
 export { CONTACTS } from '@data/seeds/contacts.ts'
+
+export { createApp, type App } from '@/core/app.ts'
+export type { OnboardingService } from '@/app/ports/onboardingService.ts'

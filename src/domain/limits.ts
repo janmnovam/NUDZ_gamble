@@ -27,13 +27,13 @@ export const isWithinCap = (
  * onboarding/review slider labels them without re-multiplying by 100 itself.
  */
 export interface LimitPercentView {
-  readonly suggested_pct: number
-  readonly max_pct: number
+  readonly suggestedPct: number
+  readonly maxPct: number
 }
 
 export const limitPercentView = (config: DomainConfig = DEFAULT_CONFIG): LimitPercentView => ({
-  suggested_pct: Math.round(config.DEFAULT_LIMIT_PCT * 100),
-  max_pct: Math.round(config.MAX_LIMIT_PCT * 100),
+  suggestedPct: Math.round(config.DEFAULT_LIMIT_PCT * 100),
+  maxPct: Math.round(config.MAX_LIMIT_PCT * 100),
 })
 
 /**

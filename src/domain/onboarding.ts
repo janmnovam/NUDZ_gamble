@@ -16,12 +16,12 @@ export interface OnboardingCopingInput {
 }
 
 export interface OnboardingInput {
-  user_id: UserId
-  reference_time_min: number
-  reference_stakes_czk: number
+  userId: UserId
+  referenceTimeMin: number
+  referenceStakesCzk: number
   /** User's chosen (already adjusted) weekly limits. */
-  limit_time_min: number
-  limit_stakes_czk: number
+  limitTimeMin: number
+  limitStakesCzk: number
   /** At least one required. */
   coping: readonly OnboardingCopingInput[]
 }
@@ -47,41 +47,41 @@ export async function completeOnboarding(
   if (input.coping.length < 1) {
     throw new Error('onboarding: at least one coping strategy is required')
   }
-  if (!isWithinCap(input.limit_time_min, input.reference_time_min)) {
+  if (!isWithinCap(input.limitTimeMin, input.referenceTimeMin)) {
     throw new Error('onboarding: time limit exceeds the 90% cap')
   }
-  if (!isWithinCap(input.limit_stakes_czk, input.reference_stakes_czk)) {
+  if (!isWithinCap(input.limitStakesCzk, input.referenceStakesCzk)) {
     throw new Error('onboarding: stakes limit exceeds the 90% cap')
   }
 
   const at = deps.now()
 
   const profile: Profile = {
-    user_id: input.user_id,
-    onboarding_completed_at: at,
-    intervention_start_date: nextDate(deps.today.today()),
-    reference_time_min: input.reference_time_min,
-    reference_stakes_czk: input.reference_stakes_czk,
+    userId: input.userId,
+    onboardingCompletedAt: at,
+    interventionStartDate: nextDate(deps.today.today()),
+    referenceTimeMin: input.referenceTimeMin,
+    referenceStakesCzk: input.referenceStakesCzk,
   }
 
   const limit: Limit = {
-    limit_id: deps.newId(),
-    user_id: input.user_id,
-    week_no: 1,
-    weekly_limit_time_min: input.limit_time_min,
-    weekly_limit_stakes_czk: input.limit_stakes_czk,
-    limit_set_at: at,
+    limitId: deps.newId(),
+    userId: input.userId,
+    weekNo: 1,
+    weeklyLimitTimeMin: input.limitTimeMin,
+    weeklyLimitStakesCzk: input.limitStakesCzk,
+    limitSetAt: at,
   }
 
   const coping: CopingStrategy[] = input.coping.map((c, i) => ({
-    coping_strategy_id: deps.newId(),
-    user_id: input.user_id,
+    copingStrategyId: deps.newId(),
+    userId: input.userId,
     label: c.label,
     type: c.type,
     priority: i + 1,
     active: true,
-    created_at: at,
-    updated_at: null,
+    createdAt: at,
+    updatedAt: null,
   }))
 
   await deps.repo.save(profile, limit, coping)

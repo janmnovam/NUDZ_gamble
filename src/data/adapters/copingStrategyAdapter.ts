@@ -1,4 +1,5 @@
 import { type CopingStrategyEntity } from '@data/model.ts'
+import { copingDefaultToDomain, copingToDomain, copingToEntity } from '@data/mappers.ts'
 import type {
   CopingStrategy,
   CopingStrategyDefault,
@@ -27,21 +28,21 @@ export class CopingStrategyAdapter implements CopingStrategyRepository {
   }
 
   loadDefaults(): Promise<CopingStrategyDefault[]> {
-    return Promise.resolve([...COPING_STRATEGY_DEFAULTS])
+    return Promise.resolve(COPING_STRATEGY_DEFAULTS.map(copingDefaultToDomain))
   }
 
   async create(input: CopingStrategyInput): Promise<CopingStrategy> {
     const strategy: CopingStrategy = {
-      coping_strategy_id: newId(),
-      user_id: input.user_id,
+      copingStrategyId: newId(),
+      userId: input.userId,
       label: input.label,
       type: input.type,
       priority: input.priority,
       active: input.active ?? true,
-      created_at: this.now(),
-      updated_at: null,
+      createdAt: this.now(),
+      updatedAt: null,
     }
-    await this.repo.put(strategy)
+    await this.repo.put(copingToEntity(strategy))
     return strategy
   }
 
@@ -53,7 +54,11 @@ export class CopingStrategyAdapter implements CopingStrategyRepository {
     await this.repo.put({ ...existing, active, updated_at: this.now() })
   }
 
-  listByUser(userId: UserId): Promise<CopingStrategy[]> {
-    return this.repo.query({ where: { field: 'user_id', equals: userId }, sortBy: 'priority' })
+  async listByUser(userId: UserId): Promise<CopingStrategy[]> {
+    const rows = await this.repo.query({
+      where: { field: 'user_id', equals: userId },
+      sortBy: 'priority',
+    })
+    return rows.map(copingToDomain)
   }
 }

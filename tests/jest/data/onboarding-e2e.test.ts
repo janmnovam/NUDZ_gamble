@@ -6,11 +6,11 @@ const NOW = '2026-09-01T22:30:00.000Z'
 const TODAY = '2026-09-01'
 
 const input: OnboardingInput = {
-  user_id: 'A001',
-  reference_time_min: 600,
-  reference_stakes_czk: 10_000,
-  limit_time_min: 480,
-  limit_stakes_czk: 8_000,
+  userId: 'A001',
+  referenceTimeMin: 600,
+  referenceStakesCzk: 10_000,
+  limitTimeMin: 480,
+  limitStakesCzk: 8_000,
   coping: [{ label: 'Jít na 15 minut ven', type: 'default' }],
 }
 
@@ -36,12 +36,12 @@ describe('onboarding end to end', () => {
     })
 
     const profile = await data.profiles.get('A001')
-    expect(profile?.intervention_start_date).toBe('2026-09-02')
+    expect(profile?.interventionStartDate).toBe('2026-09-02')
 
     const limits = await data.limits.listByUser('A001')
     expect(limits).toHaveLength(1)
-    expect(limits[0]?.week_no).toBe(1)
-    expect(limits[0]?.weekly_limit_stakes_czk).toBe(8_000)
+    expect(limits[0]?.weekNo).toBe(1)
+    expect(limits[0]?.weeklyLimitStakesCzk).toBe(8_000)
 
     const strategies = await data.copingStrategies.listByUser('A001')
     expect(strategies).toHaveLength(1)
