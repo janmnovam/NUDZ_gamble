@@ -161,14 +161,21 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Known gaps
 
-- **Limits for weeks 2–4 exist only once the matching review is completed** — `completeReview`
-  is what writes the next week's limit, so a dashboard that runs past day 7 without a review
-  fails with `no limit set for week N` (`src/domain/dashboard.ts`).
-- **`reviewable_weeks` is hardcoded empty** in `buildDashboardVM`, so the dashboard can never
-  resolve `pendingAction` to `review_available` on its own. `ReviewService` exists — this is
-  wiring, not missing logic.
+The full, ranked list with owners and next steps is
+[docs/handover.md](docs/handover.md) — kept in one place so it stays true. The
+headlines:
+
+- **`usage_event` is never written.** The store, adapter and port exist, but nothing
+  emits a row. The brief marks this log required, so it is the one gap that is not a
+  deliberate simplification.
+- **`reviewable_weeks` is hardcoded empty** in `buildDashboardVM`, so the dashboard can
+  never resolve `pendingAction` to `review_available` on its own. Wiring, not missing
+  logic.
 - **Reminders fire on a single hardcoded slot** — `REMINDER_TIMES` is `['15:30']`, a demo
   simplification standing in for a notification-time setting the user can change.
+- **Seed data is dev-only** — `window.__seed` is behind `import.meta.env.DEV`, so the
+  deployed build cannot load a scenario. The time machine (day/time jump, reset) does
+  work in production.
 - Playwright's `mobile-safari` project needs `npx playwright install webkit`; only
   Chromium was installed and exercised so far.
 

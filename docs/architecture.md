@@ -1294,14 +1294,22 @@ domain code is touched or mocked.
 Most of the domain is now built. What remains, in the order it blocks a
 "must work" jury flow:
 
-1. **Week 2–4 limits** — `buildDashboardVM` throws `no limit set for week N`
-   once the programme rolls past week 1, because only onboarding writes a limit.
-   `completeReview` sets the next week's limit, so the gap closes when the
-   review flow is reachable from the UI.
-2. **`reviewable_weeks`** — `buildDashboardVM` still hardcodes it empty, so
+The consolidated, ranked list — including the gaps outside this layer — lives in
+[handover.md](handover.md). Keep it there rather than here, so there is one list to
+keep true. What is architecture-specific:
+
+1. **`reviewable_weeks`** — `buildDashboardVM` still hardcodes it empty, so
    `pendingAction` can never resolve to `review_available`. `ReviewService`
    exists now, so this is wiring rather than new logic.
+2. **`usage_event` is never emitted** — the port, adapter and store all exist and
+   `createDataLayer()` wires the adapter, but no service injects it. The brief
+   marks the log required. See [data-model.md](data-model.md#usage_event--designed-not-yet-recorded).
 3. **Reports before day 29** — the reports tab is reachable from day 1, but the
    screen is designed as the *final* summary. Weeks not yet reached render
    locked, which is honest, but whether the tab should be there at all before
    day 29 is a product decision.
+
+Note what is **no longer** on this list: week 2–4 limits. `buildDashboardVM` still
+throws `DASHBOARD_NO_LIMIT` when a new week has no limit, but that is now the
+designed path, not a failure — `DashboardFlow` catches the code and routes the user
+into the review flow to set the week's limits (`af4ee36`).

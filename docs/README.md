@@ -5,8 +5,13 @@ them disagree.
 
 ## Start here
 
+**Handing the project over, or picking it up? Start at
+[handover.md](handover.md)** — state of play, the one ranked list of open work, the demo
+runbook and the submission checklist.
+
 | Document | Owns | Authority |
 |---|---|---|
+| [handover.md](handover.md) | What's done, what's open (with owners), how to demo it, what submission still needs | **Authoritative** for open work |
 | [architecture.md](architecture.md) | The hexagon: layers, every inbound/outbound port, DTO seams, per-port build status | **Authoritative** for structure |
 | [data-model.md](data-model.md) | The 7 user tables + the global `contact` table, field names, invariants, Dexie stores | **Authoritative** for the data layer |
 | [decisions.md](decisions.md) | Where we knowingly deviate from the brief, and why | **Authoritative** for deviations |
