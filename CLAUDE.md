@@ -60,15 +60,19 @@ Four record types: `profile`, `limit` (one per week), `check-in`, `review`. Exac
 
 ## Must work (jury clicks through on a phone, no code changes)
 
-Onboarding (reference, suggested limits, adjust within range, coping) · daily check-in incl. backfill of current week · cumulative weekly evaluation vs both limits with immediate feedback (remaining time & amount) · dashboard (limits, progress, % used, missing data) · reviews after 7/14/21 + final summary after 28 · one working reminder scenario clicking through to check-in (trigger may be simplified — note it in README) · runs on mobile, data survives refresh · **CSV export at person-day level** (see below) · **seed data + reset/demo mode** so the jury can verify missing day, backfill, weekly review, and final summary without waiting 28 real days.
+Onboarding (reference, suggested limits, adjust within range, coping) · daily check-in incl. backfill of current week · cumulative weekly evaluation vs both limits with immediate feedback (remaining time & amount) · dashboard (limits, progress, % used, missing data) · reviews after 7/14/21 + final summary after 28 · one working reminder scenario clicking through to check-in (trigger may be simplified — note it in README) · runs on mobile, data survives refresh · **CSV export** (raw tables — see below) · **seed data + reset/demo mode** so the jury can verify missing day, backfill, weekly review, and final summary without waiting 28 real days.
 
 ## Reference scenario (seed data must reproduce)
 
 Reference 600 min (10h) / 10 000 CZK → suggested 480 min (8h) / 8 000 CZK → adjust cap 540 min (9h) / 9 000 CZK. At 350 min (5h50m) / 6 500 CZK: time 73% (OK), stakes 81% (POZOR), overall POZOR.
 
-## CSV export (mandatory) — the gotcha
+## CSV export (mandatory)
 
-User-triggered, ≥1 CSV, one row per planned day 1–28 including no-play and missing days. Field list & conventions in the spec (Příloha 2). **Never confuse the two empties:** a no-play day is `completed`/`played=false` with **zeros**; a `missing` day leaves the value fields **blank/NA — never zeros**.
+**Agreed shape: raw tables, as raw as it gets.** User-triggered, one ZIP with four CSVs — `profile`, `check_in`, `limit`, `coping_strategy` — each a straight dump of the stored table, no derived rows. This is a deliberate team decision (see README's "Exporting data from app"), taken over the person-day shape the spec's Příloha 2 describes.
+
+What that means in practice, and why it is not an oversight: a day with no check-in has **no row at all** rather than a blank-valued one, and there is no derived `study_day` / `checkin_status` / `is_backfill`. Anyone comparing the export against Příloha 2 will see the difference — it is intended.
+
+**Still true, and easy to get wrong:** a no-play day is a real record — `played=false` with **zeros**. It is not the same as a missing day, which simply has no row. Never write zeros to stand in for "no data".
 
 ## Required tests (graded)
 
