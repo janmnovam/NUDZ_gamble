@@ -40,7 +40,7 @@ export function Button({
       className={cn(
         'type-label-lg inline-flex items-center justify-center gap-2 rounded-full transition select-none',
         'focus-visible:ring-brand focus-visible:ring-offset-canvas focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none',
-        'disabled:pointer-events-none disabled:opacity-50',
+        'disabled:bg-sunken disabled:text-line-strong disabled:pointer-events-none disabled:opacity-100',
         VARIANT_CLASSES[variant],
         SIZE_CLASSES[size],
         fullWidth && 'w-full',
