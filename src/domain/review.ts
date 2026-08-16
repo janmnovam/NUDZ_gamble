@@ -1,0 +1,219 @@
+/**
+ * ReviewService domain logic (doc 09) — the weekly review: surface a closed
+ * week's outcome, complete it (writing next week's limit), and the final
+ * summary after day 28. Pure; repos, calendar sources, time, and id injected.
+ * The camelCase VMs here match the app-layer DTOs field-for-field, so the
+ * service returns them directly (no rename mapper needed, unlike the dashboard).
+ */
+import { calendarDate, createStudyCalendar, type StudyCalendar } from '@domain/clock.ts'
+import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
+import { canReview, isWeekClosed } from '@domain/guards.ts'
+import { classifyStatus, isWithinCap, suggestLimit, worseStatus } from '@domain/limits.ts'
+import type {
+  CheckIn,
+  ISOCalendarTimestamp,
+  ISODate,
+  Limit,
+  Review,
+  UserId,
+} from '@domain/model.ts'
+import type {
+  CheckInRepository,
+  Clock,
+  LimitRepository,
+  ProfileRepository,
+  ReviewRepository,
+} from '@domain/ports.ts'
+
+const TOTAL_WEEKS = DEFAULT_CONFIG.PROGRAMME_DAYS / DEFAULT_CONFIG.WEEK_LENGTH_DAYS // 4
+
+export interface AxisSummary {
+  used: number
+  limit: number
+  status: Status
+}
+
+export interface ReviewVM {
+  weekNo: number
+  time: AxisSummary
+  stakes: AxisSummary
+  missingDays: ISOCalendarTimestamp[]
+  suggestedNextLimits: { timeMinutes: number; stakesAmount: number }
+}
+
+export interface FinalSummaryWeekVM {
+  weekNo: number
+  timeStatus: Status
+  stakesStatus: Status
+  overall: Status
+}
+
+export interface FinalSummaryVM {
+  weeks: FinalSummaryWeekVM[]
+}
+
+export interface CompleteReviewInput {
+  reviewWeekNo: number
+  nextLimits: { timeMinutes: number; stakesAmount: number }
+  incomplete: boolean
+}
+
+export interface ReviewDeps {
+  userId: UserId
+  profiles: ProfileRepository
+  limits: LimitRepository
+  checkIns: CheckInRepository
+  reviews: ReviewRepository
+  /** Time source; "today" is the calendar date of `time()` (see `calendarDate`). */
+  time: Clock
+  newId: () => string
+  config?: DomainConfig
+}
+
+function weekTotals(
+  checkIns: readonly CheckIn[],
+  weekNo: number,
+): { timeMin: number; stakesCzk: number } {
+  const week = checkIns.filter((c) => c.weekNo === weekNo)
+  return {
+    timeMin: week.reduce((s, c) => s + c.timeMin, 0),
+    stakesCzk: week.reduce((s, c) => s + c.stakesCzk, 0),
+  }
+}
+
+function missingDaysForWeek(
+  calendar: StudyCalendar,
+  weekNo: number,
+  today: ISODate,
+  checkIns: readonly CheckIn[],
+): ISOCalendarTimestamp[] {
+  const days: ISOCalendarTimestamp[] = []
+  for (let day = calendar.firstDay(weekNo); day <= calendar.lastDay(weekNo); day += 1) {
+    const date = calendar.dateOf(day)
+    // Compare only the YYYY-MM-DD portion — `dateOf`/`behaviorDate` are canonical
+    // timestamps, `today` is a bare date (see @domain/clock.ts).
+    if (calendarDate(date) >= today) continue // future / today: not yet due
+    if (!checkIns.some((c) => calendarDate(c.behaviorDate) === calendarDate(date))) days.push(date)
+  }
+  return days
+}
+
+export async function getPendingReview(deps: ReviewDeps): Promise<ReviewVM | null> {
+  const config = deps.config ?? DEFAULT_CONFIG
+  const profile = await deps.profiles.get(deps.userId)
+  if (!profile) throw new Error(`review: no profile for ${deps.userId}`)
+
+  const calendar = createStudyCalendar(profile.interventionStartDate, deps.time, config)
+  const reviews = await deps.reviews.listByUser(deps.userId)
+
+  let week = 0
+  for (let w = 1; w <= TOTAL_WEEKS; w += 1) {
+    if (
+      canReview({
+        weekNo: w,
+        weekElapsed: calendar.isWeekElapsed(w),
+        alreadyReviewed: isWeekClosed(w, reviews),
+      })
+    ) {
+      week = w
+      break
+    }
+  }
+  if (week === 0) return null
+
+  const checkIns = await deps.checkIns.listByUser(deps.userId)
+  const limits = await deps.limits.listByUser(deps.userId)
+  const limit = limits.find((l) => l.weekNo === week)
+  const timeLimit = limit?.weeklyLimitTimeMin ?? 0
+  const stakesLimit = limit?.weeklyLimitStakesCzk ?? 0
+  const totals = weekTotals(checkIns, week)
+  const today = calendarDate(deps.time())
+
+  return {
+    weekNo: week,
+    time: {
+      used: totals.timeMin,
+      limit: timeLimit,
+      status: classifyStatus(totals.timeMin, timeLimit, config),
+    },
+    stakes: {
+      used: totals.stakesCzk,
+      limit: stakesLimit,
+      status: classifyStatus(totals.stakesCzk, stakesLimit, config),
+    },
+    missingDays: missingDaysForWeek(calendar, week, today, checkIns),
+    suggestedNextLimits: {
+      timeMinutes: suggestLimit(profile.referenceTimeMin, config),
+      stakesAmount: suggestLimit(profile.referenceStakesCzk, config),
+    },
+  }
+}
+
+export async function completeReview(input: CompleteReviewInput, deps: ReviewDeps): Promise<void> {
+  const config = deps.config ?? DEFAULT_CONFIG
+  const profile = await deps.profiles.get(deps.userId)
+  if (!profile) throw new Error(`review: no profile for ${deps.userId}`)
+
+  if (!isWithinCap(input.nextLimits.timeMinutes, profile.referenceTimeMin, config)) {
+    throw new Error('review: next time limit exceeds the 90% cap')
+  }
+  if (!isWithinCap(input.nextLimits.stakesAmount, profile.referenceStakesCzk, config)) {
+    throw new Error('review: next stakes limit exceeds the 90% cap')
+  }
+
+  const limits = await deps.limits.listByUser(deps.userId)
+  const current = limits.find((l) => l.weekNo === input.reviewWeekNo)
+  // Undefined `current` ⇒ the first comparison is `undefined !== number` ⇒ true
+  // (changed) and short-circuits, so the plain `current.` on the right is safe.
+  const limitChanged =
+    current?.weeklyLimitTimeMin !== input.nextLimits.timeMinutes ||
+    current.weeklyLimitStakesCzk !== input.nextLimits.stakesAmount
+
+  const at = deps.time()
+
+  // ponytail: two non-transactional writes — a crash between them leaves next
+  // week's limit set without a review row. Acceptable for a local single-user
+  // PWA; upgrade to an atomic repo (like OnboardingRepository) if it matters.
+  if (input.reviewWeekNo < TOTAL_WEEKS) {
+    const nextLimit: Limit = {
+      limitId: deps.newId(),
+      userId: deps.userId,
+      weekNo: input.reviewWeekNo + 1,
+      weeklyLimitTimeMin: input.nextLimits.timeMinutes,
+      weeklyLimitStakesCzk: input.nextLimits.stakesAmount,
+      limitSetAt: at,
+    }
+    await deps.limits.save(nextLimit)
+  }
+
+  const review: Review = {
+    reviewId: deps.newId(),
+    userId: deps.userId,
+    reviewWeekNo: input.reviewWeekNo,
+    reviewCompletedAt: at,
+    limitChanged,
+    incomplete: input.incomplete,
+  }
+  await deps.reviews.save(review)
+}
+
+export async function getFinalSummary(deps: ReviewDeps): Promise<FinalSummaryVM> {
+  const config = deps.config ?? DEFAULT_CONFIG
+  const checkIns = await deps.checkIns.listByUser(deps.userId)
+  const limits = await deps.limits.listByUser(deps.userId)
+
+  const weeks: FinalSummaryWeekVM[] = []
+  for (let w = 1; w <= TOTAL_WEEKS; w += 1) {
+    const totals = weekTotals(checkIns, w)
+    const limit = limits.find((l) => l.weekNo === w)
+    const timeStatus = classifyStatus(totals.timeMin, limit?.weeklyLimitTimeMin ?? 0, config)
+    const stakesStatus = classifyStatus(totals.stakesCzk, limit?.weeklyLimitStakesCzk ?? 0, config)
+    weeks.push({
+      weekNo: w,
+      timeStatus,
+      stakesStatus,
+      overall: worseStatus(timeStatus, stakesStatus),
+    })
+  }
+  return { weeks }
+}

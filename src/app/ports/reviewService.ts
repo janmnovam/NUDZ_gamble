@@ -1,12 +1,14 @@
 /**
- * ReviewService — inbound (driving) port. Wiring stub: the contract follows
- * docs/architecture.md §ReviewService, but the DTO shapes are placeholders
- * until the service (and `@domain/review.ts`) are implemented.
+ * ReviewService — inbound (driving) port. Contract per docs/architecture.md
+ * §ReviewService; DTO shapes live in `@/app/dto/review.ts`.
  */
-// TODO(app): replace with the documented shapes when ReviewService is built.
-export type ReviewResponse = Record<string, unknown>
-export type CompleteReviewRequest = Record<string, unknown>
-export type FinalSummaryResponse = Record<string, unknown>
+import type {
+  CompleteReviewRequest,
+  FinalSummaryResponse,
+  ReviewResponse,
+} from '@/app/dto/review.ts'
+
+export type { CompleteReviewRequest, FinalSummaryResponse, ReviewResponse }
 
 export interface ReviewService {
   /** The review due for a closed week, if any. */
