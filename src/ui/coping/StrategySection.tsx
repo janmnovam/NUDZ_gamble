@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import {
   CatalogStrategyDetailScreen,
@@ -21,13 +21,16 @@ interface StrategySectionProps {
   selectedStrategies: readonly StrategyLibraryItem[]
   otherStrategies: readonly StrategyLibraryItem[]
   hiddenStrategies: readonly StrategyLibraryItem[]
+  nav?: ReactNode
+  showContactsTab?: boolean
+  createCustomStrategyFields?: 'title-only' | 'full'
   onOpenStrategy: (id: string) => void
   onMoreStrategy: (id: string) => void
-  onDeleteStrategy: (id: string) => void
-  onHideStrategy: (id: string) => void
+  onDeleteStrategy?: (id: string) => void
+  onHideStrategy?: (id: string) => void
   onRestoreStrategy: (id: string) => void
   onToggleSelected: (id: string) => void
-  onUpdateCustomStrategy: (id: string, changes: CustomStrategyChanges) => void
+  onUpdateCustomStrategy?: (id: string, changes: CustomStrategyChanges) => void
   onCreateCustomStrategy: (changes: CustomStrategyChanges) => void
 }
 
@@ -37,6 +40,9 @@ export function StrategySection({
   selectedStrategies,
   otherStrategies,
   hiddenStrategies,
+  nav,
+  showContactsTab = true,
+  createCustomStrategyFields = 'full',
   onOpenStrategy,
   onMoreStrategy,
   onDeleteStrategy,
@@ -63,7 +69,9 @@ export function StrategySection({
     return (
       <CustomStrategyDetailScreen
         mode="create"
+        nav={nav}
         existingStrategyTitles={allStrategies.map((strategy) => strategy.title)}
+        showOptionalFields={createCustomStrategyFields === 'full'}
         onBack={() => {
           setIsCreatingCustomStrategy(false)
         }}
@@ -75,10 +83,11 @@ export function StrategySection({
     )
   }
 
-  if (activeCustomStrategy?.kind === 'custom') {
+  if (activeCustomStrategy?.kind === 'custom' && onUpdateCustomStrategy !== undefined) {
     return (
       <CustomStrategyDetailScreen
         mode="edit"
+        nav={nav}
         strategy={activeCustomStrategy}
         existingStrategyTitles={allStrategies
           .filter((strategy) => strategy.id !== activeCustomStrategy.id)
@@ -98,6 +107,7 @@ export function StrategySection({
     return (
       <CatalogStrategyDetailScreen
         detail={activeCatalogStrategy}
+        nav={nav}
         onBack={() => {
           setActiveCatalogStrategyId(undefined)
         }}
@@ -106,7 +116,7 @@ export function StrategySection({
   }
 
   if (activeTab === 'contacts') {
-    return <StrategyContactsScreen contacts={contacts} onTabChange={setActiveTab} />
+    return <StrategyContactsScreen contacts={contacts} nav={nav} onTabChange={setActiveTab} />
   }
 
   return (
@@ -114,7 +124,14 @@ export function StrategySection({
       selectedStrategies={selectedStrategies}
       otherStrategies={otherStrategies}
       hiddenStrategies={hiddenStrategies}
+      nav={nav}
       customStrategyCount={customStrategyCount}
+      showContactsTab={showContactsTab}
+      canOpenStrategy={(strategy) =>
+        strategy.kind === 'custom'
+          ? onUpdateCustomStrategy !== undefined
+          : catalogStrategyDetails.some((detail) => detail.id === strategy.id)
+      }
       onOpenStrategy={(id) => {
         onOpenStrategy(id)
 
@@ -127,8 +144,8 @@ export function StrategySection({
         }
       }}
       onMoreStrategy={onMoreStrategy}
-      onDeleteStrategy={onDeleteStrategy}
-      onHideStrategy={onHideStrategy}
+      {...(onDeleteStrategy === undefined ? {} : { onDeleteStrategy })}
+      {...(onHideStrategy === undefined ? {} : { onHideStrategy })}
       onRestoreStrategy={onRestoreStrategy}
       onToggleSelected={onToggleSelected}
       onTabChange={setActiveTab}
