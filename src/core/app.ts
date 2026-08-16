@@ -21,6 +21,7 @@ import { ReviewServiceImpl } from '@/app/services/reviewServiceImpl.ts'
 import { ReminderServiceImpl } from '@/app/services/reminderServiceImpl.ts'
 import { NotificationServiceImpl } from '@/app/services/notificationServiceImpl.ts'
 import { ExportServiceImpl } from '@/app/services/exportServiceImpl.ts'
+import { AdminServiceImpl } from '@/app/services/adminServiceImpl.ts'
 import type { OnboardingService } from '@/app/ports/onboardingService.ts'
 import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
 import type { ContactService } from '@/app/ports/contactService.ts'
@@ -30,6 +31,7 @@ import type { ReviewService } from '@/app/ports/reviewService.ts'
 import type { ReminderService } from '@/app/ports/reminderService.ts'
 import type { NotificationService } from '@/app/ports/notificationService.ts'
 import type { ExportService } from '@/app/ports/exportService.ts'
+import type { AdminService } from '@/app/ports/adminService.ts'
 import { newId } from '@data/ids.ts'
 import { type DataLayer, createDataLayer } from '@/core/index.ts'
 
@@ -44,6 +46,7 @@ export interface App {
   reminder: ReminderService
   notification: NotificationService
   export: ExportService
+  admin: AdminService
 }
 
 export function createApp(data: DataLayer = createDataLayer()): App {
@@ -86,5 +89,6 @@ export function createApp(data: DataLayer = createDataLayer()): App {
       limits: data.limits,
       copingStrategies: data.copingStrategies,
     }),
+    admin: new AdminServiceImpl({ databaseAdmin: data.databaseAdmin }),
   }
 }

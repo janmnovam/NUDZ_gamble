@@ -1,7 +1,6 @@
 /**
- * Dev-only DB seeding, wired to `window.__seed` / `window.__resetDb` from
- * `main.tsx` behind `import.meta.env.DEV`. Never bundled into a production
- * build.
+ * Dev-only DB seeding, wired to `window.__seed` from `main.tsx` behind
+ * `import.meta.env.DEV`. Never bundled into a production build.
  *
  * Writes straight through the outbound repositories (`createDataLayer()`),
  * bypassing every inbound service/guard — same shortcut the test suite
@@ -64,16 +63,10 @@ function todayDate(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
-/** Clears every table so a scenario always starts from empty. */
-export async function resetDb(): Promise<void> {
-  const { db } = await import('@data/db.ts')
-  await Promise.all(db.tables.map((table) => table.clear()))
-}
-
 export async function seedScenario(scenario: Scenario): Promise<void> {
-  await resetDb()
   const data = createDataLayer()
   const userId = DEMO_USER_ID
+  await data.databaseAdmin.clearUserData(userId)
 
   const startDate = addDays(todayDate(), -(scenario.today - 1))
   const interventionStartDate = calendarTimestamp(startDate)
