@@ -34,6 +34,17 @@ function WheelColumn({ value, options, onChange, ariaLabel, format }: WheelColum
     }
   }, [value, options])
 
+  // Cancel a pending scroll-settle on unmount. A programmatic scrollTop sync
+  // fires a scroll event that schedules `settleRef`; if the drum unmounts before
+  // it runs (e.g. navigating away right after a keyboard/scroll change), the
+  // timeout would read a detached element's scrollTop (0) and emit onChange(0),
+  // clobbering the committed value.
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(settleRef.current)
+    }
+  }, [])
+
   const handleScroll = () => {
     const element = scrollRef.current
     if (!element) return
