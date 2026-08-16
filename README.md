@@ -161,14 +161,40 @@ Icons in `public/` are generated for this repository and carry no third-party li
 ## Exporting data from app
 
 - User can export data at any point of the intervention via dedicated button at the bottom of screen Dashboard or during weekly review.
-- Fields: user_id, intervention_start_date, reference_time_min, reference_stakes_czk, study_day, week_no, behavior_date, weekly_limit_time_min, weekly_limit_stakes_czk, checkin_status, played, time_min, stakes_czk, winnings_czk, submitted_at, updated_at, is_backfill.
-- Exported into .csv
-- UTF-8
-- date YYYY-MM-DD
-- timestamps ISO 8601 including timezone
-- time_min as whole minutes
-- amounts in whole CZK
-- separator comma
+- 3 .csv files are exported (and zipped together so that user doesn't have to select separate files).
+  - .csv file nr.1 is export of CHECK_IN table containing fields:
+    - check_in_id
+    - user_id
+    - behavior_date
+    - played
+    - time_min
+    - stakes_czk
+    - winnings_czk
+    - submitted_at
+    - updated_at
+  - .csv file nr 2 is export of LIMIT table containing fields:
+    - limit_id
+    - user_id
+    - week_no
+    - weekly_limit_time_min
+    - weekly_limit_stakes_czk
+    - limit_set_at
+  - .csv file nr 3 is export of COPING_STRATEGY table containing fields:
+    - coping_strategy_id
+    - user_id
+    - label
+    - source
+    - default_code
+    - active
+    - created_at
+    - updated_at
+- Format:
+  - UTF-8
+  - date YYYY-MM-DD
+  - timestamps ISO 8601 including timezone
+  - time_min as whole minutes
+  - amounts in whole CZK
+  - separator comma
 
 ## Technical debt
 
