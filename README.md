@@ -237,6 +237,7 @@ Not included in the hackathon version:
 - Logic of gains vs bets (net gain / loss).
 Logical problems:
 - After setting new weekly limits the user is not able to backfill for previous week anymore.
+- Locking mechanism now doesn't have specific colour for "no backfill" but part of program. At the moment everything is grey.
 Nice-to-have features (possible next steps before pilot):
 - Filling new week's limit should not allow me to go over 90% of referential values of amount and time spent gambling.
 - Allowing user to submit notes / feedback (free text). 
