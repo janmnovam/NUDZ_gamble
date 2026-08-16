@@ -236,10 +236,12 @@ Not included in the hackathon version:
 - Counting gains during betting.
 - Logic of gains vs bets (net gain / loss).
 Nice-to-have features (possible next steps before pilot):
+- Allowing user to submit notes / feedback (free text). 
 - Allowing user to edit already filled days (for both time and amount gambled).
 - Tracking what dates were edited and how.
 - Motivating user to lower their limits during every new week of intervention by 10% (meaning 1st week limit = 10 000 CZK, 2nd week limit suggestion 9 000 CZK).
 - User profile accessing during the intervention (with optional choice to set the time of notifications).
+- Homescreen shows all 28 days of the program, not just this week (allows user to backfill more easily in the 5 days window).
 - Graphs for each review week.
 - Consents (for the RCT user consent in paper form f2f)
 - Opt-out of notifications.
