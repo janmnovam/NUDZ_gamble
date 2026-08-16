@@ -126,6 +126,31 @@ describe('DashboardScreen', () => {
     expect(screen.getByRole('button', { name: /chybí záznam/ })).not.toBeNull()
   })
 
+  it('keeps the CTA inert on day 1 even when a handler is wired', () => {
+    // Regression: gating on the handler alone let day 1 open a check-in for a
+    // day that had not happened yet.
+    render(
+      <I18nProvider>
+        <DashboardScreen dashboard={DAY_1} onCheckIn={() => undefined} />
+      </I18nProvider>,
+    )
+    const cta = screen.getByRole('button', { name: 'Check-in bude zítra' })
+    expect((cta as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('keeps the CTA inert once every day is filled in', () => {
+    render(
+      <I18nProvider>
+        <DashboardScreen
+          dashboard={{ ...DAY_1, studyDay: 4, pendingAction: 'none', missingDays: [] }}
+          onCheckIn={() => undefined}
+        />
+      </I18nProvider>,
+    )
+    const cta = screen.getByRole('button', { name: 'Check-in bude zítra' })
+    expect((cta as HTMLButtonElement).disabled).toBe(true)
+  })
+
   it('disables the CTA while no check-in is due', () => {
     renderScreen()
     const cta = screen.getByRole('button', { name: 'Check-in bude zítra' })

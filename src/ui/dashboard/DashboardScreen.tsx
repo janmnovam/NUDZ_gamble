@@ -148,7 +148,11 @@ export function DashboardScreen({
           size="md"
           fullWidth
           variant={checkInDue ? 'primary' : 'secondary'}
-          disabled={!onCheckIn}
+          // Gated on the domain's answer, not just on a handler being wired:
+          // on day 1 nothing has elapsed, and with every day filled in there is
+          // nothing to record — in both cases the check-in would be for a day
+          // that isn't due.
+          disabled={!checkInDue || !onCheckIn}
           onClick={onCheckIn}
         >
           {checkInDue ? t('dashboard.cta.checkInDue') : t('dashboard.cta.checkInTomorrow')}
