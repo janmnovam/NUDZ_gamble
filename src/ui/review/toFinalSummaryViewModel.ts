@@ -34,7 +34,10 @@ function toWeek(
 
   return {
     weekNo: week.weekNo,
-    status: weekStatus(week),
+    locked: !week.elapsed,
+    // A week still ahead gets no chip at all — a verdict computed against no
+    // data would read as a result rather than as "not there yet".
+    ...(week.elapsed && { status: weekStatus(week) }),
     timeUsedLabel: minutes(week.time.used),
     timeLimitLabel: minutes(week.time.limit),
     stakesUsedLabel: czk(week.stakes.used),

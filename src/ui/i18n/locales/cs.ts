@@ -64,6 +64,7 @@ export const cs = {
   'review.final.limitsDoneBody':
     'Sledování skončilo. Data si můžete vyexportovat a vzít je s sebou k odborníkovi.',
   'review.week.label': 'Týden {week}',
+  'review.week.locked': 'Zatím nedostupné',
   'review.week.closedTitle': 'Týden {week} je uzavřený',
   'review.week.closedBody': 'Záznamy jsou jen ke čtení.',
   'review.week.summaryOverline': 'Souhrn týdne {week}',

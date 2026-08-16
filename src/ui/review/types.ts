@@ -11,7 +11,13 @@ export interface ReviewDayCell {
 
 export interface FinalSummaryWeek {
   weekNo: number
-  status: ReviewStatus
+  /**
+   * A week still ahead is locked: it shows no status and can't be opened,
+   * because there is nothing recorded to show yet.
+   */
+  locked: boolean
+  /** Absent while `locked` — an unreached week carries no verdict. */
+  status?: ReviewStatus
   timeUsedLabel: string
   timeLimitLabel: string
   stakesUsedLabel: string

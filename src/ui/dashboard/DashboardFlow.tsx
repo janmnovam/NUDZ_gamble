@@ -5,6 +5,7 @@ import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { TimeMachineModal } from '@ui/admin/TimeMachineModal.tsx'
 import { useMultiTap } from '@ui/admin/useMultiTap.ts'
 import { Screen } from '@ui/components/Screen.tsx'
+import { TabBar } from '@ui/components/TabBar.tsx'
 import { DashboardScreen } from '@ui/dashboard/DashboardScreen.tsx'
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
@@ -59,8 +60,10 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
   }, [dashboardService, simulatedTime])
 
   if (state.status !== 'ready') {
+    // The nav stays even when the dashboard can't load: without it a failure
+    // here strands the user with no way to reach the other tabs.
     return (
-      <Screen>
+      <Screen nav={<TabBar active="home" />}>
         <p className="type-body text-muted m-auto text-center">
           {state.status === 'loading' ? t('common.loading') : t('common.error')}
         </p>

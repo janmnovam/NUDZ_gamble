@@ -66,6 +66,11 @@ export interface FinalSummaryWeekVM {
   days: FinalSummaryDayVM[]
   /** How many of the week's 7 days have a record. */
   filledDays: number
+  /**
+   * Whether the week's seven days have all passed. A week still ahead carries
+   * no verdict — its statuses are computed against no data and mean nothing.
+   */
+  elapsed: boolean
 }
 
 export interface FinalSummaryVM {
@@ -257,6 +262,7 @@ export async function getFinalSummary(deps: ReviewDeps): Promise<FinalSummaryVM>
       overall: worseStatus(timeStatus, stakesStatus),
       days,
       filledDays: days.filter((d) => d.state === 'completed').length,
+      elapsed: calendar.isWeekElapsed(w),
     })
   }
 

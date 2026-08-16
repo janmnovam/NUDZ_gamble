@@ -23,6 +23,7 @@ function week(overrides: Partial<FinalSummaryWeekDto> = {}): FinalSummaryWeekDto
     overall: 'POZOR',
     days,
     filledDays: 7,
+    elapsed: true,
     ...overrides,
   }
 }
@@ -69,6 +70,21 @@ describe('toFinalSummaryViewModel', () => {
 
     // Going over is certain even with days missing — NEUPLNE must not hide it.
     expect(vm.weeks[0]?.status).toBe('PREKROCENO')
+  })
+
+  it('locks a week that has not elapsed, and gives it no verdict', () => {
+    const vm = build([week({ elapsed: false })])
+
+    expect(vm.weeks[0]?.locked).toBe(true)
+    // A status here would read as a result, when the week simply hasn't happened.
+    expect(vm.weeks[0]?.status).toBeUndefined()
+  })
+
+  it('leaves an elapsed week unlocked and judged', () => {
+    const vm = build([week()])
+
+    expect(vm.weeks[0]?.locked).toBe(false)
+    expect(vm.weeks[0]?.status).toBe('POZOR')
   })
 
   it('numbers the day strip by programme day and localises the weekday', () => {

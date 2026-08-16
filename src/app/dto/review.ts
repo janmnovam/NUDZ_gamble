@@ -45,6 +45,8 @@ export interface FinalSummaryWeekDto {
   /** Always 7 entries, in study-day order. */
   days: FinalSummaryDayDto[]
   filledDays: number
+  /** False while the week is still ahead — it then carries no verdict. */
+  elapsed: boolean
 }
 
 export interface FinalSummaryResponse {
