@@ -1,6 +1,8 @@
 # NUDZ_gamble
 
-PWA for harm reduction in gambling — DigiWELL Hackathon 2026. Accessible through https://janmnovam.github.io/NUDZ_gamble/ - open the website in a compatible browser, look for an install or share icon in the address bar or menu, and select "Install" or "Add to Home Screen"
+PWA for harm reduction in gambling — DigiWELL Hackathon 2026.
+
+**Install:** open https://janmnovam.github.io/NUDZ_gamble/ in a compatible browser, then use the install/share icon in the address bar or menu and select "Install" or "Add to Home Screen".
 
 > **Status: technology bootstrap only.** The toolchain, build, PWA shell and the three
 > test runners are wired up and green. No intervention logic has been implemented yet;
@@ -153,14 +155,14 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Debug mode
 
-- Is a special feature, hidden for the standard user, where QA / testing can set a specific date of intervention.
-- This allows testing specific time periods without the need to physically wait for the time to pass.
-- This feature is hidden behind version nr. mentioned on Dashboard screen.
-- QA / testing has to tap the version nr. exactly 5 times to let show the GUI for Debug mode.
+- A hidden feature that lets QA/testing set a specific intervention date.
+- This allows testing specific time periods without waiting for real time to pass.
+- It's hidden behind the version number shown on the Dashboard screen.
+- QA/testing must tap the version number exactly 5 times to reveal the Debug mode GUI.
 
 ## Exporting data from app
 
-- User can export data at any point of the intervention via dedicated button at the bottom of screen Dashboard or during weekly review.
+- The user can export data at any point during the intervention, via a dedicated button at the bottom of the Dashboard screen or during the weekly review.
 - 3 .csv files are exported (and zipped together so that user doesn't have to select separate files).
   - .csv file nr.1 is export of CHECK_IN table containing fields:
     - check_in_id
@@ -200,7 +202,7 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Suggested next steps
 
-What was not included in the first version of the app (hackaton version)
+Not included in the hackathon version:
 - Counting gains during betting.
 - Logic of gains vs bets (net gain / loss).
 Nice-to-have features (possible next steps before pilot):
