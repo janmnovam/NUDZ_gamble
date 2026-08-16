@@ -17,13 +17,18 @@ const POLL_INTERVAL_MS = 60_000
  * missing check-in (`checkin_due`) or an open weekly review (`review_due`).
  * Clicking the popup focuses the app and routes to the matching screen.
  *
+ * A second, independent channel (`config.ts`'s `LAST_CHANCE_REMINDER_TIMES`,
+ * its own `lastFiredAt`) fires the last-chance week-boundary nudge so it can
+ * come *after* the review reminder rather than being suppressed by it;
+ * clicking it routes to the dashboard.
+ *
  * Simplified trigger, per CLAUDE.md's allowance for the one reminder
  * scenario: this is a local-only, single-demo-user app with no push server,
  * so nothing wakes the app while it's fully closed — the popup only fires
  * for as long as the installed app (or a tab) is open. Documented in README.
  *
  * Uses the time machine's simulated instant when engaged (falling back to the
- * real clock) so a tester can dial the clock up to a `REMINDER_TIMES` slot
+ * real clock) so a tester can dial the clock up to a slot
  * (`admin/TimeMachineModal.tsx`'s time-of-day input) to see a popup fire
  * without waiting for the real wall clock.
  */
@@ -79,8 +84,38 @@ export function useReminderNotifications(): void {
       gateway.setLastFiredAt(time)
     }
 
+    async function checkLastChance() {
+      if (userId === null || !gateway.isNotificationSupported()) return
+
+      const time = simulatedTime ?? clientNow()
+      const result = await notification.checkLastChance({
+        userId,
+        time,
+        lastFiredAt: gateway.getLastFiredAt(gateway.LAST_CHANCE_FIRED_KEY),
+      })
+      if (isCancelled() || !result.due) return
+
+      if (gateway.getPermission() === 'default') {
+        await gateway.requestPermission()
+      }
+      if (isCancelled() || gateway.getPermission() !== 'granted') return
+
+      gateway.showNotification(
+        t('notification.lastChance.title'),
+        t('notification.lastChance.body'),
+        () => {
+          navigate('dashboard')
+        },
+      )
+      gateway.setLastFiredAt(time, gateway.LAST_CHANCE_FIRED_KEY)
+    }
+
     void check()
-    const interval = window.setInterval(() => void check(), POLL_INTERVAL_MS)
+    void checkLastChance()
+    const interval = window.setInterval(() => {
+      void check()
+      void checkLastChance()
+    }, POLL_INTERVAL_MS)
     return () => {
       cancelled = true
       window.clearInterval(interval)
