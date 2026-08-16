@@ -65,7 +65,8 @@ export function CopingStep({
 }: CopingStepProps) {
   const { t } = useTranslation()
 
-  const count = selected.length + (customCoping ? 1 : 0)
+  const hasCustomCoping = (customCoping?.label.trim().length ?? 0) > 0
+  const count = selected.length + (hasCustomCoping ? 1 : 0)
 
   const toggle = (strategy: CopingSuggestionDto) => {
     onSelectedChange(

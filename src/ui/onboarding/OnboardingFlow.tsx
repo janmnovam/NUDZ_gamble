@@ -22,6 +22,13 @@ interface OnboardingFlowProps {
   onComplete: () => void
 }
 
+function normalizeCustomCoping(customCoping: CopingDto | null): CopingDto | null {
+  if (customCoping === null) return null
+
+  const label = customCoping.label.trim()
+  return label.length === 0 ? null : { ...customCoping, label }
+}
+
 /**
  * Light flow shell: owns which onboarding step is shown and the answers collected
  * so far (UI state only), and hands each step its navigation callbacks.
@@ -79,7 +86,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const resolvedTimeLimit = timeLimitMin ?? suggestedLimits?.timeMinutes ?? 0
   const resolvedStakesLimit = stakesLimitCzk ?? suggestedLimits?.stakesAmount ?? 0
-  const copingCount = copingSelected.length + (customCoping ? 1 : 0)
+  const normalizedCustomCoping = normalizeCustomCoping(customCoping)
+  const copingCount = copingSelected.length + (normalizedCustomCoping ? 1 : 0)
 
   // Persist via the onboarding service, then confirm.
   const finishSetup = async () => {
@@ -90,7 +98,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         {
           reference: { timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk },
           limits: { timeMinutes: resolvedTimeLimit, stakesAmount: resolvedStakesLimit },
-          coping: [...copingSelected, ...(customCoping ? [customCoping] : [])],
+          coping: [...copingSelected, ...(normalizedCustomCoping ? [normalizedCustomCoping] : [])],
         },
         clientNow(),
       )
