@@ -8,7 +8,7 @@ them disagree.
 | Document | Owns | Authority |
 |---|---|---|
 | [architecture.md](architecture.md) | The hexagon: layers, every inbound/outbound port, DTO seams, per-port build status | **Authoritative** for structure |
-| [data-model.md](data-model.md) | The 6 user tables + the global `contact` table, field names, invariants, Dexie stores | **Authoritative** for the data layer |
+| [data-model.md](data-model.md) | The 7 user tables + the global `contact` table, field names, invariants, Dexie stores | **Authoritative** for the data layer |
 | [decisions.md](decisions.md) | Where we knowingly deviate from the brief, and why | **Authoritative** for deviations |
 | [../README.md](../README.md) | Stack, commands, scripts, layout, CI/CD, CSV export shape, known gaps | **Authoritative** for tooling |
 | [../CLAUDE.md](../CLAUDE.md) | English digest of the domain rules, for contributors and agents | Digest — never the source |
