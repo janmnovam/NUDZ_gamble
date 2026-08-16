@@ -23,6 +23,15 @@ export function useCopingService() {
   return app.coping
 }
 
+/** The read-only support-contact directory. Throws outside <AppProvider>. */
+export function useContactService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useContactService must be used within an <AppProvider>')
+  }
+  return app.contacts
+}
+
 /** The dashboard inbound port, wired to the data layer. Throws outside <AppProvider>. */
 export function useDashboardService() {
   const app = useContext(AppContext)

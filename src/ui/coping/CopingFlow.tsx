@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 
-import type { CopingStrategyDto } from '@/app/dto/coping.ts'
+import type { ContactDto } from '@/app/dto/contact.ts'
+import type { CopingStrategyDto, CopingSuggestionDto } from '@/app/dto/coping.ts'
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import { Screen } from '@ui/components/Screen.tsx'
 import { TabBar } from '@ui/components/TabBar.tsx'
+import { type StrategyContactItem } from '@ui/coping/components/ContactCard.tsx'
 import { type StrategyLibraryItem } from '@ui/coping/StrategyLibraryScreen.tsx'
 import { StrategySection } from '@ui/coping/StrategySection.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
-import { useCopingService } from '@ui/app/AppContext.ts'
+import { useContactService, useCopingService } from '@ui/app/AppContext.ts'
 import { clientNow } from '@ui/clock.ts'
 
 type LoadState =
@@ -15,14 +17,45 @@ type LoadState =
   | { status: 'ready'; strategies: CopingStrategyDto[] }
   | { status: 'failed' }
 
-const NO_CONTACTS = [] as const
 const NO_CATALOG_DETAILS = [] as const
 const NO_HIDDEN_STRATEGIES = [] as const
+const CZECH_PHONE_PATTERN = /^(\+420)?(\d{3})(\d{3})(\d{3})$/
 
-function toLibraryItem(strategy: CopingStrategyDto): StrategyLibraryItem {
+function toLibraryItem(
+  strategy: CopingStrategyDto,
+  summariesByLabel: ReadonlyMap<string, string>,
+): StrategyLibraryItem {
   return strategy.type === 'default'
-    ? { id: strategy.id, kind: 'catalog', title: strategy.label, sub: '' }
+    ? {
+        id: strategy.id,
+        kind: 'catalog',
+        title: strategy.label,
+        sub: summariesByLabel.get(strategy.label) ?? '',
+      }
     : { id: strategy.id, kind: 'custom', title: strategy.label }
+}
+
+function formatPhone(phone: string): string {
+  const match = CZECH_PHONE_PATTERN.exec(phone)
+  return match === null ? phone : [match[1], match[2], match[3], match[4]].filter(Boolean).join(' ')
+}
+
+function toContactItem(contact: ContactDto): StrategyContactItem {
+  const meta = [
+    contact.phone === null ? undefined : formatPhone(contact.phone),
+    contact.availability,
+  ]
+    .filter((value): value is string => value !== undefined && value !== null)
+    .join(' · ')
+
+  return {
+    id: contact.id,
+    title: contact.name,
+    purpose: contact.purpose ?? '',
+    ...(meta.length === 0 ? {} : { meta }),
+    ...(contact.phone === null ? {} : { phone: contact.phone }),
+    ...(contact.url === null ? {} : { url: contact.url }),
+  }
 }
 
 /**
@@ -35,7 +68,10 @@ function toLibraryItem(strategy: CopingStrategyDto): StrategyLibraryItem {
 export function CopingFlow() {
   const { t } = useTranslation()
   const copingService = useCopingService()
+  const contactService = useContactService()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [suggestions, setSuggestions] = useState<CopingSuggestionDto[]>([])
+  const [contacts, setContacts] = useState<ContactDto[]>([])
   const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
@@ -55,6 +91,31 @@ export function CopingFlow() {
       cancelled = true
     }
   }, [copingService, reloadToken])
+
+  useEffect(() => {
+    let cancelled = false
+
+    void Promise.allSettled([
+      copingService.getSuggestions(DEMO_USER_ID, clientNow()),
+      contactService.list(),
+    ]).then(([suggestionsResult, contactsResult]) => {
+      if (suggestionsResult.status === 'rejected') {
+        console.error('[coping] suggestions failed', suggestionsResult.reason)
+      } else if (!cancelled) {
+        setSuggestions(suggestionsResult.value)
+      }
+
+      if (contactsResult.status === 'rejected') {
+        console.error('[coping] contacts failed', contactsResult.reason)
+      } else if (!cancelled) {
+        setContacts(contactsResult.value)
+      }
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [contactService, copingService])
 
   const reload = () => {
     setReloadToken((token) => token + 1)
@@ -90,9 +151,15 @@ export function CopingFlow() {
 
   const selectedStrategies: StrategyLibraryItem[] = []
   const otherStrategies: StrategyLibraryItem[] = []
+  const summariesByLabel = new Map<string, string>()
+  for (const suggestion of suggestions) {
+    if (suggestion.summary !== undefined) {
+      summariesByLabel.set(suggestion.label, suggestion.summary)
+    }
+  }
 
   for (const strategy of state.strategies) {
-    const item = toLibraryItem(strategy)
+    const item = toLibraryItem(strategy, summariesByLabel)
     if (strategy.active) {
       selectedStrategies.push(item)
     } else {
@@ -102,13 +169,13 @@ export function CopingFlow() {
 
   return (
     <StrategySection
-      contacts={NO_CONTACTS}
+      contacts={contacts.filter((contact) => contact.category === 'counselling').map(toContactItem)}
       catalogStrategyDetails={NO_CATALOG_DETAILS}
       selectedStrategies={selectedStrategies}
       otherStrategies={otherStrategies}
       hiddenStrategies={NO_HIDDEN_STRATEGIES}
       nav={<TabBar active="coping" />}
-      showContactsTab={false}
+      showContactsTab={contacts.some((contact) => contact.category === 'counselling')}
       createCustomStrategyFields="title-only"
       onOpenStrategy={() => undefined}
       onMoreStrategy={() => undefined}

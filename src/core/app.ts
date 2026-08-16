@@ -14,6 +14,7 @@
  */
 import { OnboardingServiceImpl } from '@/app/services/onboardingServiceImpl.ts'
 import { CopingStrategyServiceImpl } from '@/app/services/copingStrategyServiceImpl.ts'
+import { ContactServiceImpl } from '@/app/services/contactServiceImpl.ts'
 import { CheckInServiceImpl } from '@/app/services/checkInServiceImpl.ts'
 import { DashboardServiceImpl } from '@/app/services/dashboardServiceImpl.ts'
 import { ReviewServiceImpl } from '@/app/services/reviewServiceImpl.ts'
@@ -21,6 +22,7 @@ import { ReminderServiceImpl } from '@/app/services/reminderServiceImpl.ts'
 import { ExportServiceImpl } from '@/app/services/exportServiceImpl.ts'
 import type { OnboardingService } from '@/app/ports/onboardingService.ts'
 import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
+import type { ContactService } from '@/app/ports/contactService.ts'
 import type { CheckInService } from '@/app/ports/checkInService.ts'
 import type { DashboardService } from '@/app/ports/dashboardService.ts'
 import type { ReviewService } from '@/app/ports/reviewService.ts'
@@ -33,6 +35,7 @@ import { type DataLayer, createDataLayer } from '@/core/index.ts'
 export interface App {
   onboarding: OnboardingService
   coping: CopingStrategyService
+  contacts: ContactService
   checkIn: CheckInService
   dashboard: DashboardService
   review: ReviewService
@@ -48,6 +51,7 @@ export function createApp(data: DataLayer = createDataLayer()): App {
       newId,
     }),
     coping: new CopingStrategyServiceImpl({ repo: data.copingStrategies }),
+    contacts: new ContactServiceImpl({ repo: data.contacts }),
     checkIn: new CheckInServiceImpl({
       checkIns: data.checkIns,
       checkInEdits: data.checkInEdits,

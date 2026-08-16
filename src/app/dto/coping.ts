@@ -11,6 +11,8 @@ export interface CopingSuggestionDto {
   id: string
   label: string
   type: CopingType
+  /** Optional one-line summary used by the strategy library card. */
+  summary?: string
 }
 
 /** A user's own coping strategy row, as returned by `list`/`create`. */
