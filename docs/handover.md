@@ -31,7 +31,27 @@ deliberately empty — fill it in when you split the work.**
 | 4 | **Reminder fires on one hardcoded slot** | `REMINDER_TIMES: ['15:30']` stands in for a user-settable notification time. Fine for the demo, flagged as a simplification — the brief only requires *one* working scenario. | `src/domain/config.ts` | M (needs a settings surface) | |
 | 5 | **Reports tab before day 29** | The tab is reachable from day 1 but the screen is designed as the *final* summary; unreached weeks render locked. Honest, but it is a product decision whether it should be there at all before day 29. | `src/ui/review/`, `TabBar` | product call | |
 | 6 | **Hiding a coping strategy is presentational only** | The library screen renders a "Skryté" section and takes an `onHideStrategy` callback, but `CopingFlow` passes an empty `NO_HIDDEN_STRATEGIES` constant and never wires the callback — so nothing can be hidden. The last open item from [tasks/coping-strategie/backend-assignment.md](../tasks/coping-strategie/backend-assignment.md); everything else in that handoff is done. | `src/ui/coping/CopingFlow.tsx:27,239`; needs a hidden/active distinction the service can persist | S–M | |
-| 7 | **`mobile-safari` e2e never run** | Only Chromium was installed and exercised. | `npx playwright install webkit` | S | |
+| 7 | **`mobile-safari` e2e project never run** | Only Chromium was installed locally. Worth running for layout regressions — but see the note below: the install and notification paths are **not** testable there, and that is a browser limitation, not a gap in our testing. | `npx playwright install webkit` | S | |
+
+### Browser limits — not our bugs, and not testable away
+
+Two features behave differently outside Chromium because the APIs simply do not exist
+there. This is worth stating plainly, because it reads like missing test coverage and
+isn't:
+
+- **The install prompt.** `beforeinstallprompt` — the event that lets a page offer its own
+  "Install" button — is a Chromium-only, non-standard event. **Safari and Firefox do not
+  implement it**, so there is nothing to trigger or assert. The app already handles this:
+  `InstallPrompt.tsx` detects iOS (via `navigator.standalone`) and shows Share → *Add to
+  Home Screen* instructions instead of a button.
+- **Notifications.** iOS Safari only delivers web notifications to an **installed** PWA
+  (16.4+), and Firefox for Android does not implement the `Notification` API at all. The
+  code guards for this rather than assuming — `isNotificationSupported()` gates every call
+  and `getPermission()` can return `'unsupported'`.
+
+So the reminder scenario was verified on Android Chrome, which is the only mobile browser
+where the whole path can run. Testing it "properly on Safari" is not a task anyone can
+pick up — it would need Apple to ship the API.
 
 ### Not on this list any more
 

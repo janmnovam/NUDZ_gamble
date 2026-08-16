@@ -176,8 +176,16 @@ headlines:
 - **Seed data is dev-only** — `window.__seed` is behind `import.meta.env.DEV`, so the
   deployed build cannot load a scenario. The time machine (day/time jump, reset) does
   work in production.
+- **Install prompt and notifications are Chromium-only, by browser design.**
+  `beforeinstallprompt` is a non-standard Chromium event that Safari and Firefox do not
+  implement, and iOS Safari delivers web notifications only to an *installed* PWA while
+  Firefox for Android has no `Notification` API at all. The app degrades on purpose (iOS
+  gets Share → "Add to Home Screen" instructions; every notification call is gated by
+  `isNotificationSupported()`), and the reminder scenario was verified on Android Chrome.
+  This is a platform limit, not untested code.
 - Playwright's `mobile-safari` project needs `npx playwright install webkit`; only
-  Chromium was installed and exercised so far.
+  Chromium was installed and exercised so far. Useful for layout, not for the two paths
+  above.
 
 ## Debug mode
 
