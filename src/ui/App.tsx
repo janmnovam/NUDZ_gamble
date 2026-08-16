@@ -3,9 +3,11 @@ import { useEffect } from 'react'
 import { useOnboardingService } from '@ui/app/AppContext.ts'
 import { useAppView } from '@ui/app/appView.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
-import { Dashboard } from '@ui/dashboard/Dashboard.tsx'
+import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
 import { OnboardingFlow } from '@ui/onboarding/OnboardingFlow.tsx'
+import { FinalSummaryFlow } from '@ui/review/FinalSummaryFlow.tsx'
+import { MOCK_FINAL_SUMMARY } from '@ui/review/mockFinalSummary.ts'
 
 export function App() {
   return (
@@ -58,6 +60,18 @@ function AppRoutes() {
         />
       )
     case 'dashboard':
-      return <Dashboard />
+      return <DashboardFlow />
+    case 'reports':
+      return (
+        <FinalSummaryFlow
+          // ⚠️ Mock data: ReviewService is still a wiring stub, so the weekly
+          // summaries are not derived from stored check-ins yet.
+          summary={MOCK_FINAL_SUMMARY}
+          onExport={() => {
+            // ExportService is a wiring stub too — CSV export isn't built.
+            console.warn('[reports] export requested, but ExportService is not implemented')
+          }}
+        />
+      )
   }
 }

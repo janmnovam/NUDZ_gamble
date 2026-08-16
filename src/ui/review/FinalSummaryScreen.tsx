@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react'
 
 import { Card } from '@ui/components/Card.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
-import { StatusChip } from '@ui/review/components/StatusChip.tsx'
+import { StatusChip } from '@ui/components/StatusChip.tsx'
 import { ReviewShell } from '@ui/review/components/ReviewShell.tsx'
 import type { FinalSummaryViewModel, FinalSummaryWeek } from '@ui/review/types.ts'
 
@@ -17,8 +17,8 @@ export function FinalSummaryScreen({ summary, onOpenWeek, onExport }: FinalSumma
 
   return (
     <ReviewShell footerLabel={t('review.exportCta')} onExport={onExport}>
-      <div className="flex flex-col gap-3 pt-1">
-        <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-2">
           <p className="type-overline text-faint">
             {t('review.final.overline', { day: summary.programmeDayLabel })}
           </p>

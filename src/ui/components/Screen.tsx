@@ -9,6 +9,8 @@ interface ScreenProps {
   header?: ReactNode
   /** Optional pinned bottom area, typically the primary CTA. */
   footer?: ReactNode
+  /** Optional bottom navigation, pinned below the footer (e.g. the tab bar). */
+  nav?: ReactNode
   /** Extra classes for the scrolling content wrapper. Defaults to `gap-5`. */
   contentClassName?: string
 }
@@ -18,10 +20,13 @@ const KEYBOARD_GAP = 100
 
 /**
  * Mobile screen scaffold: a centered, phone-width column that fills the viewport.
- * Content scrolls; the footer stays pinned. Device safe areas are respected via
- * `pt-safe` / `pb-safe` instead of drawing a mock status bar.
+ * Content scrolls; the footer and nav stay pinned. Device safe areas are respected
+ * via `pt-safe` / `pb-safe` instead of drawing a mock status bar.
+ *
+ * Whichever element is bottom-most owns the bottom safe-area inset: with a `nav`
+ * the footer falls back to plain spacing, so the two don't both pad for the notch.
  */
-export function Screen({ children, header, footer, contentClassName }: ScreenProps) {
+export function Screen({ children, header, footer, nav, contentClassName }: ScreenProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const keyboardInset = useKeyboardInset()
 
@@ -57,7 +62,8 @@ export function Screen({ children, header, footer, contentClassName }: ScreenPro
       >
         {children}
       </div>
-      {footer ? <div className="pb-safe px-4 pt-1">{footer}</div> : null}
+      {footer ? <div className={cn('px-4 pt-1', nav ? 'pb-5' : 'pb-safe')}>{footer}</div> : null}
+      {nav ? <div className="pb-safe-inset">{nav}</div> : null}
     </div>
   )
 }

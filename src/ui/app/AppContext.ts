@@ -22,3 +22,12 @@ export function useCopingService() {
   }
   return app.coping
 }
+
+/** The dashboard inbound port, wired to the data layer. Throws outside <AppProvider>. */
+export function useDashboardService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useDashboardService must be used within an <AppProvider>')
+  }
+  return app.dashboard
+}

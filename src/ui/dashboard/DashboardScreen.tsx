@@ -1,0 +1,198 @@
+import { Info } from 'lucide-react'
+
+import { type AxisDto, type DayCellDto, type DashboardResponse } from '@/app/dto/dashboard.ts'
+import { Banner } from '@ui/components/Banner.tsx'
+import { Button } from '@ui/components/Button.tsx'
+import { Card } from '@ui/components/Card.tsx'
+import { DayCell, type DayCellState } from '@ui/components/DayCell.tsx'
+import { LimitBar } from '@ui/components/LimitBar.tsx'
+import { Screen } from '@ui/components/Screen.tsx'
+import { TabBar } from '@ui/components/TabBar.tsx'
+import { StatusChip } from '@ui/components/StatusChip.tsx'
+import { useTranslation } from '@ui/i18n/context.ts'
+import { type TranslationKey } from '@ui/i18n/types.ts'
+import { dayOfMonth, weekdayAbbrev } from '@ui/lib/date.ts'
+import { formatDurationCompact } from '@ui/lib/duration.ts'
+import { groupThousands } from '@ui/lib/money.ts'
+
+/** Programme length in weeks — the "/4" in "Týden 1/4". */
+const TOTAL_WEEKS = 4
+
+/**
+ * `backfilled` looks the same as `completed` (backfill is never shown to the
+ * user — CLAUDE.md), and the day the user is currently on is highlighted as
+ * `today`. That day is `future` in the read model, because a check-in always
+ * covers the *previous* calendar day — so a day already filled in keeps
+ * reading as `completed` rather than being overwritten by the highlight.
+ */
+function toCellState(day: DayCellDto, currentStudyDay: number): DayCellState {
+  if (day.state === 'completed' || day.state === 'backfilled') return 'completed'
+  if (day.studyDay === currentStudyDay && day.state === 'future') return 'today'
+  return day.state
+}
+
+const DAY_STATE_KEYS = {
+  completed: 'dashboard.dayState.completed',
+  missing: 'dashboard.dayState.missing',
+  today: 'dashboard.dayState.today',
+  future: 'dashboard.dayState.future',
+} as const satisfies Record<DayCellState, TranslationKey>
+
+interface DashboardScreenProps {
+  dashboard: DashboardResponse
+  /** Opens the check-in. Omitted while none is due. */
+  onCheckIn?: () => void
+  /** Opens backfill for a missing day, by ISO date. */
+  onBackfillDay?: (date: string) => void
+}
+
+/**
+ * The dashboard (Figma "03 · Dashboard"): where the user stands against both
+ * weekly limits, how the current week is filling in, and the single next action.
+ *
+ * Pure presentation — every number arrives already derived on the
+ * `DashboardResponse`, because cumulative usage, weekly totals and the overall
+ * state are computed from source records, never stored (CLAUDE.md).
+ */
+export function DashboardScreen({ dashboard, onCheckIn, onBackfillDay }: DashboardScreenProps) {
+  const { t, locale } = useTranslation()
+
+  const hourUnit = t('dashboard.unitHour')
+  const minuteUnit = t('dashboard.unitMinute')
+  const currency = t('dashboard.currency')
+
+  const formatMinutes = (value: number) => formatDurationCompact(value, hourUnit, minuteUnit)
+  const formatCzk = (value: number) => `${groupThousands(value)}\u00A0${currency}`
+
+  /**
+   * "zbývá 8 h z 8 h" inside the limit, "překročeno o …" past it. Keyed off the
+   * status the domain already classified, so the sentence and the chip can
+   * never disagree about where "exceeded" begins.
+   */
+  const axisNote = (axis: AxisDto, format: (value: number) => string) =>
+    axis.status === 'PREKROCENO'
+      ? t('dashboard.exceededBy', {
+          over: format(axis.used - axis.limit),
+          limit: format(axis.limit),
+        })
+      : t('dashboard.remaining', {
+          remaining: format(Math.max(axis.remaining, 0)),
+          limit: format(axis.limit),
+        })
+
+  // The domain resolves exactly one pending action; the CTA reflects that
+  // rather than whether a handler happens to be wired yet.
+  const checkInDue = dashboard.pendingAction === 'checkin_due'
+  // The banner is driven by the same data: missing days first (Figma "24
+  // Dashboard — den 6"), otherwise the programme-start notice on day 1.
+  const firstMissingDay = dashboard.missingDays[0]
+  const showStartNotice = firstMissingDay === undefined && dashboard.studyDay <= 1
+
+  return (
+    <Screen
+      contentClassName="gap-3"
+      header={
+        <div className="flex flex-col gap-0.5 px-4 pt-2 pb-4">
+          <h1 className="type-h1-display text-ink">
+            {t('dashboard.title', { day: Math.max(dashboard.studyDay, 1) })}
+          </h1>
+          <p className="type-body-sm text-muted">
+            {t('dashboard.subtitle', { week: dashboard.weekNo, total: TOTAL_WEEKS })}
+          </p>
+        </div>
+      }
+      footer={
+        <Button
+          size="md"
+          fullWidth
+          variant={checkInDue ? 'primary' : 'secondary'}
+          disabled={!checkInDue || !onCheckIn}
+          onClick={onCheckIn}
+        >
+          {checkInDue ? t('dashboard.cta.checkInDue') : t('dashboard.cta.checkInTomorrow')}
+        </Button>
+      }
+      nav={<TabBar active="home" />}
+    >
+      <Card className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-2">
+          <span className="type-body-emphasis text-ink">{t('dashboard.overall.label')}</span>
+          <StatusChip status={dashboard.overallStatus} />
+        </div>
+
+        <LimitBar
+          label={t('dashboard.limit.time')}
+          percent={dashboard.time.percent}
+          percentLabel={t('dashboard.percent', { value: dashboard.time.percent ?? 0 })}
+          status={dashboard.time.status}
+          thresholdPercent={dashboard.cautionThresholdPercent}
+          note={axisNote(dashboard.time, formatMinutes)}
+        />
+
+        <LimitBar
+          label={t('dashboard.limit.stakes')}
+          percent={dashboard.stakes.percent}
+          percentLabel={t('dashboard.percent', { value: dashboard.stakes.percent ?? 0 })}
+          status={dashboard.stakes.status}
+          thresholdPercent={dashboard.cautionThresholdPercent}
+          note={axisNote(dashboard.stakes, formatCzk)}
+        />
+      </Card>
+
+      <Card className="flex flex-col gap-2">
+        <p className="type-overline text-faint">{t('dashboard.week.overline')}</p>
+        <div className="grid grid-cols-7 gap-[5px]">
+          {dashboard.days.map((day) => {
+            const weekday = weekdayAbbrev(day.date, locale)
+            const dayNumber = dayOfMonth(day.date)
+            const cellState = toCellState(day, dashboard.studyDay)
+            const backfill = cellState === 'missing' && onBackfillDay ? onBackfillDay : undefined
+
+            return (
+              <DayCell
+                key={day.date}
+                weekday={weekday}
+                day={dayNumber}
+                state={cellState}
+                ariaLabel={t('dashboard.day.aria', {
+                  weekday,
+                  day: dayNumber,
+                  state: t(DAY_STATE_KEYS[cellState]),
+                })}
+                {...(backfill === undefined
+                  ? {}
+                  : {
+                      onClick: () => {
+                        backfill(day.date)
+                      },
+                    })}
+              />
+            )
+          })}
+        </div>
+
+        {firstMissingDay === undefined ? null : (
+          <Banner
+            icon={Info}
+            title={t('dashboard.banner.missing.title')}
+            {...(onBackfillDay === undefined
+              ? {}
+              : {
+                  onClick: () => {
+                    onBackfillDay(firstMissingDay)
+                  },
+                })}
+          />
+        )}
+      </Card>
+
+      {showStartNotice ? (
+        <Banner
+          icon={Info}
+          title={t('dashboard.banner.started.title')}
+          body={t('dashboard.banner.started.body')}
+        />
+      ) : null}
+    </Screen>
+  )
+}

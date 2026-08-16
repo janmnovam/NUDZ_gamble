@@ -38,11 +38,20 @@
   --color-danger: #c1502e; /* Button "Danger (terracotta)" — no Figma token, approximated */
   --color-line: #e7dfd2; /* border-default */
   --color-line-strong: #cfc5b4; /* border-strong */
+  --color-disabled: #cfc5b4; /* text-disabled — same hex as border-strong, different role */
 
-  /* Domain state colours (OK / POZOR / PŘEKROČENO) for later dashboard work. */
-  --color-status-ok: #5b9a7b;
-  --color-status-caution: #a2762c;
-  --color-status-exceeded: #c1502e;
+  /* Domain state colours (OK / POZOR / PŘEKROČENO). Each state plays three
+     roles on the dashboard: the text/icon colour, the subtle chip or cell
+     background, and the progress-bar fill. */
+  --color-status-ok: #3a6752; /* status-success-text */
+  --color-status-ok-subtle: #eef5f1; /* status-success-subtle */
+  --color-status-ok-fill: #5b9a7b; /* no Figma token — reuses status-success */
+  --color-status-caution: #a2762c; /* status-warning-text */
+  --color-status-caution-subtle: #fdf6e7; /* status-warning-subtle */
+  --color-status-caution-fill: #e8b04b; /* status-warning */
+  --color-status-exceeded: #9e4224; /* status-danger-text */
+  --color-status-exceeded-subtle: #fdf1ec; /* status-danger-subtle */
+  --color-status-exceeded-fill: #e4693e; /* status-danger */
 }
 
 @layer base {
@@ -68,6 +77,15 @@
     font-weight: 600;
     font-size: 2rem;
     line-height: 2.375rem;
+    letter-spacing: -0.5px;
+  }
+  /* Figma "Heading/H1". The older `.type-h1` below predates it and maps to a
+     different Figma style (Inter 22), so the two are not interchangeable. */
+  .type-h1-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.75rem;
+    line-height: 1.75rem;
     letter-spacing: -0.5px;
   }
   .type-h1 {
@@ -112,6 +130,12 @@
     font-size: 0.9375rem;
     line-height: 1.25rem;
   }
+  /* Figma "Label/Compact" — status chips and the tab bar. */
+  .type-label-compact {
+    font-weight: 500;
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
   .type-overline {
     font-weight: 600;
     font-size: 0.6875rem;
@@ -137,6 +161,10 @@
   }
   .pb-safe {
     padding-bottom: calc(env(safe-area-inset-bottom) + 1.25rem);
+  }
+  /* For a bottom nav that already has its own height: inset only, no extra gap. */
+  .pb-safe-inset {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   /* Hide the scrollbar on the wheel picker while keeping it scrollable. */

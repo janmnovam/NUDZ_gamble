@@ -40,4 +40,11 @@ export interface DashboardResponse {
   days: DayCellDto[]
   missingDays: ISOCalendarTimestamp[]
   pendingAction: PendingAction
+  /**
+   * The OK/POZOR boundary as a whole-number percent (80). Carried so a progress
+   * bar can mark the threshold without reading `DEFAULT_CONFIG` itself — the
+   * tick and the `status` classification must always agree, and they only do
+   * that reliably if both come from the same place.
+   */
+  cautionThresholdPercent: number
 }
