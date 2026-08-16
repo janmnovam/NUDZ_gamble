@@ -200,6 +200,8 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Technical debt
 
+TypeScript pinned to 6.x — dependency-driven, not a design choice. Revisit once typescript-eslint supports TS 7, since it blocks tooling/perf improvements.
+
 ## Suggested next steps
 
 Not included in the hackathon version:
