@@ -164,4 +164,12 @@ export const cs = {
   'dashboard.unitHour': 'h',
   'dashboard.unitMinute': 'min',
   'dashboard.currency': 'Kč',
+
+  'coping.title': 'Váš Coping',
+  'coping.lead':
+    'Tvoje copingové strategie. Vypni tu, kterou zrovna nepoužíváš, nebo přidej vlastní.',
+  'coping.empty': 'Zatím nemáš žádnou strategii.',
+  'coping.add.label': 'Přidat vlastní strategii',
+  'coping.add.placeholder': 'Napiš vlastní…',
+  'coping.add.cta': 'Přidat',
 } as const

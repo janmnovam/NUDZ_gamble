@@ -14,11 +14,11 @@ export function useOnboardingService() {
   return app.onboarding
 }
 
-/** The onboarding inbound port, wired to the data layer. Throws outside <AppProvider>. */
+/** The coping-strategy inbound port, wired to the data layer. Throws outside <AppProvider>. */
 export function useCopingService() {
   const app = useContext(AppContext)
   if (!app) {
-    throw new Error('useOnboardingService must be used within an <AppProvider>')
+    throw new Error('useCopingService must be used within an <AppProvider>')
   }
   return app.coping
 }

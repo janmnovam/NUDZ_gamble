@@ -5,6 +5,7 @@ import { useOnboardingService } from '@ui/app/AppContext.ts'
 import { useAppView } from '@ui/app/appView.ts'
 import { clientNow } from '@ui/clock.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
+import { CopingFlow } from '@ui/coping/CopingFlow.tsx'
 import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
 import { useExportDownload } from '@ui/export/useExportDownload.ts'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
@@ -80,6 +81,8 @@ function AppRoutes() {
       )
     case 'dashboard':
       return <DashboardFlow />
+    case 'coping':
+      return <CopingFlow />
     case 'reports':
       return <ReportsSection />
   }

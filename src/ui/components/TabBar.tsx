@@ -15,6 +15,7 @@ export type TabKey = (typeof tabs)[number]['key']
 /** Which app view each tab opens. Absent = no screen built yet. */
 const TAB_VIEWS: Partial<Record<TabKey, AppView>> = {
   home: 'dashboard',
+  coping: 'coping',
   reports: 'reports',
 }
 
@@ -40,8 +41,8 @@ export function TabBar({ active: activeKey = 'reports' }: TabBarProps = {}) {
       {tabs.map((tab) => {
         const active = tab.key === activeKey
         const Icon = tab.icon
-        // A tab is only a control when there is somewhere to go: `coping` has
-        // no screen yet, so it stays static chrome rather than a dead-end tap.
+        // A tab is only a control when there is somewhere to go — a future
+        // tab with no screen yet stays static chrome rather than a dead-end tap.
         const target = TAB_VIEWS[tab.key]
         const reachable = !active && target !== undefined
         const content = (

@@ -158,4 +158,11 @@ export const en: Record<TranslationKey, string> = {
   'dashboard.unitHour': 'h',
   'dashboard.unitMinute': 'min',
   'dashboard.currency': 'Kč',
+
+  'coping.title': 'Your Coping',
+  'coping.lead': "Your coping strategies. Turn off one you're not using, or add your own.",
+  'coping.empty': "You don't have any strategy yet.",
+  'coping.add.label': 'Add your own strategy',
+  'coping.add.placeholder': 'Write your own…',
+  'coping.add.cta': 'Add',
 }
