@@ -1,127 +1,161 @@
 # Knihovna strategií — předání pro backend
 
-:::Stav: TODO
+:::Stav: READY FOR BACKEND
 
 ## Cíl
 
-Napojit hotovou frontendovou vrstvu Knihovny strategií na skutečný katalog,
-kontakty a lokálně perzistentní uživatelský stav. Po obnovení PWA musí uživatel
-vidět stejné vlastní, vybrané a skryté strategie jako před zavřením aplikace.
+Doplnit datovou vrstvu, která umožní zapnout zbývající hotové funkce Knihovny
+strategií: úplný katalog a jeho detaily, nezávislé stavy Vybrané a Skryté a
+plnou správu vlastních strategií. Po obnovení PWA musí uživatel vidět stejný
+stav jako před zavřením aplikace.
 
-Toto zadání popisuje očekávané chování a integrační potřeby. Záměrně
-nepředepisuje databázové tabulky, schéma, migrace, repository API ani to, zda má
-být katalog přibalený k aplikaci, seedovaný do lokálního úložiště nebo získaný
-jiným způsobem. Za návrh datové vrstvy odpovídá backendový tým.
+Zadání popisuje očekávané chování a integrační potřeby. Návrh databázového
+schématu, migrací a service/repository rozhraní je v odpovědnosti backendového
+týmu.
 
-## Výchozí stav
+## Současný stav na `main`
 
-- Frontendové komponenty jsou v `src/ui/coping` a mají komponentové testy.
-- `StrategySection` přijímá katalogové detaily, kontakty a rozdělené seznamy
-  strategií přes props.
-- Uživatelské akce předává nadřazené vrstvě pomocí callbacků.
-- Současný `CopingStrategyEntity` nepokrývá celý požadovaný stav knihovny ani
-  strukturovaný katalogový detail.
-- Současné katalogové návrhy v `src/data/seeds/copingDefaults.ts` slouží
-  stávajícímu onboardingu a nejsou kompletním zdrojem pro novou knihovnu.
-- `App` po této větvi nadále standardně otevírá existující onboarding. Neobsahuje
-  preview katalog ani dočasný in-memory store.
+- `CopingFlow` je napojený na současný `CopingStrategyService`.
+- `list` načítá uložené strategie, `create` vytvoří vlastní strategii s názvem a
+  `toggle` mění současný stav `active`.
+- `active: true` se ve frontendu zobrazuje jako Vybrané a `active: false` jako
+  Další strategie.
+- `getSuggestions` vrací šest katalogových návrhů s ID odvozeným ze stabilního
+  katalogového `code`, názvem a jednořádkovým souhrnem.
+- Katalogový souhrn se k uložené strategii dočasně přiřazuje pouze přes přesnou
+  shodu názvu. Při neshodě se raději nezobrazí žádný souhrn.
+- Záložka Kontakty je napojená přes read-only `ContactService` na existující
+  lokální adresář.
+- Detail, Skrýt/Obnovit, editace a smazání zůstávají ve flow vypnuté, přestože
+  jejich frontendové komponenty a komponentové testy už existují.
 
-## Co frontend potřebuje načíst
+Současný uložený záznam strategie obsahuje UUID, uživatele, název, typ,
+`priority`, `active` a časová razítka. U katalogové strategie ale neuchovává
+stabilní `code` původní katalogové položky. Samotné `list` navíc vrací pouze
+uložené strategie, nikoliv celý šestipoložkový katalog.
 
-### Katalog strategií
+## Data potřebná pro sestavení knihovny
 
-Pro každou publikovanou katalogovou strategii potřebuje frontend:
+### Katalogová strategie
 
-- stabilní identifikátor,
-- pevné pořadí,
-- název a souhrn pro kartu,
+Pro všech šest publikovaných katalogových strategií frontend potřebuje:
+
+- stabilní katalogové ID nezávislé na uživatelském textu,
+- pevné katalogové pořadí,
+- název a souhrn karty,
 - obsah detailu „Co udělat“, „Proč to může pomoci“, „Jak na to“ a „Kdy se může
   hodit“,
-- volitelnou realistickou poznámku nebo dostupnou alternativu,
-- volitelné oficiální odkazy pro relevantní strategii.
+- volitelnou poznámku nebo dostupnou alternativu,
+- volitelné oficiální odkazy.
 
-Konkrétní aktuální texty a vizuální pořadí určuje Figma. `content.md` je pomocný
-obsahový podklad; při rozporu má přednost Figma.
+Aktuální texty a pořadí určuje Figma. `content.md` je pomocný podklad; při
+rozporu má přednost Figma.
 
-### Aktuální stav knihovny
+### Uživatelský stav katalogové strategie
 
-Při otevření knihovny musí být možné načíst:
+Pro každou katalogovou položku musí být možné zjistit:
 
-- které katalogové strategie jsou ve Vybraných,
-- které katalogové strategie jsou skryté,
-- všechny vlastní strategie včetně názvu, volitelného pole „Kdy ji chci použít?“
-  a volitelného pole „Jak začnu?“,
-- stav Vybrané a Skryté každé vlastní strategie,
-- údaj umožňující řadit vlastní strategie od nejnovější.
+- zda je ve Vybraných,
+- zda je skrytá.
 
-Stavy Vybrané a Skryté jsou nezávislé. Skrytí nesmí zrušit výběr a obnovená
-strategie se musí vrátit do původní sekce.
+Tyto stavy jsou nezávislé. Skrytí nesmí změnit stav Vybrané a obnovená položka
+se musí vrátit do původní sekce.
 
-### Kontakty
+### Vlastní strategie
 
-Frontend potřebuje seznam kontaktů s názvem, účelem a dostupnými kontaktními
-údaji nebo odkazy v pořadí schváleném obsahem/Figmou.
+Frontend potřebuje načíst a ukládat:
 
-## Operace, které musí datová vrstva obsloužit
+- stabilní ID,
+- povinný název,
+- volitelné pole „Kdy ji chci použít?“,
+- volitelné pole „Jak začnu?“,
+- nezávislý stav Vybrané,
+- nezávislý stav Skryté,
+- čas vytvoření a poslední změny.
 
-- načíst knihovnu a kontakty,
+Čas vytvoření slouží k řazení vlastních strategií od nejnovější.
+
+## Operace zbývající k implementaci
+
+- načíst jeden aktuální stav, ze kterého frontend sestaví Vybrané, Další a
+  Skryté strategie,
+- vrátit všech šest katalogových položek včetně úplného detailu,
 - přidat nebo odebrat katalogovou i vlastní strategii z Vybraných,
 - skrýt a obnovit katalogovou i vlastní strategii,
-- vytvořit vlastní strategii,
-- upravit tři povolená pole vlastní strategie,
+- vytvořit vlastní strategii se třemi podporovanými poli,
+- upravit tři podporovaná pole vlastní strategie,
 - trvale smazat vlastní strategii,
-- vrátit srozumitelnou chybu při neúspěšném načtení nebo uložení.
+- vrátit rozlišitelné chyby načtení, validace a uložení.
 
-Katalogovou strategii nelze upravit ani smazat. Frontend už potvrzuje smazání
-vlastní strategie, ale datová vrstva musí odmítnout neplatnou operaci bez ohledu
-na klientské rozhraní.
+Katalogovou strategii nelze upravit ani smazat. Datová vrstva musí neplatnou
+operaci odmítnout nezávisle na klientské validaci.
 
-## Funkční pravidla, která musí zůstat zachována
+## Funkční pravidla
 
-- Nejvýše pět vlastních strategií; do limitu se počítají i skryté a nevybrané.
+- Nejvýše pět vlastních strategií; započítávají se i skryté a nevybrané.
 - Nová vlastní strategie se automaticky zařadí do Vybraných.
-- Duplicitní název katalogové nebo vlastní strategie není povolen; porovnání
+- Duplicitní název katalogové nebo vlastní strategie není povolen. Porovnání
   ignoruje velikost písmen a mezery před a za názvem.
 - Název vlastní strategie je povinný a má nejvýše 80 znaků.
 - Volitelná pole mají každé nejvýše 240 znaků.
-- Vlastní strategie se řadí od nejnovější, katalogové v pevném katalogovém
-  pořadí; ruční řazení není podporované.
-- Změny zůstávají po reloadu PWA zachované.
+- V každé sekci se nejprve řadí vlastní strategie od nejnovější a potom
+  katalogové strategie v pevném pořadí.
+- Všechny úspěšné změny musí přežít reload PWA.
 
-## Očekávané napojení frontendu
+## Migrace existujících dat
 
-Backendový tým může navrhnout vhodné service/repository rozhraní. Na integrační
-hranici ale frontend potřebuje:
+Migrace musí zachovat současné vlastní strategie i stav `active` již uložených
+strategií. Součástí návrhu musí být způsob, jak existující katalogové záznamy
+spojit se stabilním katalogovým ID bez dlouhodobé závislosti na názvu.
 
-1. jeden načtený stav, ze kterého lze sestavit Vybrané, Další a Skryté,
-2. úplné katalogové detaily a kontakty,
-3. asynchronní operace pro všechny změny uvedené výše,
-4. rozlišení stavu načítání a chyby,
-5. možnost po úspěšné mutaci zobrazit aktuální uložený stav.
+Po migraci se stejná katalogová strategie nesmí objevit dvakrát a změna jejího
+uživatelského textu nesmí ztratit uložený stav uživatele.
 
-Před finálním napojením je možné upravit současné props/callbacky
-`StrategySection`, pokud backendový návrh nabídne čistší aplikační rozhraní.
-Vizuální komponenty a jejich produktové chování se tím nemají měnit.
+## Očekávaná integrační hranice
 
-## Akceptační kritéria backendového předání
+Backendový tým může navrhnout vhodné service/repository rozhraní. Frontend na
+aplikační hranici potřebuje:
 
-- Knihovna se sestaví bez hardcoded preview dat v `App.tsx`.
-- Všech šest katalogových strategií má kartu i úplný detail z aktuálního zdroje
+1. načtený stav celého katalogu a všech vlastních strategií,
+2. úplné katalogové detaily,
+3. asynchronní operace pro všechny výše uvedené změny,
+4. rozlišení chyb načtení, validace a uložení,
+5. aktuální uložený stav po úspěšné mutaci.
+
+Props a callbacky `StrategySection` lze při finálním napojení upravit podle
+výsledného kontraktu. Vizuální komponenty a produktové chování zůstávají
+zachované.
+
+## Akceptační kritéria
+
+- Knihovna vždy zobrazí všech šest katalogových strategií právě jednou.
+- Každá katalogová karta má souhrn a otevírá úplný detail z aktuálního zdroje
   obsahu.
-- Všechny podporované mutace přežijí reload aplikace.
+- Vybrané, Další a Skryté se správně sestaví z uloženého stavu.
 - Výběr a skrytí zůstanou nezávislé také po reloadu.
 - Vytvoření, úprava a smazání vlastní strategie se projeví v uloženém stavu.
-- Limit, délky polí a unikátnost názvu jsou chráněné i mimo klientskou validaci.
-- Chyba načtení nebo uložení je rozlišitelná a frontend na ni může reagovat bez
-  ztráty rozepsaného formuláře.
-- Existují testy datové vrstvy a alespoň jeden integrační test toku načtení →
-  změna → reload → opětovné načtení.
+- Limit, délky polí a unikátnost názvu jsou chráněné v aplikační nebo datové
+  vrstvě, nejen ve formuláři.
+- Chyba uložení je rozlišitelná a frontend při ní může zachovat rozepsaný
+  formulář.
+- Existující data projdou migrací bez ztráty vlastních strategií nebo stavu
+  Vybrané.
+
+## Požadované testy
+
+- načtení kompletního katalogu a spojení s uživatelským stavem,
+- nezávislost stavů Vybrané a Skryté,
+- vytvoření, úprava a smazání vlastní strategie,
+- limit pěti strategií, délky polí a kontrola duplicit,
+- migrace současného záznamu katalogové i vlastní strategie,
+- ochrana katalogové strategie před editací a smazáním,
+- integrační tok načtení → změna → reload → opětovné načtení.
 
 ## Rozhodnutí ponechaná backendovému týmu
 
 - výsledný datový model a vztah k současnému `coping_strategy`,
-- způsob distribuce a případného verzování katalogového obsahu,
+- způsob distribuce a verzování katalogového obsahu,
 - použitá lokální nebo vzdálená persistence,
-- migrace existujících dat,
+- konkrétní migrační strategie,
 - hranice repository/service vrstvy a transakční chování,
 - strategie optimistic/pessimistic aktualizací po dohodě s frontendem.

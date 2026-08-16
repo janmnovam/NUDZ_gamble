@@ -1,6 +1,6 @@
 # Knihovna strategií — vývojové zadání
 
-:::Stav: Frontend knihovny DONE; datové napojení TODO
+:::Stav: Frontend knihovny DONE; základní napojení DONE; rozšířená datová vrstva TODO
 
 Tento dokument je samostatné zadání pro vývoj. Uživatelské texty a obsah
 katalogu jsou v [content.md](content.md).
@@ -17,13 +17,13 @@ Hotová je prezentační a interakční vrstva samotné Knihovny strategií:
 - limit pěti vlastních strategií a související validace,
 - komponentové testy.
 
-Frontend přijímá katalog, kontakty i uživatelský stav přes props a změny předává
-callbacky. Tato větev záměrně neobsahuje dočasná preview data ani nemění výchozí
-start aplikace. Onboarding zůstává beze změny.
+`CopingFlow` už používá existující `list`, `create`, `toggle`, katalogové souhrny
+a read-only službu kontaktů. Díky tomu je základní knihovna dostupná z navigace
+Strategie a změny současného stavu `active` přežijí reload.
 
-Načítání, ukládání, migrace a napojení na existující aplikační služby nejsou
-součástí hotové frontendové vrstvy. Samostatné předání pro backend je v
-[backend-assignment.md](backend-assignment.md).
+Úplný katalog, stabilní vazba katalogového ID, detaily, nezávislé skrývání a
+plná správa vlastních strategií vyžadují rozšíření datové vrstvy. Samostatné
+předání pro backend je v [backend-assignment.md](backend-assignment.md).
 
 ## Cíl
 
