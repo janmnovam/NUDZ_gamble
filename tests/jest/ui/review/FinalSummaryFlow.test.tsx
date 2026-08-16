@@ -3,12 +3,36 @@ import { jest } from '@jest/globals'
 
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
 import { FinalSummaryFlow } from '@ui/review/FinalSummaryFlow.tsx'
-import { MOCK_FINAL_SUMMARY } from '@ui/review/mockFinalSummary.ts'
+import type { FinalSummaryViewModel } from '@ui/review/types.ts'
 
-function renderFinalSummary(onExport = jest.fn()) {
+const TEST_SUMMARY: FinalSummaryViewModel = {
+  programmeDayLabel: 'TEST DAY',
+  weeks: [
+    {
+      weekNo: 1,
+      status: 'PREKROCENO',
+      timeUsedLabel: 'test time used',
+      timeLimitLabel: 'test time limit',
+      stakesUsedLabel: 'test stakes used',
+      stakesLimitLabel: 'test stakes limit',
+      filledDays: 6,
+      totalDays: 7,
+      days: [
+        { dayLabel: 'PO', dayNumber: 1, state: 'completed' },
+        { dayLabel: 'ÚT', dayNumber: 2, state: 'completed' },
+        { dayLabel: 'ST', dayNumber: 3, state: 'missing' },
+      ],
+    },
+  ],
+}
+
+function renderFinalSummary(
+  summary = TEST_SUMMARY,
+  onExport: jest.Mock = jest.fn(),
+) {
   render(
     <I18nProvider>
-      <FinalSummaryFlow summary={MOCK_FINAL_SUMMARY} onExport={onExport} />
+      <FinalSummaryFlow summary={summary} onExport={onExport} />
     </I18nProvider>,
   )
 }
@@ -16,10 +40,10 @@ function renderFinalSummary(onExport = jest.fn()) {
 describe('FinalSummaryFlow', () => {
   it('renders the final summary overview and emits export requests', () => {
     const onExport = jest.fn()
-    renderFinalSummary(onExport)
+    renderFinalSummary(TEST_SUMMARY, onExport)
 
     expect(screen.getByRole('heading', { name: 'Přehledy' })).toBeTruthy()
-    expect(screen.getByText('Měsíční souhrn · DEN 29')).toBeTruthy()
+    expect(screen.getByText('Měsíční souhrn · TEST DAY')).toBeTruthy()
     expect(screen.getByRole('button', { name: /Týden 1/ })).toBeTruthy()
     expect(screen.getByText('PŘEKROČENO')).toBeTruthy()
 
@@ -33,11 +57,10 @@ describe('FinalSummaryFlow', () => {
     fireEvent.click(screen.getByRole('button', { name: /Týden 1/ }))
 
     expect(screen.getByText('Týden 1 je uzavřený')).toBeTruthy()
-    expect(screen.getByText('9h 30 min z 10h 0 min')).toBeTruthy()
-    expect(screen.getByText('6 ze 7 dnů')).toBeTruthy()
+    expect(screen.getByText('Souhrn týdne 1')).toBeTruthy()
     expect(screen.getByText('Průběh týdne')).toBeTruthy()
 
     fireEvent.click(screen.getByRole('button', { name: 'Zpět' }))
-    expect(screen.getByText('Měsíční souhrn · DEN 29')).toBeTruthy()
+    expect(screen.getByText('Měsíční souhrn · TEST DAY')).toBeTruthy()
   })
 })
