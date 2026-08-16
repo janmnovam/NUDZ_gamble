@@ -1,4 +1,4 @@
-import { Info } from 'lucide-react'
+import { ArrowRight, Info } from 'lucide-react'
 
 import { type AxisDto, type DayCellDto, type DashboardResponse } from '@/app/dto/dashboard.ts'
 import { Banner } from '@ui/components/Banner.tsx'
@@ -44,6 +44,12 @@ interface DashboardScreenProps {
   onCheckIn?: () => void
   /** Opens backfill for a missing day, by ISO date. */
   onBackfillDay?: (date: string) => void
+  /** Fires on each tap of the day heading — the hidden admin gesture. */
+  onSecretTap?: () => void
+  /** Whether the demo time machine is engaged (shows the exit pill). */
+  timeMachineActive?: boolean
+  /** Leaves the time machine, back to the real day. */
+  onExitTimeMachine?: () => void
 }
 
 /**
@@ -54,7 +60,14 @@ interface DashboardScreenProps {
  * `DashboardResponse`, because cumulative usage, weekly totals and the overall
  * state are computed from source records, never stored (CLAUDE.md).
  */
-export function DashboardScreen({ dashboard, onCheckIn, onBackfillDay }: DashboardScreenProps) {
+export function DashboardScreen({
+  dashboard,
+  onCheckIn,
+  onBackfillDay,
+  onSecretTap,
+  timeMachineActive = false,
+  onExitTimeMachine,
+}: DashboardScreenProps) {
   const { t, locale } = useTranslation()
 
   const hourUnit = t('dashboard.unitHour')
@@ -92,13 +105,28 @@ export function DashboardScreen({ dashboard, onCheckIn, onBackfillDay }: Dashboa
     <Screen
       contentClassName="gap-3"
       header={
-        <div className="flex flex-col gap-0.5 px-4 pt-2 pb-4">
-          <h1 className="type-h1-display text-ink">
-            {t('dashboard.title', { day: Math.max(dashboard.studyDay, 1) })}
-          </h1>
-          <p className="type-body-sm text-muted">
-            {t('dashboard.subtitle', { week: dashboard.weekNo, total: TOTAL_WEEKS })}
-          </p>
+        <div className="flex items-start justify-between gap-2 px-4 pt-2 pb-4">
+          <div className="flex flex-col gap-0.5">
+            <h1
+              className="type-h1-display text-ink cursor-default select-none"
+              onClick={onSecretTap}
+            >
+              {t('dashboard.title', { day: Math.max(dashboard.studyDay, 1) })}
+            </h1>
+            <p className="type-body-sm text-muted">
+              {t('dashboard.subtitle', { week: dashboard.weekNo, total: TOTAL_WEEKS })}
+            </p>
+          </div>
+          {timeMachineActive && onExitTimeMachine ? (
+            <button
+              type="button"
+              onClick={onExitTimeMachine}
+              className="bg-brand-subtle text-brand-ink type-body-sm focus-visible:ring-brand mt-1 inline-flex shrink-0 items-center gap-1 rounded-full px-3 py-1.5 font-medium hover:brightness-95 focus-visible:ring-2 focus-visible:outline-none"
+            >
+              {t('dashboard.timeMachine.exit')}
+              <ArrowRight className="size-4" aria-hidden />
+            </button>
+          ) : null}
         </div>
       }
       footer={

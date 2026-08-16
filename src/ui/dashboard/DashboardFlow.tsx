@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 
 import { type DashboardResponse } from '@/app/dto/dashboard.ts'
+import { useAdminStore } from '@ui/admin/adminStore.ts'
+import { TimeMachineModal } from '@ui/admin/TimeMachineModal.tsx'
+import { useMultiTap } from '@ui/admin/useMultiTap.ts'
 import { Screen } from '@ui/components/Screen.tsx'
 import { DashboardScreen } from '@ui/dashboard/DashboardScreen.tsx'
 import { DEMO_USER_ID } from '@/app/constants.ts'
@@ -23,10 +26,20 @@ export function DashboardFlow() {
   const dashboardService = useDashboardService()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
 
+  // Hidden demo console: the time machine sets a simulated instant, which we
+  // pass into the read model in place of the real clock. Changing it re-runs
+  // the fetch below, so the dashboard reflects the simulated day.
+  const panelOpen = useAdminStore((s) => s.panelOpen)
+  const simulatedTime = useAdminStore((s) => s.simulatedTime)
+  const openPanel = useAdminStore((s) => s.openPanel)
+  const exitTimeMachine = useAdminStore((s) => s.exitTimeMachine)
+  const onSecretTap = useMultiTap(7, openPanel)
+
   useEffect(() => {
     let cancelled = false
 
-    void dashboardService.getDashboard(DEMO_USER_ID, clientNow()).then(
+    const time = simulatedTime ?? clientNow()
+    void dashboardService.getDashboard(DEMO_USER_ID, time).then(
       (dashboard) => {
         if (!cancelled) setState({ status: 'ready', dashboard })
       },
@@ -39,7 +52,7 @@ export function DashboardFlow() {
     return () => {
       cancelled = true
     }
-  }, [dashboardService])
+  }, [dashboardService, simulatedTime])
 
   if (state.status !== 'ready') {
     return (
@@ -51,5 +64,15 @@ export function DashboardFlow() {
     )
   }
 
-  return <DashboardScreen dashboard={state.dashboard} />
+  return (
+    <>
+      <DashboardScreen
+        dashboard={state.dashboard}
+        onSecretTap={onSecretTap}
+        timeMachineActive={simulatedTime !== null}
+        onExitTimeMachine={exitTimeMachine}
+      />
+      {panelOpen ? <TimeMachineModal currentDay={state.dashboard.studyDay} /> : null}
+    </>
+  )
 }

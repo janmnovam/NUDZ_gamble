@@ -172,4 +172,12 @@ export const cs = {
   'coping.add.label': 'Přidat vlastní strategii',
   'coping.add.placeholder': 'Napiš vlastní…',
   'coping.add.cta': 'Přidat',
+
+  'dashboard.timeMachine.exit': 'Opustit stroj času',
+  'admin.timeMachine.title': 'Stroj času',
+  'admin.timeMachine.dayLabel': 'Přejít na den intervence:',
+  'admin.timeMachine.confirm': 'Potvrdit',
+  'admin.timeMachine.wipe': 'Smazat data',
+  'admin.timeMachine.wipeConfirm': 'Opravdu smazat všechna data a začít od začátku?',
+  'admin.timeMachine.close': 'Zavřít',
 } as const

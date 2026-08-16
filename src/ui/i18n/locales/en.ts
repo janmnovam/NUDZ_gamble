@@ -165,4 +165,12 @@ export const en: Record<TranslationKey, string> = {
   'coping.add.label': 'Add your own strategy',
   'coping.add.placeholder': 'Write your own…',
   'coping.add.cta': 'Add',
+
+  'dashboard.timeMachine.exit': 'Exit time machine',
+  'admin.timeMachine.title': 'Time machine',
+  'admin.timeMachine.dayLabel': 'Go to intervention day:',
+  'admin.timeMachine.confirm': 'Confirm',
+  'admin.timeMachine.wipe': 'Delete data',
+  'admin.timeMachine.wipeConfirm': 'Delete all data and start over?',
+  'admin.timeMachine.close': 'Close',
 }

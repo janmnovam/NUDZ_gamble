@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { useCopingService, useOnboardingService } from '@ui/app/AppContext.ts'
+import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { CopingStep } from '@ui/onboarding/steps/CopingStep.tsx'
 import { DoneStep } from '@ui/onboarding/steps/DoneStep.tsx'
 import { IntroStep } from '@ui/onboarding/steps/IntroStep.tsx'
@@ -26,6 +27,7 @@ interface OnboardingFlowProps {
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const onboarding = useOnboardingService()
   const coping = useCopingService()
+  const rememberInterventionStart = useAdminStore((s) => s.setInterventionStartDate)
   const submittingRef = useRef(false)
 
   const [step, setStep] = useState(0)
@@ -93,6 +95,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         clientNow(),
       )
       setInterventionStartDate(new Date(res.interventionStartDate))
+      rememberInterventionStart(res.interventionStartDate)
       goNext()
     } catch (error) {
       submittingRef.current = false
