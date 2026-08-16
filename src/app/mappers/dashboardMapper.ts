@@ -18,6 +18,7 @@ function toDayCellDto(day: DayCell): DayCellDto {
     studyDay: day.studyDay,
     date: day.date,
     state: day.state,
+    backfillable: day.backfillable,
     ...(day.played !== undefined && { played: day.played }),
     ...(day.timeMin !== undefined && { timeMinutes: day.timeMin }),
     ...(day.stakesCzk !== undefined && { stakesAmount: day.stakesCzk }),

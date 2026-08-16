@@ -94,8 +94,10 @@ describe('dayStateOf', () => {
   })
 })
 
-// Week 1 starts 2026-09-01; "today" is 2026-09-04 so 09-01..09-03 are valid past days.
-const CTX = { today: '2026-09-04', weekFirstDay: '2026-09-01T00:00:00.000Z' }
+// "today" is 2026-09-04, so any earlier date is a valid past day. The backfill
+// window / closed-week eligibility now lives in the check-in service + guards,
+// not in `validateCheckIn` — this only rejects form-actionable input problems.
+const CTX = { today: '2026-09-04' }
 
 function draft(over: Partial<CheckInDraft> = {}): CheckInDraft {
   return {
@@ -147,10 +149,12 @@ describe('validateCheckIn', () => {
     if (!res.valid) expect(res.errors.map((e) => e.field)).toContain('behaviorDate')
   })
 
-  it('rejects behaviorDate before the current week', () => {
-    const res = validateCheckIn(draft({ behaviorDate: '2026-08-31T00:00:00.000Z' }), CTX)
-    expect(res.valid).toBe(false)
-    if (!res.valid) expect(res.errors.map((e) => e.field)).toContain('behaviorDate')
+  it('accepts a past behaviorDate — window/closed-week is not a form error', () => {
+    // Formerly rejected as "before the current week"; that boundary moved to the
+    // service (rolling 5-day window + closed-week guard), so validation passes.
+    expect(validateCheckIn(draft({ behaviorDate: '2026-08-31T00:00:00.000Z' }), CTX)).toEqual({
+      valid: true,
+    })
   })
 })
 

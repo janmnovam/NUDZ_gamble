@@ -6,7 +6,7 @@
  * into this shape, mapping a `DomainError` onto its `type`/`code` and any other
  * thrown value onto `internal`.
  */
-import { DomainError, type ErrorType } from '@domain/errors.ts'
+import { DomainError, ERROR_TYPES, type ErrorType } from '@domain/errors.ts'
 
 export interface ErrorEnvelope {
   /** Broad category — lets callers branch without matching on `code`. */
@@ -50,7 +50,7 @@ export function toEnvelope(err: unknown): ErrorEnvelope {
     return { type: err.type, code: err.code, trace: originOf(err) }
   }
   return {
-    type: 'internal',
+    type: ERROR_TYPES.INTERNAL,
     code: err instanceof Error ? err.name : 'INTERNAL',
     trace: originOf(err),
   }

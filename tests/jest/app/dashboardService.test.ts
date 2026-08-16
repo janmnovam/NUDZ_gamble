@@ -126,14 +126,17 @@ describe('DashboardServiceImpl.getDashboard', () => {
       studyDay: 1,
       date: '2026-09-01T00:00:00.000Z',
       state: 'completed',
+      backfillable: false,
       played: true,
       timeMinutes: 60,
       stakesAmount: 500,
     })
+    // Missing day 2 is 3 days back on day 5 → inside the rolling window.
     expect(res.days[1]).toEqual({
       studyDay: 2,
       date: '2026-09-02T00:00:00.000Z',
       state: 'missing',
+      backfillable: true,
     })
   })
 

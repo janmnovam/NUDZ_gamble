@@ -16,7 +16,8 @@ import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts
 import { toCopingStrategyDto, toCopingSuggestionDto } from '@/app/mappers/copingMapper.ts'
 import { type Result, run } from '@/app/result.ts'
 import { normalizeCopingDetail, normalizeCopingLabel, nextCopingPriority } from '@domain/coping.ts'
-import { DomainError } from '@domain/errors.ts'
+import { ERROR_CODES } from '@domain/errorCodes.ts'
+import { DomainError, ERROR_TYPES } from '@domain/errors.ts'
 import type { CopingStrategyUpdate, ISOTimestamp, UserId } from '@domain/model.ts'
 import type { CopingStrategyRepository } from '@domain/ports.ts'
 
@@ -79,8 +80,8 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
     return run(async () => {
       if (copingStrategyId.trim().length === 0) {
         throw new DomainError(
-          'validation',
-          'COPING_EMPTY_ID',
+          ERROR_TYPES.VALIDATION,
+          ERROR_CODES.coping.EMPTY_ID,
           'coping: copingStrategyId must not be empty',
         )
       }
@@ -97,8 +98,8 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
     return run(async () => {
       if (copingStrategyId.trim().length === 0) {
         throw new DomainError(
-          'validation',
-          'COPING_EMPTY_ID',
+          ERROR_TYPES.VALIDATION,
+          ERROR_CODES.coping.EMPTY_ID,
           'coping: copingStrategyId must not be empty',
         )
       }
@@ -118,8 +119,8 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
     return run(async () => {
       if (copingStrategyId.trim().length === 0) {
         throw new DomainError(
-          'validation',
-          'COPING_EMPTY_ID',
+          ERROR_TYPES.VALIDATION,
+          ERROR_CODES.coping.EMPTY_ID,
           'coping: copingStrategyId must not be empty',
         )
       }

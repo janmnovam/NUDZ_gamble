@@ -110,34 +110,16 @@ describe('canReview', () => {
 })
 
 describe('canEditCheckIn', () => {
-  it('flags a future/today date first, then a locked week, else allowed', () => {
-    expect(
-      canEditCheckIn({
-        behaviorDate: '2026-09-10T00:00:00.000Z',
-        today: '2026-09-03',
-        weekClosed: false,
-      }),
-    ).toBe('future_date')
-    expect(
-      canEditCheckIn({
-        behaviorDate: '2026-09-03T00:00:00.000Z',
-        today: '2026-09-03',
-        weekClosed: false,
-      }),
-    ).toBe('future_date')
-    expect(
-      canEditCheckIn({
-        behaviorDate: '2026-09-02T00:00:00.000Z',
-        today: '2026-09-03',
-        weekClosed: true,
-      }),
-    ).toBe('locked_week')
-    expect(
-      canEditCheckIn({
-        behaviorDate: '2026-09-02T00:00:00.000Z',
-        today: '2026-09-03',
-        weekClosed: false,
-      }),
-    ).toBe('allowed')
+  it('flags a future/today date first, then a locked week, then the window, else allowed', () => {
+    // diff <= 0 is today or the future.
+    expect(canEditCheckIn({ studyDayDiff: -7, weekClosed: false })).toBe('future_date')
+    expect(canEditCheckIn({ studyDayDiff: 0, weekClosed: false })).toBe('future_date')
+    // A closed week wins over the window check (precedence).
+    expect(canEditCheckIn({ studyDayDiff: 2, weekClosed: true })).toBe('locked_week')
+    // Inside the rolling 5-day window, open week → allowed.
+    expect(canEditCheckIn({ studyDayDiff: 1, weekClosed: false })).toBe('allowed')
+    expect(canEditCheckIn({ studyDayDiff: 5, weekClosed: false })).toBe('allowed')
+    // One day past the window.
+    expect(canEditCheckIn({ studyDayDiff: 6, weekClosed: false })).toBe('outside_window')
   })
 })

@@ -31,5 +31,5 @@ export interface CheckInFeedbackDto {
 }
 
 export type CheckInResultResponse =
-  | { ok: true; checkIn: CheckIn; feedback: CheckInFeedbackDto }
+  | { ok: true; checkIn: CheckIn; feedback: CheckInFeedbackDto; backfilled: boolean }
   | { ok: false; errors: CheckInFieldErrorDto[] }

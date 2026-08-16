@@ -5,7 +5,7 @@ import type { CheckInRequest } from '@/app/dto/checkin.ts'
 import type { DashboardResponse } from '@/app/dto/dashboard.ts'
 import type { CheckInService } from '@/app/ports/checkInService.ts'
 import type { DashboardService } from '@/app/ports/dashboardService.ts'
-import { ok } from '@/app/result.ts'
+import { fail, ok } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
@@ -22,13 +22,13 @@ const DASHBOARD: DashboardResponse = {
   stakes: { used: 0, limit: 8000, percent: 0, remaining: 8000, status: 'OK' },
   overallStatus: 'OK',
   days: [
-    { studyDay: 1, date: '2026-09-01T00:00:00.000Z', state: 'completed' },
-    { studyDay: 2, date: '2026-09-02T00:00:00.000Z', state: 'completed' },
-    { studyDay: 3, date: '2026-09-03T00:00:00.000Z', state: 'missing' },
-    { studyDay: 4, date: '2026-09-04T00:00:00.000Z', state: 'future' },
-    { studyDay: 5, date: '2026-09-05T00:00:00.000Z', state: 'future' },
-    { studyDay: 6, date: '2026-09-06T00:00:00.000Z', state: 'future' },
-    { studyDay: 7, date: '2026-09-07T00:00:00.000Z', state: 'future' },
+    { studyDay: 1, date: '2026-09-01T00:00:00.000Z', state: 'completed', backfillable: false },
+    { studyDay: 2, date: '2026-09-02T00:00:00.000Z', state: 'completed', backfillable: false },
+    { studyDay: 3, date: '2026-09-03T00:00:00.000Z', state: 'missing', backfillable: true },
+    { studyDay: 4, date: '2026-09-04T00:00:00.000Z', state: 'future', backfillable: false },
+    { studyDay: 5, date: '2026-09-05T00:00:00.000Z', state: 'future', backfillable: false },
+    { studyDay: 6, date: '2026-09-06T00:00:00.000Z', state: 'future', backfillable: false },
+    { studyDay: 7, date: '2026-09-07T00:00:00.000Z', state: 'future', backfillable: false },
   ],
   missingDays: ['2026-09-03T00:00:00.000Z'],
   pendingAction: 'checkin_due',
@@ -87,6 +87,7 @@ function success(req: CheckInRequest) {
       copingReminder: null,
       incompleteWeek: false,
     },
+    backfilled: false,
   } as const)
 }
 
@@ -100,16 +101,22 @@ function renderRoute({
   checkIn,
   dashboard = defaultDashboardService(),
   onComplete = jest.fn(),
+  behaviorDate,
 }: {
   checkIn: CheckInService
   dashboard?: DashboardService
   onComplete?: jest.Mock
+  behaviorDate?: string
 }) {
   useCurrentUser.setState({ userId: USER_ID })
   render(
     <I18nProvider>
       <AppProvider app={{ dashboard, checkIn } as App}>
-        <CheckInRoute onComplete={onComplete} onCancel={jest.fn()} />
+        <CheckInRoute
+          onComplete={onComplete}
+          onCancel={jest.fn()}
+          {...(behaviorDate ? { behaviorDate } : {})}
+        />
       </AppProvider>
     </I18nProvider>,
   )
@@ -249,6 +256,54 @@ describe('CheckInRoute', () => {
       USER_ID,
       getDashboard.mock.calls[1]?.[1],
     )
+  })
+
+  it('opens the exact day named by the behaviorDate prop, overriding the auto-pick', async () => {
+    // Auto-pick would choose day 3 (the missing day); the prop names day 2.
+    const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
+      Promise.resolve(success(req)),
+    )
+    const { onComplete } = renderRoute({
+      checkIn: {
+        submitCheckIn,
+        editCheckIn: () => Promise.reject(new Error('unused')),
+      },
+      behaviorDate: '2026-09-02T00:00:00.000Z',
+    })
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ne\s+nehrál jsem/ }))
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalled()
+    })
+    expect(submitCheckIn).toHaveBeenCalledWith(
+      expect.objectContaining({ behaviorDate: '2026-09-02T00:00:00.000Z' }),
+      USER_ID,
+      expect.any(String),
+    )
+  })
+
+  it('surfaces an OUTSIDE_WINDOW refusal as a localized message', async () => {
+    const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+    const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>(() =>
+      Promise.resolve(fail({ type: 'validation', code: 'CHECKIN_OUTSIDE_WINDOW', trace: 'test' })),
+    )
+    renderRoute({
+      checkIn: {
+        submitCheckIn,
+        editCheckIn: () => Promise.reject(new Error('unused')),
+      },
+      behaviorDate: '2026-09-03T00:00:00.000Z',
+    })
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ne\s+nehrál jsem/ }))
+
+    expect(
+      await screen.findByText(
+        'Tento den už zpětně doplnit nejde – doplnit lze jen posledních 5 dní.',
+      ),
+    ).not.toBeNull()
+    logged.mockRestore()
   })
 
   it('uses the admin simulated time when opening from the dashboard', async () => {

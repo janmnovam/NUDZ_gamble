@@ -24,6 +24,8 @@ export interface DayCellDto {
   studyDay: number
   date: ISOCalendarTimestamp
   state: DayState
+  /** A `missing` day still inside the rolling backfill window — the UI makes only these tappable. */
+  backfillable: boolean
   /** Present only when `state` is `completed` or `backfilled`. */
   played?: boolean
   timeMinutes?: number

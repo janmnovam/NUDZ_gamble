@@ -13,13 +13,16 @@ import type {
 import type { CheckInFeedbackDto } from '@/app/dto/checkin.ts'
 import { type Result, run } from '@/app/result.ts'
 import {
+  isBackfill,
   submitCheckIn as buildRecord,
   validateCheckIn,
   type CheckInDraft,
 } from '@domain/checkin.ts'
 import { buildCheckInFeedback } from '@domain/feedback.ts'
 import { calendarDate, createStudyCalendar, type StudyCalendar } from '@domain/clock.ts'
-import { DomainError } from '@domain/errors.ts'
+import { ERROR_CODES } from '@domain/errorCodes.ts'
+import { DomainError, ERROR_TYPES } from '@domain/errors.ts'
+import { canEditCheckIn, isWeekClosed } from '@domain/guards.ts'
 import type { CheckIn, ISOCalendarTimestamp, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
 import type {
   CheckInEditRepository,
@@ -27,6 +30,7 @@ import type {
   CopingStrategyRepository,
   LimitRepository,
   ProfileRepository,
+  ReviewRepository,
 } from '@domain/ports.ts'
 
 export interface CheckInServiceDeps {
@@ -36,6 +40,8 @@ export interface CheckInServiceDeps {
   profiles: ProfileRepository
   /** Needed for the doc-07 coping reminder. */
   copingStrategies: CopingStrategyRepository
+  /** Needed to reject backfill of a review-closed week. */
+  reviews: ReviewRepository
   newId: () => string
 }
 
@@ -78,12 +84,14 @@ export class CheckInServiceImpl implements CheckInService {
   ): Promise<CheckInResultResponse> {
     const profile = await this.deps.profiles.get(userId)
     if (!profile)
-      throw new DomainError('not_found', 'CHECKIN_NO_PROFILE', `checkin: no profile for ${userId}`)
+      throw new DomainError(
+        ERROR_TYPES.NOT_FOUND,
+        ERROR_CODES.checkin.NO_PROFILE,
+        `checkin: no profile for ${userId}`,
+      )
 
     const calendar = createStudyCalendar(profile.interventionStartDate, time)
     const today = calendarDate(time)
-    // Entry is popup-gated to day ≥ 1, so `currentWeek()` never hits the day-0 throw.
-    const weekFirstDay = calendar.dateOf(calendar.firstDay(calendar.currentWeek()))
 
     const draft: CheckInDraft = {
       behaviorDate: req.behaviorDate,
@@ -92,28 +100,59 @@ export class CheckInServiceImpl implements CheckInService {
       stakesCzk: req.stakesCzk,
       winningsCzk: req.winningsCzk,
     }
-    const validation = validateCheckIn(draft, { today, weekFirstDay })
+    // Form-actionable input problems (future date, numeric bounds) → field errors.
+    const validation = validateCheckIn(draft, { today })
     if (!validation.valid) return { ok: false, errors: validation.errors }
 
-    // doc 05's "can't add/edit a closed week" is already enforced by the
-    // validation above: `behaviorDate` must fall in the current week, which by
-    // definition hasn't elapsed and so can't be review-closed yet. So no
-    // separate `canEditCheckIn`/reviews check is reachable here — the field
-    // error IS the visible refusal for any earlier (closed) week.
-    const behaviorWeek = calendar.weekNo(calendar.studyDay(req.behaviorDate))
+    // Backfill eligibility for this fixed date — the rolling window and closed
+    // week (doc 05, now a 5-day window rather than "current week"). These are
+    // not form errors the user can fix, so they surface as thrown DomainErrors.
+    const behaviorStudyDay = calendar.studyDay(req.behaviorDate)
+    if (behaviorStudyDay < 1) {
+      throw new DomainError(
+        ERROR_TYPES.VALIDATION,
+        ERROR_CODES.checkin.OUTSIDE_WINDOW,
+        'checkin: behaviorDate is before the programme start',
+      )
+    }
+    const behaviorWeek = calendar.weekNo(behaviorStudyDay)
+    const reviews = await this.deps.reviews.listByUser(userId)
+    const studyDayDiff = calendar.studyDay(today) - behaviorStudyDay
+    const editability = canEditCheckIn({
+      studyDayDiff,
+      weekClosed: isWeekClosed(behaviorWeek, reviews),
+    })
+    if (editability === 'locked_week') {
+      throw new DomainError(
+        ERROR_TYPES.VALIDATION,
+        ERROR_CODES.checkin.WEEK_CLOSED,
+        `checkin: week ${String(behaviorWeek)} is closed`,
+      )
+    }
+    if (editability === 'outside_window') {
+      throw new DomainError(
+        ERROR_TYPES.VALIDATION,
+        ERROR_CODES.checkin.OUTSIDE_WINDOW,
+        `checkin: ${String(studyDayDiff)} days back is outside the backfill window`,
+      )
+    }
+
     const all = await this.deps.checkIns.listByUser(userId)
     const existing = all.find(
       (c) => calendarDate(c.behaviorDate) === calendarDate(req.behaviorDate),
     )
     if (requireExisting && !existing) {
       throw new DomainError(
-        'not_found',
-        'CHECKIN_NOTHING_TO_EDIT',
+        ERROR_TYPES.NOT_FOUND,
+        ERROR_CODES.checkin.NOTHING_TO_EDIT,
         'checkin: nothing to edit for that day',
       )
     }
 
     const record = buildRecord(userId, draft, behaviorWeek, time, this.deps.newId, existing)
+    // Derived (never stored on the record): submitted more than a day after the
+    // day it covers. Flagged on the audit row, the result, and the CSV export.
+    const backfilled = isBackfill(record.behaviorDate, record.submittedAt)
     await this.deps.checkIns.save(record)
 
     await this.deps.checkInEdits.save({
@@ -121,6 +160,7 @@ export class CheckInServiceImpl implements CheckInService {
       userId,
       checkInId: record.checkInId,
       action: existing ? 'updated' : 'created',
+      backfill: backfilled,
       editedAt: time,
       changedFields: changedFields(existing, record),
       before: existing ? JSON.stringify(existing) : null,
@@ -128,7 +168,7 @@ export class CheckInServiceImpl implements CheckInService {
     })
 
     const feedback = await this.buildFeedback(userId, calendar, behaviorWeek, today)
-    return { ok: true, checkIn: record, feedback }
+    return { ok: true, checkIn: record, feedback, backfilled }
   }
 
   private async buildFeedback(

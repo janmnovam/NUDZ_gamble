@@ -3,7 +3,8 @@
  * (create/toggle/list) reuses these so the app-layer service stays a thin
  * DTO/repo wrapper.
  */
-import { DomainError } from '@domain/errors.ts'
+import { ERROR_CODES } from '@domain/errorCodes.ts'
+import { DomainError, ERROR_TYPES } from '@domain/errors.ts'
 
 /** Max length of a strategy's `label` ("Název"), per the coping library spec. */
 export const COPING_LABEL_MAX_LENGTH = 80
@@ -14,12 +15,16 @@ export const COPING_DETAIL_MAX_LENGTH = 240
 export function normalizeCopingLabel(label: string): string {
   const trimmed = label.trim()
   if (trimmed.length === 0) {
-    throw new DomainError('validation', 'COPING_EMPTY_LABEL', 'coping: label must not be empty')
+    throw new DomainError(
+      ERROR_TYPES.VALIDATION,
+      ERROR_CODES.coping.EMPTY_LABEL,
+      'coping: label must not be empty',
+    )
   }
   if (trimmed.length > COPING_LABEL_MAX_LENGTH) {
     throw new DomainError(
-      'validation',
-      'COPING_LABEL_TOO_LONG',
+      ERROR_TYPES.VALIDATION,
+      ERROR_CODES.coping.LABEL_TOO_LONG,
       `coping: label must be at most ${String(COPING_LABEL_MAX_LENGTH)} characters`,
     )
   }
@@ -36,8 +41,8 @@ export function normalizeCopingDetail(value: string | null | undefined): string 
   if (trimmed.length === 0) return null
   if (trimmed.length > COPING_DETAIL_MAX_LENGTH) {
     throw new DomainError(
-      'validation',
-      'COPING_DETAIL_TOO_LONG',
+      ERROR_TYPES.VALIDATION,
+      ERROR_CODES.coping.DETAIL_TOO_LONG,
       `coping: detail must be at most ${String(COPING_DETAIL_MAX_LENGTH)} characters`,
     )
   }

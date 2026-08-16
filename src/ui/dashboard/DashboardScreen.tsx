@@ -103,6 +103,10 @@ export function DashboardScreen({
   // Dashboard — den 6"), otherwise the programme-start notice on day 1.
   const missing = dashboard.missingDays
   const firstMissingDay = missing[0]
+  // The banner names the first missing day but its tap must land on a day that's
+  // actually still in the backfill window — a missing day past the rolling
+  // window (or in a review-closed week) is shown but not fillable.
+  const firstBackfillableDay = dashboard.days.find((day) => day.backfillable)?.date
   const showStartNotice = firstMissingDay === undefined && dashboard.studyDay <= 1
   // Naming the day beats "fill in the missing days": on day 3 you want to be
   // told *which* day, and when there is nothing to do you want to hear that too.
@@ -192,7 +196,7 @@ export function DashboardScreen({
             const weekday = weekdayAbbrev(day.date, locale)
             const dayNumber = dayOfMonth(day.date)
             const cellState = toCellState(day, dashboard.studyDay)
-            const backfill = cellState === 'missing' && onBackfillDay ? onBackfillDay : undefined
+            const backfill = day.backfillable && onBackfillDay ? onBackfillDay : undefined
 
             return (
               <DayCell
@@ -222,11 +226,11 @@ export function DashboardScreen({
             icon={Info}
             title={missingTitle}
             body={t('dashboard.banner.missing.body')}
-            {...(onBackfillDay === undefined
+            {...(onBackfillDay === undefined || firstBackfillableDay === undefined
               ? {}
               : {
                   onClick: () => {
-                    onBackfillDay(firstMissingDay)
+                    onBackfillDay(firstBackfillableDay)
                   },
                 })}
           />

@@ -1,6 +1,7 @@
 import { type CopingStrategyEntity } from '@data/model.ts'
 import { copingDefaultToDomain, copingToDomain, copingToEntity } from '@data/mappers.ts'
-import { DomainError } from '@domain/errors.ts'
+import { ERROR_CODES } from '@domain/errorCodes.ts'
+import { DomainError, ERROR_TYPES } from '@domain/errors.ts'
 import type {
   CopingStrategy,
   CopingStrategyDefault,
@@ -68,8 +69,8 @@ export class CopingStrategyAdapter implements CopingStrategyRepository {
     }
     if (existing.type !== 'custom') {
       throw new DomainError(
-        'validation',
-        'COPING_NOT_EDITABLE',
+        ERROR_TYPES.VALIDATION,
+        ERROR_CODES.coping.NOT_EDITABLE,
         'coping: only custom strategies can be edited',
       )
     }
@@ -91,8 +92,8 @@ export class CopingStrategyAdapter implements CopingStrategyRepository {
     }
     if (existing.type !== 'custom') {
       throw new DomainError(
-        'validation',
-        'COPING_NOT_DELETABLE',
+        ERROR_TYPES.VALIDATION,
+        ERROR_CODES.coping.NOT_DELETABLE,
         'coping: only custom strategies can be deleted',
       )
     }

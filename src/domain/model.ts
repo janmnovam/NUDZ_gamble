@@ -140,6 +140,8 @@ export interface CheckInEdit {
   userId: UserId
   checkInId: string
   action: CheckInEditAction
+  /** Whether this write was a backfill (submitted > 1 day after the day it covers). */
+  backfill: boolean
   editedAt: ISOTimestamp
   changedFields: string[]
   /** JSON snapshot before the change; `null` for a `created` row. */

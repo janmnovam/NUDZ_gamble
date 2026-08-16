@@ -112,6 +112,7 @@ export interface CheckInEditEntity {
   user_id: UserId
   check_in_id: string
   action: CheckInEditAction
+  backfill: boolean
   edited_at: ISOTimestamp
   changed_fields: string[]
   before: string | null

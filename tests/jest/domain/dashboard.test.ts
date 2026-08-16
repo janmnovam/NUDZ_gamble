@@ -1,6 +1,11 @@
 import { buildDashboardVM, buildDayCell, type DashboardDeps } from '@domain/dashboard.ts'
-import type { CheckIn, Limit, Profile } from '@domain/model.ts'
-import type { CheckInRepository, LimitRepository, ProfileRepository } from '@domain/ports.ts'
+import type { CheckIn, Limit, Profile, Review } from '@domain/model.ts'
+import type {
+  CheckInRepository,
+  LimitRepository,
+  ProfileRepository,
+  ReviewRepository,
+} from '@domain/ports.ts'
 
 const USER_ID = 'A001'
 
@@ -20,7 +25,12 @@ function checkIn(overrides: Partial<CheckIn>): CheckIn {
   }
 }
 
-function fakeDeps(params: { checkIns: CheckIn[]; today: string; limits?: Limit[] }): DashboardDeps {
+function fakeDeps(params: {
+  checkIns: CheckIn[]
+  today: string
+  limits?: Limit[]
+  reviews?: Review[]
+}): DashboardDeps {
   const profile: Profile = {
     userId: USER_ID,
     onboardingCompletedAt: '2026-08-31T21:30:00+02:00',
@@ -50,11 +60,17 @@ function fakeDeps(params: { checkIns: CheckIn[]; today: string; limits?: Limit[]
     get: () => Promise.resolve(undefined),
     save: () => Promise.resolve(),
   }
+  const reviewRepo: ReviewRepository = {
+    save: () => Promise.resolve(),
+    getByWeek: (_u, w) => Promise.resolve((params.reviews ?? []).find((r) => r.reviewWeekNo === w)),
+    listByUser: () => Promise.resolve(params.reviews ?? []),
+  }
   return {
     userId: USER_ID,
     profileRepo,
     limitRepo,
     checkInRepo,
+    reviewRepo,
     time: `${params.today}T12:00:00.000Z`,
   }
 }
@@ -73,11 +89,14 @@ describe('buildDayCell', () => {
         date: '2026-09-02T00:00:00.000Z',
         today: '2026-09-04',
         checkIn: record,
+        studyDayDiff: 2,
+        weekClosed: false,
       }),
     ).toEqual({
       studyDay: 2,
       date: '2026-09-02T00:00:00.000Z',
       state: 'completed',
+      backfillable: false,
       played: true,
       timeMin: 60,
       stakesCzk: 500,
@@ -91,16 +110,47 @@ describe('buildDayCell', () => {
         date: '2026-09-03T00:00:00.000Z',
         today: '2026-09-04',
         checkIn: undefined,
+        studyDayDiff: 1,
+        weekClosed: false,
       }),
-    ).toEqual({ studyDay: 3, date: '2026-09-03T00:00:00.000Z', state: 'missing' })
+    ).toEqual({
+      studyDay: 3,
+      date: '2026-09-03T00:00:00.000Z',
+      state: 'missing',
+      backfillable: true,
+    })
     expect(
       buildDayCell({
         studyDay: 5,
         date: '2026-09-05T00:00:00.000Z',
         today: '2026-09-04',
         checkIn: undefined,
+        studyDayDiff: -1,
+        weekClosed: false,
       }),
-    ).toEqual({ studyDay: 5, date: '2026-09-05T00:00:00.000Z', state: 'future' })
+    ).toEqual({
+      studyDay: 5,
+      date: '2026-09-05T00:00:00.000Z',
+      state: 'future',
+      backfillable: false,
+    })
+  })
+
+  it('marks a missing day backfillable only inside the 5-day open window', () => {
+    const missing = (studyDayDiff: number, weekClosed: boolean) =>
+      buildDayCell({
+        studyDay: 1,
+        date: '2026-09-01T00:00:00.000Z',
+        today: '2026-09-10',
+        checkIn: undefined,
+        studyDayDiff,
+        weekClosed,
+      }).backfillable
+
+    expect(missing(1, false)).toBe(true) // yesterday
+    expect(missing(5, false)).toBe(true) // window edge
+    expect(missing(6, false)).toBe(false) // past the window
+    expect(missing(3, true)).toBe(false) // in window but review-closed week
   })
 })
 

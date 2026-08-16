@@ -19,8 +19,7 @@ export interface DashboardServiceDeps {
   profiles: ProfileRepository
   limits: LimitRepository
   checkIns: CheckInRepository
-  // Not yet read by `buildDashboardVM` — `reviewable_weeks` stays hardcoded
-  // empty until ReviewRepository/ReviewService are wired (architecture.md TODO #4/#7).
+  /** Read by `buildDashboardVM` to gate each missing day's `backfillable` flag on a closed week. */
   reviews: ReviewRepository
 }
 
@@ -38,6 +37,7 @@ export class DashboardServiceImpl implements DashboardService {
         profileRepo: this.deps.profiles,
         limitRepo: this.deps.limits,
         checkInRepo: this.deps.checkIns,
+        reviewRepo: this.deps.reviews,
         time,
       })
       return toDashboardResponse(vm)

@@ -15,6 +15,7 @@ const DAY_1: DashboardResponse = {
     studyDay: index + 1,
     date: `2026-09-0${String(index + 1)}T00:00:00.000Z`,
     state: 'future' as const,
+    backfillable: false,
   })),
   missingDays: [],
   pendingAction: 'none',
@@ -116,7 +117,7 @@ describe('DashboardScreen', () => {
           dashboard={{
             ...DAY_1,
             days: DAY_1.days.map((day, index) =>
-              index === 0 ? { ...day, state: 'missing' as const } : day,
+              index === 0 ? { ...day, state: 'missing' as const, backfillable: true } : day,
             ),
           }}
           onBackfillDay={() => undefined}
@@ -149,6 +150,24 @@ describe('DashboardScreen', () => {
     )
     const cta = screen.getByRole('button', { name: 'Check-in bude zítra' })
     expect((cta as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('leaves an out-of-window missing day non-actionable (not a button)', () => {
+    render(
+      <I18nProvider>
+        <DashboardScreen
+          dashboard={{
+            ...DAY_1,
+            days: DAY_1.days.map((day, index) =>
+              // Missing but past the backfill window → shown, not tappable.
+              index === 0 ? { ...day, state: 'missing' as const, backfillable: false } : day,
+            ),
+          }}
+          onBackfillDay={() => undefined}
+        />
+      </I18nProvider>,
+    )
+    expect(screen.queryByRole('button', { name: /chybí záznam/ })).toBeNull()
   })
 
   it('disables the CTA while no check-in is due', () => {

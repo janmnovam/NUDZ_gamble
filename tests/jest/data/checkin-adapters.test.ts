@@ -58,6 +58,7 @@ describe('check-in adapters', () => {
     userId: 'A001',
     checkInId: 'ci-1',
     action: 'created',
+    backfill: false,
     editedAt: '2026-09-03T08:00:00.000Z',
     changedFields: ['played', 'timeMin', 'stakesCzk'],
     before: null,

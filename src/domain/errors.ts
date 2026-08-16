@@ -5,15 +5,28 @@
  * `@/app/result.ts`). Any other thrown value is treated as `internal`.
  */
 
-/** Broad error category, surfaced on the envelope as `type`. */
-export type ErrorType = 'internal' | 'validation' | 'not_found' | 'conflict'
+import type { DomainErrorCode } from '@domain/errorCodes.ts'
+
+/**
+ * Broad error categories, surfaced on the envelope as `type`. A frozen constant
+ * map (like `ERROR_CODES`) rather than a TS `enum` — matches the codebase's
+ * `as const` + derived-union idiom and stays a plain string at runtime.
+ */
+export const ERROR_TYPES = {
+  INTERNAL: 'internal',
+  VALIDATION: 'validation',
+  NOT_FOUND: 'not_found',
+  CONFLICT: 'conflict',
+} as const
+
+export type ErrorType = (typeof ERROR_TYPES)[keyof typeof ERROR_TYPES]
 
 export class DomainError extends Error {
   readonly type: ErrorType
-  /** Specific machine-readable identifier, e.g. `ONBOARDING_TIME_CAP`. */
-  readonly code: string
+  /** A registered code from `ERROR_CODES` (see `@domain/errorCodes.ts`). */
+  readonly code: DomainErrorCode
 
-  constructor(type: ErrorType, code: string, message: string) {
+  constructor(type: ErrorType, code: DomainErrorCode, message: string) {
     super(message)
     this.name = 'DomainError'
     this.type = type

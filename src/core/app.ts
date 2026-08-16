@@ -70,6 +70,7 @@ export function createApp(data: DataLayer = createDataLayer()): App {
       limits: data.limits,
       profiles: data.profiles,
       copingStrategies: data.copingStrategies,
+      reviews: data.reviews,
       newId,
     }),
     dashboard: new DashboardServiceImpl({

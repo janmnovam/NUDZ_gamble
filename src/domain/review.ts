@@ -12,7 +12,8 @@ import {
   type StudyDay,
 } from '@domain/clock.ts'
 import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
-import { DomainError } from '@domain/errors.ts'
+import { ERROR_CODES } from '@domain/errorCodes.ts'
+import { DomainError, ERROR_TYPES } from '@domain/errors.ts'
 import { canReview, isWeekClosed } from '@domain/guards.ts'
 import { classifyStatus, isWithinCap, suggestLimit, worseStatus } from '@domain/limits.ts'
 import type {
@@ -143,7 +144,11 @@ export async function getPendingReview(deps: ReviewDeps): Promise<ReviewVM | nul
   const config = deps.config ?? DEFAULT_CONFIG
   const profile = await deps.profiles.get(deps.userId)
   if (!profile)
-    throw new DomainError('not_found', 'REVIEW_NO_PROFILE', `review: no profile for ${deps.userId}`)
+    throw new DomainError(
+      ERROR_TYPES.NOT_FOUND,
+      ERROR_CODES.review.NO_PROFILE,
+      `review: no profile for ${deps.userId}`,
+    )
 
   const calendar = createStudyCalendar(profile.interventionStartDate, deps.time, config)
   const reviews = await deps.reviews.listByUser(deps.userId)
@@ -195,19 +200,23 @@ export async function completeReview(input: CompleteReviewInput, deps: ReviewDep
   const config = deps.config ?? DEFAULT_CONFIG
   const profile = await deps.profiles.get(deps.userId)
   if (!profile)
-    throw new DomainError('not_found', 'REVIEW_NO_PROFILE', `review: no profile for ${deps.userId}`)
+    throw new DomainError(
+      ERROR_TYPES.NOT_FOUND,
+      ERROR_CODES.review.NO_PROFILE,
+      `review: no profile for ${deps.userId}`,
+    )
 
   if (!isWithinCap(input.nextLimits.timeMinutes, profile.referenceTimeMin, config)) {
     throw new DomainError(
-      'validation',
-      'REVIEW_TIME_CAP',
+      ERROR_TYPES.VALIDATION,
+      ERROR_CODES.review.TIME_CAP,
       'review: next time limit exceeds the 90% cap',
     )
   }
   if (!isWithinCap(input.nextLimits.stakesAmount, profile.referenceStakesCzk, config)) {
     throw new DomainError(
-      'validation',
-      'REVIEW_STAKES_CAP',
+      ERROR_TYPES.VALIDATION,
+      ERROR_CODES.review.STAKES_CAP,
       'review: next stakes limit exceeds the 90% cap',
     )
   }

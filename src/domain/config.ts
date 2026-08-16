@@ -27,8 +27,19 @@ export interface DomainConfig {
    * to `WEEK_LENGTH_DAYS`: editing is allowed anywhere in the still-open
    * week, no separate day-count cutoff on top of `weekClosed` (doc 05's
    * default reading — one boundary, not two overlapping ones).
+   *
+   * Superseded for backfill by `BACKFILL_WINDOW_DAYS` (see below); left here as
+   * the documented "no extra cutoff" knob and currently unconsumed.
    */
   readonly EDIT_WINDOW_DAYS: number
+  /**
+   * Rolling backfill window: a missing day is backfillable iff
+   * `1 <= studyDay(today) - studyDay(behaviorDate) <= this` AND its week isn't
+   * review-closed. Replaces the old "current week only" boundary — the window
+   * can reach into a previous week that hasn't been reviewed yet. Distinct from
+   * `EDIT_WINDOW_DAYS`, which describes a different (unconsumed) policy.
+   */
+  readonly BACKFILL_WINDOW_DAYS: number
   /**
    * Local wall-clock times ("HH:mm", 24h) the installed app checks for a due
    * reminder and, if one is due, pops a system notification (doc 08's "one
@@ -52,5 +63,6 @@ export const DEFAULT_CONFIG: DomainConfig = {
   WEEK_LENGTH_DAYS: 7,
   PROGRAMME_DAYS: 28,
   EDIT_WINDOW_DAYS: 7,
+  BACKFILL_WINDOW_DAYS: 5,
   REMINDER_TIMES: ['09:00', '20:00'],
 }

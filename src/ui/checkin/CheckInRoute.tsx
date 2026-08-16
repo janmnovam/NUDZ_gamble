@@ -8,8 +8,10 @@ import { Screen } from '@ui/components/Screen.tsx'
 import { useCheckInService, useDashboardService } from '@ui/app/AppContext.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow, isoForDay } from '@ui/clock.ts'
+import { errorMessageKey } from '@ui/errors/errorMessage.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
-import { dayOfMonth } from '@ui/lib/date.ts'
+import { type TranslationKey } from '@ui/i18n/types.ts'
+import { dayInWords, dayOfMonth } from '@ui/lib/date.ts'
 import type { ISOTimestamp } from '@domain/model.ts'
 
 type LoadState =
@@ -20,15 +22,29 @@ type LoadState =
       behaviorDay: DayCellDto
       time: ISOTimestamp
     }
-  | { status: 'failed' }
+  | { status: 'failed'; message: TranslationKey }
   | { status: 'unavailable' }
 
 interface CheckInRouteProps {
   onComplete: () => void
   onCancel: () => void
+  /**
+   * A specific day to fill in, set when the user taps a missing day on the
+   * dashboard. When present it overrides the default "latest missing day" pick,
+   * so the check-in opens for exactly that date.
+   */
+  behaviorDate?: string
 }
 
-function behaviorDayForCheckIn(dashboard: DashboardResponse): DayCellDto | undefined {
+function behaviorDayForCheckIn(
+  dashboard: DashboardResponse,
+  targetDate?: string,
+): DayCellDto | undefined {
+  // A tapped backfill targets one exact day; honour it over the auto-pick.
+  if (targetDate !== undefined) {
+    return dashboard.days.find((day) => day.date === targetDate)
+  }
+
   const missing = new Set(dashboard.missingDays)
   const latestMissing = [...dashboard.days].reverse().find((day) => missing.has(day.date))
   if (latestMissing) return latestMissing
@@ -58,7 +74,7 @@ function behaviorDateLabel(date: string, locale: string): string {
   return `${weekday} ${String(dayOfMonth(date))}.`
 }
 
-export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
+export function CheckInRoute({ onComplete, onCancel, behaviorDate }: CheckInRouteProps) {
   const { t, locale } = useTranslation()
   const dashboardService = useDashboardService()
   const checkInService = useCheckInService()
@@ -79,8 +95,12 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
         throw new Error(dashboardRes.error?.code ?? 'dashboard unavailable')
       }
       const dashboard = dashboardRes.data
-      const behaviorDay = behaviorDayForCheckIn(dashboard)
+      const behaviorDay = behaviorDayForCheckIn(dashboard, behaviorDate)
       if (behaviorDay) return { dashboard, behaviorDay, time: baseTime }
+
+      // A tapped backfill names one exact day — don't advance to the manual-test
+      // "next day" fallback, which is only for the auto-pick path.
+      if (behaviorDate !== undefined) return null
 
       const manualTime = nextManualTestTime(dashboard, interventionStartDate)
       if (manualTime === null || manualTime === baseTime) return null
@@ -105,24 +125,30 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
       },
       (error: unknown) => {
         console.error('[checkin] getDashboard failed', error)
-        if (active) setState({ status: 'failed' })
+        if (active) setState({ status: 'failed', message: 'common.error' })
       },
     )
     return () => {
       active = false
     }
-  }, [baseTime, dashboardService, interventionStartDate, userId])
+  }, [baseTime, behaviorDate, dashboardService, interventionStartDate, userId])
 
   const labels = useMemo(() => {
     if (state.status !== 'ready') return null
+    // "Did you gamble yesterday?" only reads right when the day is actually
+    // yesterday; a backfill names the day instead ("...v úterý 18?").
+    const isYesterday = state.dashboard.studyDay - state.behaviorDay.studyDay === 1
     return {
       programDayLabel: `Den ${String(state.behaviorDay.studyDay)} Vašeho programu`,
       weekLabel: `Týden ${String(state.dashboard.weekNo)} - Den ${String(
         dayWithinWeek(state.behaviorDay.studyDay),
       )}`,
       behaviorDateLabel: behaviorDateLabel(state.behaviorDay.date, locale),
+      playedQuestion: isYesterday
+        ? t('checkin.played.question')
+        : t('checkin.played.questionDated', { day: dayInWords(state.behaviorDay.date, locale) }),
     }
-  }, [locale, state])
+  }, [locale, state, t])
 
   if (state.status !== 'ready' || !labels || userId === null) {
     return (
@@ -136,7 +162,11 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
         }
       >
         <p className="type-body text-muted m-auto text-center">
-          {state.status === 'loading' ? t('common.loading') : t('common.error')}
+          {state.status === 'loading'
+            ? t('common.loading')
+            : state.status === 'failed'
+              ? t(state.message)
+              : t('common.error')}
         </p>
       </Screen>
     )
@@ -168,8 +198,10 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
           .then((response) => {
             submittingRef.current = false
             if (response.error || !response.data) {
+              // Eligibility refusals (outside the backfill window, closed week)
+              // arrive here as a localized envelope — show it, don't swallow it.
               console.error('[checkin] submitCheckIn failed', response.error)
-              setState({ status: 'failed' })
+              setState({ status: 'failed', message: errorMessageKey(response.error) })
               return
             }
             if (response.data.ok) {
@@ -177,12 +209,12 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
               return
             }
             console.error('[checkin] submitCheckIn validation failed', response.data.errors)
-            setState({ status: 'failed' })
+            setState({ status: 'failed', message: 'common.error' })
           })
           .catch((error: unknown) => {
             submittingRef.current = false
             console.error('[checkin] submitCheckIn failed', error)
-            setState({ status: 'failed' })
+            setState({ status: 'failed', message: 'common.error' })
           })
       }}
       onCancel={onCancel}

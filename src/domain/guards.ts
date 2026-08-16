@@ -4,34 +4,36 @@
  * and the review flow. One implementation each, so a second slightly
  * different copy never creeps in at a second call site.
  */
-import type { ISOCalendarTimestamp, ISODate, Review } from '@domain/model.ts'
-import { calendarDate, type WeekNo } from '@domain/clock.ts'
+import type { Review } from '@domain/model.ts'
+import { type WeekNo } from '@domain/clock.ts'
 import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
 import { isWithinCap, limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
 
-export type CheckInEditability = 'allowed' | 'locked_week' | 'future_date'
+export type CheckInEditability = 'allowed' | 'future_date' | 'locked_week' | 'outside_window'
 
 /**
- * Doc 09: a week is closed by its completed review, not by the calendar
- * (the "ordering trap") — pass `weekClosed` in via `IsWeekClosed`, don't
- * derive it from the day number here. No separate day-count cutoff on top:
- * `config.ts`'s `EDIT_WINDOW_DAYS` is set equal to `WEEK_LENGTH_DAYS`, so
- * `weekClosed` alone already enforces it.
+ * Doc 05's backfill/edit policy, in one place (reused by the check-in service
+ * and the dashboard's fill-in links). Inputs are already reduced to scalars by
+ * the caller via `StudyCalendar`:
+ * - `studyDayDiff` = `studyDay(today) - studyDay(behaviorDate)` (1 = yesterday).
+ * - `weekClosed` = a review row exists for that day's week (`isWeekClosed`).
+ *
+ * A missing day is editable iff it is in the past, its week isn't review-closed,
+ * and it falls inside the rolling `BACKFILL_WINDOW_DAYS` window. Precedence:
+ * `future_date` > `locked_week` > `outside_window`.
  */
-export type CanEditCheckIn = (params: {
-  behaviorDate: ISOCalendarTimestamp
-  today: ISODate
-  weekClosed: boolean
-}) => CheckInEditability
+export type CanEditCheckIn = (
+  params: { studyDayDiff: number; weekClosed: boolean },
+  config?: DomainConfig,
+) => CheckInEditability
 
-/**
- * Future/today first (a day that isn't over yet can't be checked in), then a
- * review-closed week, else editable. Compare the timestamp's calendar date
- * portion to `today`; the stored value itself is a canonical timestamp.
- */
-export const canEditCheckIn: CanEditCheckIn = ({ behaviorDate, today, weekClosed }) => {
-  if (calendarDate(behaviorDate) >= today) return 'future_date'
+export const canEditCheckIn: CanEditCheckIn = (
+  { studyDayDiff, weekClosed },
+  config = DEFAULT_CONFIG,
+) => {
+  if (studyDayDiff <= 0) return 'future_date'
   if (weekClosed) return 'locked_week'
+  if (studyDayDiff > config.BACKFILL_WINDOW_DAYS) return 'outside_window'
   return 'allowed'
 }
 

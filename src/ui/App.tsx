@@ -69,6 +69,7 @@ function AppRoutes() {
   const adoptCurrentUser = useCurrentUser((state) => state.setUserId)
   const view = useAppView((state) => state.view)
   const navigate = useAppView((state) => state.navigate)
+  const checkinBehaviorDate = useAppView((state) => state.checkinBehaviorDate)
 
   useReminderNotifications()
 
@@ -108,6 +109,9 @@ function AppRoutes() {
           onCheckIn={() => {
             navigate('checkin')
           }}
+          onBackfill={(date) => {
+            navigate('checkin', { behaviorDate: date })
+          }}
         />
       )
     case 'review':
@@ -115,6 +119,7 @@ function AppRoutes() {
     case 'checkin':
       return (
         <CheckInRoute
+          {...(checkinBehaviorDate ? { behaviorDate: checkinBehaviorDate } : {})}
           onComplete={() => {
             navigate('dashboard')
           }}

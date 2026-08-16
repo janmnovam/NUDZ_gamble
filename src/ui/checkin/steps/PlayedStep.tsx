@@ -12,6 +12,8 @@ interface PlayedStepProps {
   programDayLabel?: string | undefined
   weekLabel?: string | undefined
   behaviorDateLabel?: string | undefined
+  /** Pre-built "did you gamble …?" heading; falls back to the yesterday phrasing. */
+  playedQuestion?: string | undefined
   onBack: () => void
   onPlayed: () => void
   onNotPlayed: () => void
@@ -57,6 +59,7 @@ export function PlayedStep({
   programDayLabel,
   weekLabel,
   behaviorDateLabel,
+  playedQuestion,
   onBack,
   onPlayed,
   onNotPlayed,
@@ -87,7 +90,7 @@ export function PlayedStep({
             date: behaviorDateLabel ?? t('checkin.shared.yesterday'),
           })}
         </p>
-        <h1 className="type-h1 text-ink">{t('checkin.played.question')}</h1>
+        <h1 className="type-h1 text-ink">{playedQuestion ?? t('checkin.played.question')}</h1>
       </div>
 
       <div className="flex gap-3">

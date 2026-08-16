@@ -28,12 +28,14 @@ export type CheckInValidation = { valid: true } | { valid: false; errors: CheckI
 
 /**
  * Doc 05's validation table: numeric bounds, `played=false ⟹ all zero`, and
- * `behaviorDate` must fall in the current week and be ≤ `today − 1`.
- * `weekFirstDay` comes from `StudyCalendar.dateOf(firstDay(currentWeek()))`.
+ * `behaviorDate` must be ≤ `today − 1` (a day that isn't over can't be checked
+ * in). Eligibility to *backfill* a given past day — the rolling window and
+ * review-closed week — is a separate policy (`canEditCheckIn` in guards.ts),
+ * enforced by the service; those are fixed-date refusals, not form errors.
  */
 export type ValidateCheckIn = (
   draft: CheckInDraft,
-  context: { today: ISODate; weekFirstDay: ISOCalendarTimestamp },
+  context: { today: ISODate },
 ) => CheckInValidation
 
 /**
@@ -81,17 +83,15 @@ export const dayStateOf: DayStateOf = ({ behaviorDate, today, checkIn }) => {
 /**
  * Doc 05's validation table. Numeric bounds apply only when `played`; when not
  * played all three numerics must be 0 (the form hides them). `behaviorDate`
- * must fall in the current week (≥ `weekFirstDay`) and be ≤ today − 1
- * (`< today` for whole calendar dates). Never validates against the limit —
- * exceeding it is a legal outcome (doc 06), not a form error.
+ * must be ≤ today − 1 (`< today` for whole calendar dates). Never validates
+ * against the limit — exceeding it is a legal outcome (doc 06), not a form
+ * error. The backfill window / closed-week eligibility is enforced separately
+ * (see `canEditCheckIn`).
  */
-export const validateCheckIn: ValidateCheckIn = (draft, { today, weekFirstDay }) => {
+export const validateCheckIn: ValidateCheckIn = (draft, { today }) => {
   const errors: CheckInFieldError[] = []
   const behaviorDay = calendarDate(draft.behaviorDate)
 
-  if (behaviorDay < calendarDate(weekFirstDay)) {
-    errors.push({ field: 'behaviorDate', message: "Date is before the current week's start." })
-  }
   if (behaviorDay >= today) {
     errors.push({ field: 'behaviorDate', message: 'Date must be on or before yesterday.' })
   }

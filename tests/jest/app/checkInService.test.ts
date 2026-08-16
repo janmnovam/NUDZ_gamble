@@ -1,12 +1,13 @@
 import { CheckInServiceImpl, type CheckInServiceDeps } from '@/app/services/checkInServiceImpl.ts'
 import type { Result } from '@/app/result.ts'
-import type { CheckIn, CheckInEdit, CopingStrategy, Limit, Profile } from '@domain/model.ts'
+import type { CheckIn, CheckInEdit, CopingStrategy, Limit, Profile, Review } from '@domain/model.ts'
 import type {
   CheckInEditRepository,
   CheckInRepository,
   CopingStrategyRepository,
   LimitRepository,
   ProfileRepository,
+  ReviewRepository,
 } from '@domain/ports.ts'
 
 /** Unwrap a service `Result`, failing the test if it carried an envelope error. */
@@ -19,7 +20,9 @@ function payload<T>(r: Result<T>): T {
 const USER_ID = 'demo-user'
 const START = '2026-09-01T00:00:00.000Z' // week 1 = 09-01..09-07
 
-function makeService(opts: { checkIns?: CheckIn[]; coping?: CopingStrategy[] } = {}) {
+function makeService(
+  opts: { checkIns?: CheckIn[]; coping?: CopingStrategy[]; reviews?: Review[] } = {},
+) {
   const profile: Profile = {
     userId: USER_ID,
     onboardingCompletedAt: '2026-08-31T21:30:00+02:00',
@@ -76,6 +79,12 @@ function makeService(opts: { checkIns?: CheckIn[]; coping?: CopingStrategy[] } =
     remove: () => Promise.reject(new Error('unused')),
     listByUser: () => Promise.resolve(opts.coping ?? []),
   }
+  const reviewStore: Review[] = opts.reviews ?? []
+  const reviews: ReviewRepository = {
+    save: () => Promise.resolve(),
+    getByWeek: (_u, w) => Promise.resolve(reviewStore.find((r) => r.reviewWeekNo === w)),
+    listByUser: () => Promise.resolve([...reviewStore]),
+  }
 
   const deps: CheckInServiceDeps = {
     checkIns,
@@ -83,6 +92,7 @@ function makeService(opts: { checkIns?: CheckIn[]; coping?: CopingStrategy[] } =
     limits,
     profiles,
     copingStrategies,
+    reviews,
     newId: () => `id-${String((seq += 1))}`,
   }
   return { service: new CheckInServiceImpl(deps), checkInStore, editStore }
@@ -166,19 +176,17 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
     expect(editStore).toHaveLength(0)
   })
 
-  it('refuses a prior (closed) week visibly via a field error', async () => {
+  it('refuses a pre-programme date with an OUTSIDE_WINDOW envelope, writes nothing', async () => {
     // today still 09-04 (week 1); ask for a week-0 date before the programme.
     const { service, checkInStore } = makeService()
-    const res = payload(
-      await service.submitCheckIn(
-        { ...req, behaviorDate: '2026-08-30T00:00:00.000Z' },
-        USER_ID,
-        TIME,
-      ),
+    const res = await service.submitCheckIn(
+      { ...req, behaviorDate: '2026-08-30T00:00:00.000Z' },
+      USER_ID,
+      TIME,
     )
-    expect(res.ok).toBe(false)
-    if (res.ok) return
-    expect(res.errors.map((e) => e.field)).toContain('behaviorDate')
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('CHECKIN_OUTSIDE_WINDOW')
     expect(checkInStore).toHaveLength(0)
   })
 
@@ -203,6 +211,68 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
     if (!res.ok) return
     expect(res.feedback.overall).toBe('POZOR')
     expect(res.feedback.copingReminder).toBe('Go for a walk')
+  })
+})
+
+describe('CheckInServiceImpl.submitCheckIn backfill window', () => {
+  // today = day 10 (2026-09-10); week 1 = days 1..7, week 2 = days 8..14.
+  const LATE_TIME = '2026-09-10T08:00:00+02:00'
+  const base = { played: true, timeMin: 100, stakesCzk: 1_000, winningsCzk: 0 }
+
+  it('accepts a day 5 back (edge of the window), even into a prior open week', async () => {
+    // behaviorDate = day 5 (09-05, week 1); diff = 10 - 5 = 5 = window edge.
+    const { service, checkInStore } = makeService()
+    const res = payload(
+      await service.submitCheckIn(
+        { ...base, behaviorDate: '2026-09-05T00:00:00.000Z' },
+        USER_ID,
+        LATE_TIME,
+      ),
+    )
+    expect(res.ok).toBe(true)
+    if (!res.ok) return
+    expect(res.checkIn).toMatchObject({ weekNo: 1 })
+    expect(res.backfilled).toBe(true)
+    expect(checkInStore).toHaveLength(1)
+  })
+
+  it('refuses a day 6 back (past the window) with OUTSIDE_WINDOW, writes nothing', async () => {
+    // behaviorDate = day 4 (09-04); diff = 10 - 4 = 6 > BACKFILL_WINDOW_DAYS.
+    const { service, checkInStore, editStore } = makeService()
+    const res = await service.submitCheckIn(
+      { ...base, behaviorDate: '2026-09-04T00:00:00.000Z' },
+      USER_ID,
+      LATE_TIME,
+    )
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('CHECKIN_OUTSIDE_WINDOW')
+    expect(checkInStore).toHaveLength(0)
+    expect(editStore).toHaveLength(0)
+  })
+
+  it('refuses a day inside the window but in a review-closed week with WEEK_CLOSED', async () => {
+    // behaviorDate = day 5 (09-05, week 1), diff 5 (in window), but week 1 closed.
+    const reviews: Review[] = [
+      {
+        reviewId: 'r1',
+        userId: USER_ID,
+        reviewWeekNo: 1,
+        reviewCompletedAt: '2026-09-08T08:00:00+02:00',
+        limitChanged: false,
+        incomplete: false,
+      },
+    ]
+    const { service, checkInStore } = makeService({ reviews })
+    const res = await service.submitCheckIn(
+      { ...base, behaviorDate: '2026-09-05T00:00:00.000Z' },
+      USER_ID,
+      LATE_TIME,
+    )
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('CHECKIN_WEEK_CLOSED')
+    expect(checkInStore).toHaveLength(0)
   })
 })
 

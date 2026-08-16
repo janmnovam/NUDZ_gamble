@@ -50,9 +50,28 @@ describe('toCheckInCsv', () => {
     const csv = toCheckInCsv([checkIn])
     const lines = csv.trim().split('\r\n')
     expect(lines[0]).toBe(
-      'check_in_id,user_id,behavior_date,played,time_min,stakes_czk,winnings_czk,submitted_at,updated_at',
+      'check_in_id,user_id,behavior_date,played,time_min,stakes_czk,winnings_czk,submitted_at,updated_at,is_backfill',
     )
-    expect(lines[1]).toBe('c1,A001,2026-09-01,true,60,500,0,2026-09-02T08:00:00+02:00,')
+    // Submitted the very next day → not a backfill.
+    expect(lines[1]).toBe('c1,A001,2026-09-01,true,60,500,0,2026-09-02T08:00:00+02:00,,false')
+  })
+
+  it('flags a check-in submitted more than a day late as a backfill', () => {
+    const checkIn: CheckIn = {
+      checkInId: 'c2',
+      userId: 'A001',
+      behaviorDate: '2026-09-01T00:00:00.000Z',
+      weekNo: 1,
+      played: true,
+      timeMin: 60,
+      stakesCzk: 500,
+      winningsCzk: 0,
+      // Two days after the day it covers → a backfill.
+      submittedAt: '2026-09-03T08:00:00+02:00',
+      updatedAt: null,
+    }
+    const csv = toCheckInCsv([checkIn])
+    expect(csv.trim().split('\r\n')[1]?.endsWith(',true')).toBe(true)
   })
 
   it('truncates the canonical behaviorDate timestamp to a bare YYYY-MM-DD date', () => {

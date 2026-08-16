@@ -7,10 +7,22 @@ import { create } from 'zustand'
 export type AppView =
   'loading' | 'onboarding' | 'dashboard' | 'review' | 'checkin' | 'coping' | 'reports'
 
+/** Optional targets a navigation can carry to the destination screen. */
+interface NavigateParams {
+  /**
+   * Calendar date (`ISOCalendarTimestamp`) a backfill check-in should target,
+   * set when the user taps a specific missing day on the dashboard. Cleared on
+   * any navigation that doesn't pass it, so it never leaks into a later visit.
+   */
+  behaviorDate?: string
+}
+
 interface AppViewStore {
   view: AppView
-  /** Navigate to a top-level screen. */
-  navigate: (view: AppView) => void
+  /** Target day for a backfill check-in, or `null` for the default (latest missing) pick. */
+  checkinBehaviorDate: string | null
+  /** Navigate to a top-level screen, optionally carrying a target day for check-in. */
+  navigate: (view: AppView, params?: NavigateParams) => void
 }
 
 /**
@@ -24,7 +36,8 @@ interface AppViewStore {
  */
 export const useAppView = create<AppViewStore>()((set) => ({
   view: 'loading',
-  navigate: (view) => {
-    set({ view })
+  checkinBehaviorDate: null,
+  navigate: (view, params) => {
+    set({ view, checkinBehaviorDate: params?.behaviorDate ?? null })
   },
 }))

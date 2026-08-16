@@ -19,6 +19,9 @@ export const en: Record<TranslationKey, string> = {
   'error.dashboard.noProfile': "We couldn't find your profile. Please finish setup.",
   'error.dashboard.noLimit': 'No limits are set for this week yet.',
   'error.coping.emptyLabel': 'Please write what the strategy means.',
+  'error.checkin.outsideWindow':
+    'This day can no longer be backfilled — only the last 5 days can be filled in.',
+  'error.checkin.weekClosed': 'This week is already closed and can no longer be edited.',
 
   'checkin.shared.title': 'Check-in for {date}',
   'checkin.shared.yesterday': 'yesterday',
@@ -28,6 +31,7 @@ export const en: Record<TranslationKey, string> = {
     'A day without gambling is a valid record. An empty day is different — it is missing data.',
   'checkin.dayState.future': 'This day cannot be filled in yet.',
   'checkin.played.question': 'Did you gamble yesterday?',
+  'checkin.played.questionDated': 'Did you gamble {day}?',
   'checkin.played.yesShort': 'Yes',
   'checkin.played.noShort': 'No',
   'checkin.played.yes': 'I gambled',
@@ -198,7 +202,7 @@ export const en: Record<TranslationKey, string> = {
   'dashboard.banner.missing.one': "You haven't filled in {day}",
   'dashboard.banner.missing.few': "You haven't filled in {count} days",
   'dashboard.banner.missing.other': "You haven't filled in {count} days",
-  'dashboard.banner.missing.body': 'You can still add them before this week ends.',
+  'dashboard.banner.missing.body': 'You can add them within 5 days of the day itself.',
   'dashboard.banner.allDone.title': 'All filled in',
   'dashboard.banner.allDone.body': 'See you tomorrow — the next check-in covers today.',
   'dashboard.banner.started.title': 'Self-tracking has started',

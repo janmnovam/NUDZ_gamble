@@ -5,11 +5,22 @@
 import { calendarDate, createStudyCalendar, type StudyDay, type WeekNo } from '@domain/clock.ts'
 import { dayStateOf, type DayState } from '@domain/checkin.ts'
 import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
-import { DomainError } from '@domain/errors.ts'
-import { resolvePendingAction, type PendingAction } from '@domain/guards.ts'
+import { ERROR_CODES } from '@domain/errorCodes.ts'
+import { DomainError, ERROR_TYPES } from '@domain/errors.ts'
+import {
+  canEditCheckIn,
+  isWeekClosed,
+  resolvePendingAction,
+  type PendingAction,
+} from '@domain/guards.ts'
 import { classifyStatus, worseStatus } from '@domain/limits.ts'
 import type { CheckIn, ISOCalendarTimestamp, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
-import type { CheckInRepository, LimitRepository, ProfileRepository } from '@domain/ports.ts'
+import type {
+  CheckInRepository,
+  LimitRepository,
+  ProfileRepository,
+  ReviewRepository,
+} from '@domain/ports.ts'
 
 export interface AxisView {
   used: number
@@ -25,6 +36,8 @@ export interface DayCell {
   studyDay: StudyDay
   date: ISOCalendarTimestamp
   state: DayState
+  /** A `missing` day still inside the rolling backfill window (tappable to fill in). */
+  backfillable: boolean
   /** Present for `completed` / `backfilled` cells only. */
   played?: boolean
   timeMin?: number
@@ -52,25 +65,37 @@ export type BuildDashboardVM = () => DashboardVM
  * week strip and (later) a 28-cell month/final-summary view. The caller
  * loops over as many study days as it needs; this only ever knows about one.
  */
-export function buildDayCell(params: {
-  studyDay: StudyDay
-  date: ISOCalendarTimestamp
-  today: ISODate
-  checkIn: CheckIn | undefined
-}): DayCell {
-  const { studyDay, date, today, checkIn } = params
+export function buildDayCell(
+  params: {
+    studyDay: StudyDay
+    date: ISOCalendarTimestamp
+    today: ISODate
+    checkIn: CheckIn | undefined
+    /** `studyDay(today) - studyDay(date)`; feeds the rolling backfill window. */
+    studyDayDiff: number
+    /** A review row exists for this day's week. */
+    weekClosed: boolean
+  },
+  config: DomainConfig = DEFAULT_CONFIG,
+): DayCell {
+  const { studyDay, date, today, checkIn, studyDayDiff, weekClosed } = params
   const state = dayStateOf({ behaviorDate: date, today, checkIn })
+  // Only a missing day is offer-able, and only inside the same window the
+  // check-in service enforces (`canEditCheckIn`) — one source of truth.
+  const backfillable =
+    state === 'missing' && canEditCheckIn({ studyDayDiff, weekClosed }, config) === 'allowed'
   if (checkIn && (state === 'completed' || state === 'backfilled')) {
     return {
       studyDay,
       date,
       state,
+      backfillable,
       played: checkIn.played,
       timeMin: checkIn.timeMin,
       stakesCzk: checkIn.stakesCzk,
     }
   }
-  return { studyDay, date, state }
+  return { studyDay, date, state, backfillable }
 }
 
 /**
@@ -95,6 +120,8 @@ export interface DashboardDeps {
   profileRepo: ProfileRepository
   limitRepo: LimitRepository
   checkInRepo: CheckInRepository
+  /** Needed to gate a missing day's `backfillable` flag on a review-closed week. */
+  reviewRepo: ReviewRepository
   /** Caller-supplied instant; "today" is its calendar date (see `calendarDate`). */
   time: ISOTimestamp
   config?: DomainConfig
@@ -110,8 +137,8 @@ export async function buildDashboardVM(deps: DashboardDeps): Promise<DashboardVM
   const profile = await deps.profileRepo.get(deps.userId)
   if (!profile) {
     throw new DomainError(
-      'not_found',
-      'DASHBOARD_NO_PROFILE',
+      ERROR_TYPES.NOT_FOUND,
+      ERROR_CODES.dashboard.NO_PROFILE,
       `buildDashboardVM: no profile for user ${deps.userId}`,
     )
   }
@@ -130,8 +157,8 @@ export async function buildDashboardVM(deps: DashboardDeps): Promise<DashboardVM
   const limit = limits.find((l) => l.weekNo === weekNo)
   if (!limit) {
     throw new DomainError(
-      'not_found',
-      'DASHBOARD_NO_LIMIT',
+      ERROR_TYPES.NOT_FOUND,
+      ERROR_CODES.dashboard.NO_LIMIT,
       `buildDashboardVM: no limit set for week ${String(weekNo)}`,
     )
   }
@@ -139,10 +166,26 @@ export async function buildDashboardVM(deps: DashboardDeps): Promise<DashboardVM
   const checkIns = await deps.checkInRepo.listByUser(deps.userId)
   const checkInsByDate = new Map(checkIns.map((c) => [c.behaviorDate, c]))
 
+  const reviews = await deps.reviewRepo.listByUser(deps.userId)
+  // The strip is one week, so `weekClosed` is the same for every cell here.
+  const weekClosed = isWeekClosed(weekNo, reviews)
+
   const days: DayCell[] = []
   for (let day = calendar.firstDay(weekNo); day <= calendar.lastDay(weekNo); day += 1) {
     const date = calendar.dateOf(day)
-    days.push(buildDayCell({ studyDay: day, date, today, checkIn: checkInsByDate.get(date) }))
+    days.push(
+      buildDayCell(
+        {
+          studyDay: day,
+          date,
+          today,
+          checkIn: checkInsByDate.get(date),
+          studyDayDiff: studyDay - day,
+          weekClosed,
+        },
+        config,
+      ),
+    )
   }
 
   const missingDays = days.filter((d) => d.state === 'missing').map((d) => d.date)

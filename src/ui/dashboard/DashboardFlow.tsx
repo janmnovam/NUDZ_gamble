@@ -22,6 +22,8 @@ type LoadState =
 
 interface DashboardFlowProps {
   onCheckIn?: () => void
+  /** Opens a backfill check-in for a specific missing day, by ISO calendar date. */
+  onBackfill?: (date: string) => void
 }
 
 /**
@@ -30,7 +32,7 @@ interface DashboardFlowProps {
  * those two it has no steps: it loads the read model through `DashboardService`
  * and hands it to the (pure) screen, which is the only place that renders.
  */
-export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
+export function DashboardFlow({ onCheckIn, onBackfill }: DashboardFlowProps = {}) {
   const { t } = useTranslation()
   // Injected by <AppProvider>, which is also how tests supply a fake.
   const dashboardService = useDashboardService()
@@ -91,6 +93,7 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
       <DashboardScreen
         dashboard={state.dashboard}
         {...(onCheckIn ? { onCheckIn } : {})}
+        {...(onBackfill ? { onBackfillDay: onBackfill } : {})}
         onSecretTap={onSecretTap}
         timeMachineActive={simulatedTime !== null}
         onExitTimeMachine={exitTimeMachine}

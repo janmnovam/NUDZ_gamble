@@ -21,6 +21,7 @@ const DASHBOARD: DashboardResponse = {
     studyDay: index + 1,
     date: `2026-09-0${String(index + 1)}T00:00:00.000Z`,
     state: 'future' as const,
+    backfillable: false,
   })),
   missingDays: [],
   pendingAction: 'none',

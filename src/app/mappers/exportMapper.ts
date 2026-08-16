@@ -5,6 +5,7 @@
  * `src/app/lib/zip.ts`; turning that byte array into a browser download
  * (Blob + object URL) is a UI concern, out of scope here.
  */
+import { isBackfill } from '@domain/checkin.ts'
 import { calendarDate } from '@domain/clock.ts'
 import type { CheckIn, CopingStrategy, Limit, Profile } from '@domain/model.ts'
 
@@ -59,9 +60,15 @@ const CHECK_IN_COLUMNS = [
   'winnings_czk',
   'submitted_at',
   'updated_at',
+  'is_backfill',
 ] as const
 
-/** `behavior_date` is README's "date YYYY-MM-DD" column — `CheckIn.behaviorDate` itself is now a canonical UTC-midnight timestamp (`refactor(data): store day fields as canonical timestamps`), so it's truncated here rather than passed through raw. */
+/**
+ * `behavior_date` is README's "date YYYY-MM-DD" column — `CheckIn.behaviorDate`
+ * itself is now a canonical UTC-midnight timestamp (`refactor(data): store day
+ * fields as canonical timestamps`), so it's truncated here rather than passed
+ * through raw. `is_backfill` is derived (never stored) via `isBackfill`.
+ */
 export function toCheckInCsv(rows: readonly CheckIn[]): string {
   return toCsv(
     CHECK_IN_COLUMNS,
@@ -75,6 +82,7 @@ export function toCheckInCsv(rows: readonly CheckIn[]): string {
       String(r.winningsCzk),
       r.submittedAt,
       r.updatedAt ?? '',
+      String(isBackfill(r.behaviorDate, r.submittedAt)),
     ]),
   )
 }

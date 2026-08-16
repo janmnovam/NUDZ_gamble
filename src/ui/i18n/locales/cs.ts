@@ -23,6 +23,9 @@ export const cs = {
   'error.dashboard.noProfile': 'Nenašli jsme tvůj profil. Dokonči prosím nastavení.',
   'error.dashboard.noLimit': 'Pro tento týden zatím nejsou nastavené limity.',
   'error.coping.emptyLabel': 'Napiš prosím, co strategie znamená.',
+  'error.checkin.outsideWindow':
+    'Tento den už zpětně doplnit nejde – doplnit lze jen posledních 5 dní.',
+  'error.checkin.weekClosed': 'Tento týden je už uzavřený a nedá se upravovat.',
 
   'checkin.shared.title': 'Check-in za {date}',
   'checkin.shared.yesterday': 'včerejšek',
@@ -32,6 +35,7 @@ export const cs = {
     'I den bez hraní je platný záznam. Nevyplněný den je něco jiného — je to chybějící údaj.',
   'checkin.dayState.future': 'Tento den ještě není možné vyplnit.',
   'checkin.played.question': 'Hrál/a jste včera?',
+  'checkin.played.questionDated': 'Hrál/a jste {day}?',
   'checkin.played.yesShort': 'Ano',
   'checkin.played.noShort': 'Ne',
   'checkin.played.yes': 'hrál jsem',
@@ -204,7 +208,7 @@ export const cs = {
   'dashboard.banner.missing.one': 'Nemáte vyplněný {day}',
   'dashboard.banner.missing.few': 'Nemáte vyplněné {count} dny',
   'dashboard.banner.missing.other': 'Nemáte vyplněných {count} dnů',
-  'dashboard.banner.missing.body': 'Doplnit je můžete do konce tohoto týdne.',
+  'dashboard.banner.missing.body': 'Doplnit je můžete během 5 dní od daného dne.',
   'dashboard.banner.allDone.title': 'Vše vyplněno',
   'dashboard.banner.allDone.body': 'Zase zítra — další check-in bude na dnešek.',
   'dashboard.banner.started.title': 'Sebesledování začalo',

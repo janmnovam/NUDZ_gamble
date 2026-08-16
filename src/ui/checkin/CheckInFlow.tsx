@@ -28,6 +28,8 @@ interface CheckInFlowProps {
   programDayLabel?: string | undefined
   weekLabel?: string | undefined
   behaviorDateLabel?: string | undefined
+  /** The "did you gamble …?" heading; names the day for a backfill, else "yesterday". */
+  playedQuestion?: string | undefined
   onComplete: (result: CheckInFlowResult) => void
   onCancel?: () => void
 }
@@ -52,6 +54,7 @@ export function CheckInFlow({
   programDayLabel,
   weekLabel,
   behaviorDateLabel,
+  playedQuestion,
   onComplete,
   onCancel,
 }: CheckInFlowProps) {
@@ -86,6 +89,7 @@ export function CheckInFlow({
     programDayLabel,
     weekLabel,
     behaviorDateLabel,
+    playedQuestion,
   }
 
   if (step === 'played') {

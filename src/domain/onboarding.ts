@@ -1,5 +1,3 @@
-import { calendarTimestamp, dateOf } from '@domain/clock.ts'
-import { DomainError } from '@domain/errors.ts'
 import { isWithinCap } from '@domain/limits.ts'
 import {
   type CopingStrategy,
@@ -10,6 +8,9 @@ import {
   type UserId,
 } from '@domain/model.ts'
 import { type OnboardingRepository } from '@domain/ports.ts'
+import {DomainError, ERROR_TYPES} from "@domain/errors.ts";
+import {ERROR_CODES} from "@domain/errorCodes.ts";
+import {calendarTimestamp, dateOf} from "@domain/clock.ts";
 
 export interface OnboardingCopingInput {
   label: string
@@ -50,22 +51,22 @@ export async function completeOnboarding(
 ): Promise<void> {
   if (input.coping.length < 1) {
     throw new DomainError(
-      'validation',
-      'ONBOARDING_NO_COPING',
+      ERROR_TYPES.VALIDATION,
+      ERROR_CODES.onboarding.NO_COPING,
       'onboarding: at least one coping strategy is required',
     )
   }
   if (!isWithinCap(input.limitTimeMin, input.referenceTimeMin)) {
     throw new DomainError(
-      'validation',
-      'ONBOARDING_TIME_CAP',
+      ERROR_TYPES.VALIDATION,
+      ERROR_CODES.onboarding.TIME_CAP,
       'onboarding: time limit exceeds the 90% cap',
     )
   }
   if (!isWithinCap(input.limitStakesCzk, input.referenceStakesCzk)) {
     throw new DomainError(
-      'validation',
-      'ONBOARDING_STAKES_CAP',
+      ERROR_TYPES.VALIDATION,
+      ERROR_CODES.onboarding.STAKES_CAP,
       'onboarding: stakes limit exceeds the 90% cap',
     )
   }
