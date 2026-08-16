@@ -3,7 +3,7 @@ import { jest } from '@jest/globals'
 import { CopingStrategyServiceImpl } from '@/app/services/copingStrategyServiceImpl.ts'
 import { ok, type Result } from '@/app/result.ts'
 import { AppDatabase, createDataLayer, type DataLayer } from '@/core'
-import type { CopingStrategy, CopingStrategyDefault } from '@domain/model.ts'
+import type { CopingStrategy, CopingStrategyDefault, UserId } from '@domain/model.ts'
 import type { CopingStrategyRepository } from '@domain/ports.ts'
 
 const TIME = '2026-09-04T08:00:00+02:00'
@@ -32,7 +32,7 @@ describe('CopingStrategyServiceImpl.getSuggestions', () => {
     } as unknown as CopingStrategyRepository
     const service = new CopingStrategyServiceImpl({ repo })
 
-    await expect(service.getSuggestions('demo-user', '2026-09-01T12:00:00.000Z')).resolves.toEqual(
+    await expect(service.getSuggestions('2026-09-01T12:00:00.000Z')).resolves.toEqual(
       ok([
         {
           id: 'change_environment',
@@ -50,9 +50,7 @@ describe('CopingStrategyServiceImpl.getSuggestions', () => {
     const data: DataLayer = createDataLayer(db)
     const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
 
-    const suggestions = unwrap(
-      await service.getSuggestions('demo-user', '2026-09-01T12:00:00.000Z'),
-    )
+    const suggestions = unwrap(await service.getSuggestions('2026-09-01T12:00:00.000Z'))
     expect(suggestions.length).toBeGreaterThanOrEqual(1)
     expect(typeof suggestions[0]?.id).toBe('string')
     expect(typeof suggestions[0]?.label).toBe('string')
@@ -110,7 +108,7 @@ describe('CopingStrategyServiceImpl.create', () => {
       },
     ]
     const create = jest.fn(
-      (input: { userId: string; label: string; type: string; priority: number }, time: string) =>
+      (input: { userId: UserId; label: string; type: string; priority: number }, time: string) =>
         Promise.resolve({
           copingStrategyId: 'new-id',
           userId: input.userId,

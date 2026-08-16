@@ -9,9 +9,9 @@ import { errorMessageKey } from '@ui/errors/errorMessage.ts'
 import { type TranslationKey } from '@ui/i18n/types.ts'
 import { TabBar } from '@ui/components/TabBar.tsx'
 import { DashboardScreen } from '@ui/dashboard/DashboardScreen.tsx'
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { useDashboardService } from '@ui/app/AppContext.ts'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 
 type LoadState =
@@ -33,6 +33,7 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
   const { t } = useTranslation()
   // Injected by <AppProvider>, which is also how tests supply a fake.
   const dashboardService = useDashboardService()
+  const userId = useCurrentUser((s) => s.userId)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
 
   // Hidden demo console: the time machine sets a simulated instant, which we
@@ -45,10 +46,11 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
   const onSecretTap = useMultiTap(7, openPanel)
 
   useEffect(() => {
+    if (userId === null) return
     let cancelled = false
 
     const time = simulatedTime ?? clientNow()
-    void dashboardService.getDashboard(DEMO_USER_ID, time).then((res) => {
+    void dashboardService.getDashboard(userId, time).then((res) => {
       if (cancelled) return
       if (res.error || !res.data) {
         console.error('[dashboard] getDashboard failed', res.error)
@@ -61,7 +63,7 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
     return () => {
       cancelled = true
     }
-  }, [dashboardService, simulatedTime])
+  }, [dashboardService, userId, simulatedTime])
 
   if (state.status !== 'ready') {
     // The nav stays even when the dashboard can't load: without it a failure

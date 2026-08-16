@@ -19,12 +19,14 @@ export function toOnboardingInput(req: OnboardingProfileRequest, userId: UserId)
   }
 }
 
-/** Echo the request back with the derived first intervention day. */
+/** Echo the request back with the generated user id and derived first intervention day. */
 export function toOnboardingProfileResponse(
   req: OnboardingProfileRequest,
+  userId: UserId,
   interventionStartDate: ISOCalendarTimestamp,
 ): OnboardingProfileResponse {
   return {
+    userId,
     reference: { ...req.reference },
     limits: { ...req.limits },
     coping: req.coping.map((c) => ({ ...c })),

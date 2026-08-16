@@ -44,8 +44,10 @@ export interface OnboardingProfileRequest {
   coping: CopingDto[]
 }
 
-/** Echo of the completed profile plus the derived first intervention day. */
+/** Echo of the completed profile plus the service-generated user id and first day. */
 export interface OnboardingProfileResponse extends OnboardingProfileRequest {
+  /** The freshly generated id of the user the service just created. */
+  userId: UserId
   interventionStartDate: ISOCalendarTimestamp
 }
 

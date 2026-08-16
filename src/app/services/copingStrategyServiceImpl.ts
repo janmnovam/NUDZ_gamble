@@ -30,7 +30,7 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
     this.deps = deps
   }
 
-  getSuggestions(_userId: UserId, _time: ISOTimestamp): Promise<Result<CopingSuggestionDto[]>> {
+  getSuggestions(_time: ISOTimestamp): Promise<Result<CopingSuggestionDto[]>> {
     return run(async () => {
       const defaults = await this.deps.repo.loadDefaults()
       return defaults.map(toCopingSuggestionDto)

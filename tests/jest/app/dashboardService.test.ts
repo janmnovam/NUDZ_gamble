@@ -52,6 +52,7 @@ function makeService(params: { checkIns: CheckIn[]; today: string; noProfile?: b
   }
   const profiles: ProfileRepository = {
     get: (userId) => Promise.resolve(!params.noProfile && userId === USER_ID ? profile : undefined),
+    getCurrent: () => Promise.resolve(params.noProfile ? undefined : profile),
     save: () => Promise.resolve(),
   }
   const limits: LimitRepository = {

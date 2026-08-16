@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useNotificationService } from '@ui/app/AppContext.ts'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import * as gateway from '@ui/notifications/notificationGateway.ts'
@@ -20,9 +20,11 @@ const POLL_INTERVAL_MS = 60_000
  */
 export function useReminderNotifications(): void {
   const notification = useNotificationService()
+  const userId = useCurrentUser((s) => s.userId)
   const { t, locale } = useTranslation()
 
   useEffect(() => {
+    if (userId === null) return
     let cancelled = false
     // A function, not a bare flag read: defeats TS's narrowing across the
     // `await` below, which would otherwise (wrongly) treat `cancelled` as
@@ -31,11 +33,11 @@ export function useReminderNotifications(): void {
     const isCancelled = () => cancelled
 
     async function check() {
-      if (!gateway.isNotificationSupported()) return
+      if (userId === null || !gateway.isNotificationSupported()) return
 
       const time = clientNow()
       const result = await notification.checkSchedule({
-        userId: DEMO_USER_ID,
+        userId,
         time,
         lastFiredAt: gateway.getLastFiredAt(),
       })
@@ -62,5 +64,5 @@ export function useReminderNotifications(): void {
       cancelled = true
       window.clearInterval(interval)
     }
-  }, [notification, t, locale])
+  }, [notification, userId, t, locale])
 }

@@ -65,6 +65,7 @@ function makeService(): ExportServiceImpl {
   }
   const profiles: ProfileRepository = {
     get: () => Promise.resolve(undefined),
+    getCurrent: () => Promise.resolve(undefined),
     save: () => Promise.resolve(),
   }
   const deps: ExportServiceDeps = { profiles, checkIns, limits, copingStrategies }

@@ -21,6 +21,7 @@ function makeService(existingProfile?: Profile) {
     },
     profiles: {
       get: () => Promise.resolve(saved.profile ?? existingProfile),
+      getCurrent: () => Promise.resolve(saved.profile ?? existingProfile),
       save: () => Promise.resolve(),
     },
   }
@@ -41,9 +42,9 @@ const completeRequest: OnboardingProfileRequest = {
 describe('OnboardingServiceImpl.getStatus', () => {
   it('reports not completed when no profile is stored', async () => {
     const { service } = makeService()
-    await expect(service.getStatus('demo-user', FIXED_NOW)).resolves.toEqual(
+    await expect(service.getStatus(FIXED_NOW)).resolves.toEqual(
       ok({
-        userId: 'demo-user',
+        userId: null,
         completed: false,
         completedAt: null,
       }),
@@ -59,7 +60,7 @@ describe('OnboardingServiceImpl.getStatus', () => {
       referenceStakesCzk: 10_000,
     }
     const { service } = makeService(profile)
-    await expect(service.getStatus('demo-user', FIXED_NOW)).resolves.toEqual(
+    await expect(service.getStatus(FIXED_NOW)).resolves.toEqual(
       ok({
         userId: 'demo-user',
         completed: true,
@@ -70,10 +71,12 @@ describe('OnboardingServiceImpl.getStatus', () => {
 
   it('reports completed right after complete() persists the profile', async () => {
     const { service } = makeService()
-    await service.complete(completeRequest, 'demo-user', FIXED_NOW)
-    await expect(service.getStatus('demo-user', FIXED_NOW)).resolves.toEqual(
+    const created = await service.complete(completeRequest, FIXED_NOW)
+    // getStatus resolves the current user from the stored profile — the id the
+    // service just minted.
+    await expect(service.getStatus(FIXED_NOW)).resolves.toEqual(
       ok({
-        userId: 'demo-user',
+        userId: created.data?.userId ?? '',
         completed: true,
         completedAt: FIXED_NOW,
       }),
@@ -84,7 +87,7 @@ describe('OnboardingServiceImpl.getStatus', () => {
 describe('OnboardingServiceImpl.getSuggestedLimits', () => {
   it('suggests 80% of the reference for time and money, with percentages', async () => {
     const { service } = makeService()
-    await expect(service.getSuggestedLimits(reference, 'demo-user', FIXED_NOW)).resolves.toEqual(
+    await expect(service.getSuggestedLimits(reference, FIXED_NOW)).resolves.toEqual(
       ok({
         timeMinutes: 480,
         stakesAmount: 8_000,
@@ -101,7 +104,7 @@ describe('OnboardingServiceImpl.getSuggestedLimits', () => {
 describe('OnboardingServiceImpl.complete', () => {
   it('persists profile + week-1 limit + coping and echoes the next-day start', async () => {
     const { service, saved } = makeService()
-    const res = await service.complete(completeRequest, 'demo-user', FIXED_NOW)
+    const res = await service.complete(completeRequest, FIXED_NOW)
 
     expect(saved.profile).toMatchObject({
       referenceTimeMin: 600,
@@ -118,8 +121,10 @@ describe('OnboardingServiceImpl.complete', () => {
       ['Zavolat bratrovi', 2],
     ])
 
+    // The service mints the id (first `newId()` call → `id-1` in this fake).
     expect(res).toEqual(
       ok({
+        userId: 'id-1',
         reference: { timeMinutes: 600, stakesAmount: 10_000 },
         limits: { timeMinutes: 480, stakesAmount: 8_000 },
         coping: completeRequest.coping,
@@ -132,7 +137,6 @@ describe('OnboardingServiceImpl.complete', () => {
     const { service, saved } = makeService()
     const res = await service.complete(
       { ...completeRequest, limits: { timeMinutes: 541, stakesAmount: 8_000 } },
-      'demo-user',
       FIXED_NOW,
     )
     expect(res.data).toBeNull()
@@ -145,7 +149,6 @@ describe('OnboardingServiceImpl.complete', () => {
     const { service } = makeService()
     const res = await service.complete(
       { ...completeRequest, limits: { timeMinutes: 480, stakesAmount: 9_001 } },
-      'demo-user',
       FIXED_NOW,
     )
     expect(res.data).toBeNull()

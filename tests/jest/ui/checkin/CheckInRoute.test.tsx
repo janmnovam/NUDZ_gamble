@@ -1,7 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { jest } from '@jest/globals'
 
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import type { CheckInRequest } from '@/app/dto/checkin.ts'
 import type { DashboardResponse } from '@/app/dto/dashboard.ts'
 import type { CheckInService } from '@/app/ports/checkInService.ts'
@@ -10,8 +9,11 @@ import { ok } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { CheckInRoute } from '@ui/checkin/CheckInRoute.tsx'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
+
+const USER_ID = 'test-user'
 
 const DASHBOARD: DashboardResponse = {
   studyDay: 4,
@@ -67,7 +69,7 @@ function success(req: CheckInRequest) {
     ok: true,
     checkIn: {
       checkInId: 'ci-1',
-      userId: DEMO_USER_ID,
+      userId: USER_ID,
       behaviorDate: req.behaviorDate,
       weekNo: 1,
       played: req.played,
@@ -103,6 +105,7 @@ function renderRoute({
   dashboard?: DashboardService
   onComplete?: jest.Mock
 }) {
+  useCurrentUser.setState({ userId: USER_ID })
   render(
     <I18nProvider>
       <AppProvider app={{ dashboard, checkIn } as App}>
@@ -121,6 +124,7 @@ describe('CheckInRoute', () => {
       simulatedTime: null,
       interventionStartDate: null,
     })
+    useCurrentUser.setState({ userId: null })
   })
 
   it('submits a not-played check-in as zeros and completes', async () => {
@@ -147,7 +151,7 @@ describe('CheckInRoute', () => {
         stakesCzk: 0,
         winningsCzk: 0,
       },
-      DEMO_USER_ID,
+      USER_ID,
       expect.any(String),
     )
   })
@@ -179,7 +183,7 @@ describe('CheckInRoute', () => {
         stakesCzk: 2500,
         winningsCzk: 0,
       },
-      DEMO_USER_ID,
+      USER_ID,
       expect.any(String),
     )
   })
@@ -208,7 +212,7 @@ describe('CheckInRoute', () => {
         behaviorDate: '2026-09-03T00:00:00.000Z',
         played: false,
       }),
-      DEMO_USER_ID,
+      USER_ID,
       expect.any(String),
     )
   })
@@ -242,7 +246,7 @@ describe('CheckInRoute', () => {
         behaviorDate: '2026-09-01T00:00:00.000Z',
         played: false,
       }),
-      DEMO_USER_ID,
+      USER_ID,
       getDashboard.mock.calls[1]?.[1],
     )
   })
@@ -269,7 +273,7 @@ describe('CheckInRoute', () => {
     await waitFor(() => {
       expect(onComplete).toHaveBeenCalled()
     })
-    expect(getDashboard).toHaveBeenCalledWith(DEMO_USER_ID, simulatedTime)
-    expect(submitCheckIn).toHaveBeenCalledWith(expect.any(Object), DEMO_USER_ID, simulatedTime)
+    expect(getDashboard).toHaveBeenCalledWith(USER_ID, simulatedTime)
+    expect(submitCheckIn).toHaveBeenCalledWith(expect.any(Object), USER_ID, simulatedTime)
   })
 })

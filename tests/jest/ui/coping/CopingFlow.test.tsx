@@ -7,6 +7,7 @@ import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts
 import { ok } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { CopingFlow } from '@ui/coping/CopingFlow.tsx'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
 
@@ -82,6 +83,7 @@ function renderFlow(
   service: CopingStrategyService,
   contacts: ContactService = createContactService(),
 ) {
+  useCurrentUser.setState({ userId: 'demo-user' })
   render(
     <I18nProvider>
       <AppProvider app={{ coping: service, contacts } as App}>

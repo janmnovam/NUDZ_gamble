@@ -10,7 +10,7 @@ import { RefStakesStep } from '@ui/onboarding/steps/RefStakesStep.tsx'
 import { RefTimeStep } from '@ui/onboarding/steps/RefTimeStep.tsx'
 import type { CopingDto, SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
 import type { CopingSuggestionDto } from '@/app/dto/coping.ts'
-import { DEMO_USER_ID } from '@/app/constants.ts'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { errorMessageKey } from '@ui/errors/errorMessage.ts'
@@ -30,6 +30,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const onboarding = useOnboardingService()
   const coping = useCopingService()
   const rememberInterventionStart = useAdminStore((s) => s.setInterventionStartDate)
+  const adoptCurrentUser = useCurrentUser((s) => s.setUserId)
   const submittingRef = useRef(false)
 
   const { t } = useTranslation()
@@ -48,7 +49,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // Load the predefined coping suggestions once; map each to the domain-shaped
   useEffect(() => {
     let active = true
-    void coping.getSuggestions(DEMO_USER_ID, clientNow()).then((res) => {
+    void coping.getSuggestions(clientNow()).then((res) => {
       if (active && res.data) setCopingStrategies(res.data)
     })
     return () => {
@@ -60,11 +61,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   useEffect(() => {
     let active = true
     void onboarding
-      .getSuggestedLimits(
-        { timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk },
-        DEMO_USER_ID,
-        clientNow(),
-      )
+      .getSuggestedLimits({ timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk }, clientNow())
       .then((res) => {
         if (active) setSuggestedLimits(res.data)
       })
@@ -95,7 +92,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           limits: { timeMinutes: resolvedTimeLimit, stakesAmount: resolvedStakesLimit },
           coping: [...copingSelected, ...(customCoping ? [customCoping] : [])],
         },
-        DEMO_USER_ID,
         clientNow(),
       )
       if (res.error || !res.data) {
@@ -104,6 +100,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         setSubmitError(t(errorMessageKey(res.error)))
         return
       }
+      // The service just minted the user id; adopt it so every later screen
+      // (and a reload) talks to the backend as the profile we just created.
+      adoptCurrentUser(res.data.userId)
       setSubmitError(null)
       setInterventionStartDate(new Date(res.data.interventionStartDate))
       rememberInterventionStart(res.data.interventionStartDate)

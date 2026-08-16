@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 
 import type { ContactDto } from '@/app/dto/contact.ts'
 import type { CopingStrategyDto, CopingSuggestionDto } from '@/app/dto/coping.ts'
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import { Screen } from '@ui/components/Screen.tsx'
 import { TabBar } from '@ui/components/TabBar.tsx'
 import { type StrategyContactItem } from '@ui/coping/components/ContactCard.tsx'
@@ -10,6 +9,7 @@ import { type StrategyLibraryItem } from '@ui/coping/StrategyLibraryScreen.tsx'
 import { StrategySection } from '@ui/coping/StrategySection.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { useContactService, useCopingService } from '@ui/app/AppContext.ts'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 
 type LoadState =
@@ -69,15 +69,17 @@ export function CopingFlow() {
   const { t } = useTranslation()
   const copingService = useCopingService()
   const contactService = useContactService()
+  const userId = useCurrentUser((s) => s.userId)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [suggestions, setSuggestions] = useState<CopingSuggestionDto[]>([])
   const [contacts, setContacts] = useState<ContactDto[]>([])
   const [reloadToken, setReloadToken] = useState(0)
 
   useEffect(() => {
+    if (userId === null) return
     let cancelled = false
 
-    void copingService.list(DEMO_USER_ID, clientNow()).then((res) => {
+    void copingService.list(userId, clientNow()).then((res) => {
       if (cancelled) return
       if (res.error || !res.data) {
         console.error('[coping] list failed', res.error)
@@ -90,13 +92,13 @@ export function CopingFlow() {
     return () => {
       cancelled = true
     }
-  }, [copingService, reloadToken])
+  }, [copingService, userId, reloadToken])
 
   useEffect(() => {
     let cancelled = false
 
     void Promise.allSettled([
-      copingService.getSuggestions(DEMO_USER_ID, clientNow()),
+      copingService.getSuggestions(clientNow()),
       contactService.list(),
     ]).then(([suggestionsResult, contactsResult]) => {
       if (suggestionsResult.status === 'rejected') {
@@ -124,14 +126,16 @@ export function CopingFlow() {
   }
 
   const handleToggle = (copingStrategyId: string, active: boolean) => {
-    void copingService.toggle(copingStrategyId, active, DEMO_USER_ID, clientNow()).then((res) => {
+    if (userId === null) return
+    void copingService.toggle(copingStrategyId, active, userId, clientNow()).then((res) => {
       if (res.error) console.error('[coping] toggle failed', res.error)
       else reload()
     })
   }
 
   const handleAdd = (label: string) => {
-    void copingService.create({ label }, DEMO_USER_ID, clientNow()).then((res) => {
+    if (userId === null) return
+    void copingService.create({ label }, userId, clientNow()).then((res) => {
       if (res.error) console.error('[coping] create failed', res.error)
       else reload()
     })

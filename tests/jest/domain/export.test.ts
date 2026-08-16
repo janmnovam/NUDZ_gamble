@@ -81,6 +81,7 @@ function fakeDeps(params: {
   }
   const profileRepo: ProfileRepository = {
     get: () => Promise.resolve(params.profile),
+    getCurrent: () => Promise.resolve(params.profile),
     save: () => Promise.resolve(),
   }
   return { userId: USER_ID, profileRepo, checkInRepo, limitRepo, copingStrategyRepo }

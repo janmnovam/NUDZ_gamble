@@ -38,11 +38,11 @@ export class OnboardingServiceImpl implements OnboardingService {
     this.deps = deps
   }
 
-  getStatus(userId: UserId, _time: ISOTimestamp): Promise<Result<OnboardingStatusResponse>> {
+  getStatus(_time: ISOTimestamp): Promise<Result<OnboardingStatusResponse>> {
     return run(async () => {
-      const profile = await this.deps.profiles.get(userId)
+      const profile = await this.deps.profiles.getCurrent()
       return {
-        userId,
+        userId: profile?.userId ?? null,
         completed: profile !== undefined,
         completedAt: profile?.onboardingCompletedAt ?? null,
       }
@@ -51,7 +51,6 @@ export class OnboardingServiceImpl implements OnboardingService {
 
   getSuggestedLimits(
     req: ReferenceWeekRequest,
-    _userId: UserId,
     _time: ISOTimestamp,
   ): Promise<Result<SuggestedLimitsResponse>> {
     return run(() => {
@@ -70,10 +69,13 @@ export class OnboardingServiceImpl implements OnboardingService {
 
   complete(
     req: OnboardingProfileRequest,
-    userId: UserId,
     time: ISOTimestamp,
   ): Promise<Result<OnboardingProfileResponse>> {
     return run(async () => {
+      // The service owns identity: mint a fresh id for the user being created.
+      // `newId` is the generic id factory (also mints limit/coping ids); typed as
+      // `UserId` here at the point of use.
+      const userId: UserId = this.deps.newId()
       const input = toOnboardingInput(req, userId)
       await completeOnboarding(input, {
         repo: this.deps.repo,
@@ -82,7 +84,7 @@ export class OnboardingServiceImpl implements OnboardingService {
       })
       // Same value the domain just persisted: the day after the instant's local date.
       const interventionStartDate = calendarTimestamp(nextDate(dateOf(time)))
-      return toOnboardingProfileResponse(req, interventionStartDate)
+      return toOnboardingProfileResponse(req, userId, interventionStartDate)
     })
   }
 }

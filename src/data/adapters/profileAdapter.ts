@@ -22,4 +22,10 @@ export class ProfileAdapter implements ProfileRepository {
     const entity = await this.repo.get(userId)
     return entity && profileToDomain(entity)
   }
+
+  async getCurrent(): Promise<Profile | undefined> {
+    // Single-user app: at most one profile row.
+    const [entity] = await this.repo.getAll()
+    return entity && profileToDomain(entity)
+  }
 }

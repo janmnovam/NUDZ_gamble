@@ -12,7 +12,6 @@
  * `createStudyCalendar` (src/domain/clock.ts) derives that day without any
  * TimeMachineClock — the clock/guard code is untouched.
  */
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import { createDataLayer } from '@/core/index.ts'
 import { calendarTimestamp } from '@domain/clock.ts'
 import type { CheckIn, Limit, Profile, Review } from '@domain/model.ts'
@@ -65,7 +64,7 @@ function todayDate(): string {
 
 export async function seedScenario(scenario: Scenario): Promise<void> {
   const data = createDataLayer()
-  const userId = DEMO_USER_ID
+  const userId = newId()
   await data.databaseAdmin.clearUserData(userId)
 
   const startDate = addDays(todayDate(), -(scenario.today - 1))

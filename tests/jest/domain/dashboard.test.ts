@@ -38,6 +38,7 @@ function fakeDeps(params: { checkIns: CheckIn[]; today: string; limits?: Limit[]
   }
   const profileRepo: ProfileRepository = {
     get: (userId) => Promise.resolve(userId === USER_ID ? profile : undefined),
+    getCurrent: () => Promise.resolve(profile),
     save: () => Promise.resolve(),
   }
   const limitRepo: LimitRepository = {

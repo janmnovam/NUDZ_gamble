@@ -5,6 +5,7 @@ import type { ExportService } from '@/app/ports/exportService.ts'
 import { fail, ok, type Result } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { useExportDownload } from '@ui/export/useExportDownload.ts'
 
 function Harness() {
@@ -21,6 +22,7 @@ function Harness() {
 
 /** Only the export seam matters, so a narrowed cast keeps the fake focused. */
 function renderHarness(exportService: ExportService) {
+  useCurrentUser.setState({ userId: 'test-user' })
   render(
     <AppProvider app={{ export: exportService } as App}>
       <Harness />

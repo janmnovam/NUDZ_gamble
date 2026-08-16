@@ -23,6 +23,7 @@ const onboarding: OnboardingService = {
   complete: () =>
     Promise.resolve(
       ok({
+        userId: 'u1',
         reference: { timeMinutes: 0, stakesAmount: 0 },
         limits: { timeMinutes: 0, stakesAmount: 0 },
         coping: [],

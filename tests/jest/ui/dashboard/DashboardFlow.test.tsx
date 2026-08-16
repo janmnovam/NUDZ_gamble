@@ -6,6 +6,7 @@ import type { DashboardService } from '@/app/ports/dashboardService.ts'
 import { fail, ok, type Result } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
 
@@ -27,6 +28,7 @@ const DASHBOARD: DashboardResponse = {
 
 // Only the dashboard seam matters here, so a narrowed cast keeps the fake focused.
 function renderFlow(dashboard: DashboardService) {
+  useCurrentUser.setState({ userId: 'test-user' })
   render(
     <I18nProvider>
       <AppProvider app={{ dashboard } as App}>

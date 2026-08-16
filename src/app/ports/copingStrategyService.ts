@@ -12,8 +12,11 @@ import type { Result } from '@/app/result.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 
 export interface CopingStrategyService {
-  /** The predefined coping suggestions (Dr. Kazmer's list) for the onboarding picker. */
-  getSuggestions(userId: UserId, time: ISOTimestamp): Promise<Result<CopingSuggestionDto[]>>
+  /**
+   * The predefined coping suggestions (Dr. Kazmer's list) for the onboarding
+   * picker. User-agnostic — the list is global, and onboarding has no user yet.
+   */
+  getSuggestions(time: ISOTimestamp): Promise<Result<CopingSuggestionDto[]>>
 
   /** The user's own coping strategies (default + custom), by priority. */
   list(userId: UserId, time: ISOTimestamp): Promise<Result<CopingStrategyDto[]>>

@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useOnboardingService } from '@ui/app/AppContext.ts'
 import { useAppView } from '@ui/app/appView.ts'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
 import { CheckInRoute } from '@ui/checkin/CheckInRoute.tsx'
@@ -61,25 +61,28 @@ function ReportsSection() {
  */
 function AppRoutes() {
   const onboarding = useOnboardingService()
+  const adoptCurrentUser = useCurrentUser((state) => state.setUserId)
   const view = useAppView((state) => state.view)
   const navigate = useAppView((state) => state.navigate)
 
   useReminderNotifications()
 
-  // Resolve the entry screen once: returning (onboarded) users land on the
-  // dashboard, everyone else starts onboarding. Runs while `view` is 'loading'.
+  // Resolve the current user (and entry screen) once from the backend: the
+  // service reports who has onboarded — a returning user lands on the dashboard,
+  // a fresh/wiped device starts onboarding. Runs while `view` is 'loading'.
   useEffect(() => {
     let active = true
-    void onboarding.getStatus(DEMO_USER_ID, clientNow()).then((res) => {
+    void onboarding.getStatus(clientNow()).then((res) => {
       if (!active) return
-      // On a read failure, `data` is null → fall back to onboarding rather than a stuck splash.
       if (res.error) console.error('[app] getStatus failed', res.error)
+      // Cache the id the backend resolved so later screens talk as that user.
+      if (res.data?.userId) adoptCurrentUser(res.data.userId)
       navigate(res.data?.completed ? 'dashboard' : 'onboarding')
     })
     return () => {
       active = false
     }
-  }, [onboarding, navigate])
+  }, [onboarding, adoptCurrentUser, navigate])
 
   switch (view) {
     case 'loading':

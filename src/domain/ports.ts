@@ -24,6 +24,9 @@ import type {
 export interface ProfileRepository {
   save(profile: Profile): Promise<void>
   get(userId: UserId): Promise<Profile | undefined>
+  /** The single stored profile, if onboarding has happened — the backend is the
+   * source of truth for "who the current user is" (no client-side id). */
+  getCurrent(): Promise<Profile | undefined>
 }
 
 export interface CopingStrategyRepository {

@@ -17,6 +17,7 @@ function profile(): Profile {
 function makeService(params: { profile?: Profile; checkIns: CheckIn[] }) {
   const profiles: ProfileRepository = {
     get: (userId) => Promise.resolve(userId === USER_ID ? params.profile : undefined),
+    getCurrent: () => Promise.resolve(params.profile),
     save: () => Promise.resolve(),
   }
   const checkIns: CheckInRepository = {

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useReviewService } from '@ui/app/AppContext.ts'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { errorMessageKey } from '@ui/errors/errorMessage.ts'
@@ -19,14 +19,16 @@ export type FinalSummaryState =
 /** Loads the four-week summary from `ReviewService` and labels it for the screens. */
 export function useFinalSummary(): FinalSummaryState {
   const review = useReviewService()
+  const userId = useCurrentUser((s) => s.userId)
   const { t, locale } = useTranslation()
   const [state, setState] = useState<FinalSummaryState>({ status: 'loading' })
 
   useEffect(() => {
+    if (userId === null) return
     let cancelled = false
-
     const now = clientNow()
-    void review.getFinalSummary(DEMO_USER_ID, now).then((res) => {
+
+    void review.getFinalSummary(userId, now).then((res) => {
       if (cancelled) return
       if (res.error || !res.data) {
         console.error('[reports] getFinalSummary failed', res.error)
@@ -48,7 +50,7 @@ export function useFinalSummary(): FinalSummaryState {
     return () => {
       cancelled = true
     }
-  }, [review, t, locale])
+  }, [review, userId, t, locale])
 
   return state
 }
