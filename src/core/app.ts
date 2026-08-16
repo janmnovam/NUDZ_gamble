@@ -79,10 +79,9 @@ export function createApp(data: DataLayer = createDataLayer()): App {
       today,
     }),
     export: new ExportServiceImpl({
-      profiles: data.profiles,
-      limits: data.limits,
       checkIns: data.checkIns,
-      reviews: data.reviews,
+      limits: data.limits,
+      copingStrategies: data.copingStrategies,
     }),
   }
 }

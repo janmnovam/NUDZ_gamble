@@ -1,9 +1,13 @@
 /**
- * ExportService — inbound (driving) port. Wiring stub: the contract follows
- * docs/architecture.md §ExportService. The return is a concrete CSV string;
- * the person-day row derivation is TODO.
+ * ExportService — inbound (driving) port. Contract follows
+ * docs/architecture.md §ExportService / README's "Exporting data from app".
+ * Table fetch + sort lives in `@domain/export.ts` (`buildExportBundle`);
+ * CSV text formatting lives in `@/app/mappers/exportMapper.ts`; ZIP
+ * bundling lives in `@/app/lib/zip.ts` (`createZip`) — this port's return
+ * is the finished archive, ready for the UI to hand to the browser's
+ * download mechanism.
  */
 export interface ExportService {
-  /** Person-day CSV, one row per study day 1–28 (see spec Příloha 2). */
-  exportPersonDaysCsv(): Promise<string>
+  /** CHECK_IN, LIMIT and COPING_STRATEGY, each as a CSV file, bundled into one ZIP archive. */
+  exportDataZip(): Promise<Uint8Array>
 }

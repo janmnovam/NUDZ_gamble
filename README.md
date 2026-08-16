@@ -149,7 +149,9 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 - `src/domain/` is empty — no intervention logic, limits, check-in or review flow yet.
 - `src/data/db.ts` opens a placeholder store (`_bootstrap`); the real schema is not modelled.
-- CSV export, seed/demo mode and the reminder scenario required by the brief are not built.
+- Seed/demo mode and the reminder scenario required by the brief are not built. CSV export
+  itself is built (`ExportService.exportDataZip`, see below) but has no UI trigger yet — no
+  button wires it to a browser download.
 - Playwright's `mobile-safari` project needs `npx playwright install webkit`; only
   Chromium was installed and exercised so far.
 
@@ -185,8 +187,7 @@ Icons in `public/` are generated for this repository and carry no third-party li
     - coping_strategy_id
     - user_id
     - label
-    - source
-    - default_code
+    - type
     - active
     - created_at
     - updated_at

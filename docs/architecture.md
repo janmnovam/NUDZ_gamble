@@ -419,40 +419,33 @@ month/final-summary view, not just this 7-cell week strip. Carried by a real DTO
 
 ### ExportService
 
-**Status:** 📝 DRAFT — no `PersonDayRow` builder / CSV row derivation logic exists yet
+**Status:** ✅ DONE — table fetch + sort is `buildExportBundle()` (`src/domain/export.ts`, tested in `tests/jest/domain/export.test.ts`), CSV text formatting is `toCheckInCsv`/`toLimitCsv`/`toCopingStrategyCsv` (`src/app/mappers/exportMapper.ts`, tested in `tests/jest/app/exportMapper.test.ts`), ZIP bundling is `createZip()` (`src/app/lib/zip.ts`, a dependency-free "store" writer, tested in `tests/jest/app/lib/zip.test.ts`) — no new npm dependency was pulled in for it. `ExportServiceImpl` (`src/app/services/exportServiceImpl.ts`, tested end to end in `tests/jest/app/exportService.test.ts`) wires the three together and is exposed via `createApp()`. The layering mirrors `DashboardService`: a pure domain builder → an app-layer mapper → a thin service, plus one extra app-layer step (zipping) this port needed and `DashboardService` didn't. What's *not* built yet: the UI trigger (a button on Dashboard/Review that calls `app.export.exportDataZip()` and turns the returned bytes into a browser download via `Blob`/`URL.createObjectURL` — deliberately a UI concern, out of scope for this port).
+
+**Design history** — this port originally derived a single Příloha-2-shaped person-day CSV (`buildPersonDayRows`/`PersonDayRow`, one row per study day 1–28, `completed`/`missing` status, `is_backfill`). Mid-build, README's "Exporting data from app" section was updated (commits around `d8aaa46`/`5ea75c4`) to specify a different shape — three raw-table CSVs (`CHECK_IN`, `LIMIT`, `COPING_STRATEGY`) zipped together, no derived per-day rows. Per an explicit call from the project owner, the export was rebuilt to match README, superseding the person-day design. **Known tension:** Příloha 2 (CLAUDE.md's "CSV export (mandatory)") requires person-day-level export — one row per planned day 1–28, including no-play and missing days, with a `missing` row's value fields left blank/NA rather than absent. A raw `CHECK_IN` table dump doesn't satisfy that: there's no row at all for a day with no check-in, and no `study_day`/`checkin_status`/`is_backfill` derivation. Whether this is acceptable for grading is a product call outside this doc's scope — flagging it here so the gap isn't silently lost.
+
+**Field lists** (README is the authoritative copy of these — keep both in sync on change):
+
+| File | Columns |
+|---|---|
+| `check_in.csv` | `check_in_id, user_id, behavior_date, played, time_min, stakes_czk, winnings_czk, submitted_at, updated_at` |
+| `limit.csv` | `limit_id, user_id, week_no, weekly_limit_time_min, weekly_limit_stakes_czk, limit_set_at` |
+| `coping_strategy.csv` | `coping_strategy_id, user_id, label, type, active, created_at, updated_at` |
+
+`coping_strategy.csv`'s `type` is the domain model's field as-is (`default`/`custom`) — a direct column, not a renamed/derived one. Each table is sorted for stable output: check-ins by `behavior_date`, limits by `week_no`, coping strategies by `priority`.
 
 **Depends on**
 - Inbound
   - (none)
 - Outbound
-  - ProfileRepository
-  - LimitRepository
   - CheckInRepository
-  - ReviewRepository
+  - LimitRepository
+  - CopingStrategyRepository
 
 | Method | Accepts | Returns | Description |
 |---|---|---|---|
-| exportPersonDaysCsv | `—` | `string` (CSV of `PersonDayRow`) | Person-day CSV, one row per study day 1–28 |
+| exportDataZip | `—` | `Uint8Array` (ZIP of the 3 CSVs) | CHECK_IN, LIMIT, COPING_STRATEGY tables, each as a CSV, bundled into one archive |
 
-**PersonDayRow** (one CSV line)
-
-```json
-{
-  "userId": "A001",
-  "interventionStartDate": "2026-09-01T00:00:00.000Z",
-  "studyDay": 3,
-  "weekNo": 1,
-  "behaviorDate": "2026-09-03T00:00:00.000Z",
-  "checkinStatus": "completed",
-  "played": true,
-  "timeMinutes": 60,
-  "stakesAmount": 500,
-  "winningsAmount": 0,
-  "submittedAt": "2026-09-04T08:00:00+02:00",
-  "updatedAt": null,
-  "isBackfill": false
-}
-```
+**CSV conventions**: comma-delimited, CRLF line endings, UTF-8, stable snake_case header row per table, RFC 4180 quoting only where a field needs it, `null`/absent values serialize as an empty cell.
 
 ## Outbound ports (driven)
 
@@ -710,5 +703,5 @@ Everything downstream of onboarding is still unimplemented in `src/domain`. In p
 3. **guards.ts implementations** — `evaluateLimitAdjustment` and `resolvePendingAction` are built. Still missing: `canEditCheckIn`, `isWeekClosed`, `canReview`. These block both `CheckInService` (edit window) and `ReviewService` (week-closing).
 4. **ReviewService** (new `review.ts`) — `getPendingReview`, `completeReview`, `getFinalSummary`; depends on guards #3 and a `ReviewRepository` adapter (currently 📝 DRAFT, no adapter yet).
 5. **ReminderService** (new `reminder.ts`) — `getDueReminder`; depends on `resolvePendingAction` from guards #3.
-6. **ExportService** (new `export.ts`) — `PersonDayRow` builder for the CSV export; depends on #1–#2 for source data, and must respect the missing-vs-no-play blank/zero distinction (CLAUDE.md CSV gotcha).
+6. ~~**ExportService**~~ — ✅ done (`src/domain/export.ts` + `src/app/mappers/exportMapper.ts` + `src/app/lib/zip.ts`), ahead of `CheckInService`/`ReviewService` since it only reads existing `CheckInRepository`/`LimitRepository`/`CopingStrategyRepository` data, not the not-yet-built submit/review flows. Still missing: the UI export button/download trigger.
 7. **Outbound gaps**: `ReviewRepository` and `UsageEventRepository` have no adapters yet (`src/data/adapters` has no `reviewAdapter.ts`/`usageEventAdapter.ts`); `TimeMachineClock` (the demo/jury clock) is still 📝 DRAFT — needed before any 28-day walkthrough can be demoed without waiting real days.
