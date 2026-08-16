@@ -24,6 +24,8 @@ function week(weekNo: number, overrides: Partial<FinalSummaryWeekDto> = {}): Fin
     days,
     filledDays: 7,
     elapsed: true,
+    started: true,
+    closed: true,
     ...overrides,
   }
 }

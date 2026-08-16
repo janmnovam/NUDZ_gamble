@@ -1,5 +1,10 @@
 import type { FinalSummaryResponse, FinalSummaryWeekDto } from '@/app/dto/review.ts'
-import type { FinalSummaryViewModel, FinalSummaryWeek, ReviewStatus } from '@ui/review/types.ts'
+import type {
+  FinalSummaryViewModel,
+  FinalSummaryWeek,
+  ReviewStatus,
+  WeekState,
+} from '@ui/review/types.ts'
 import { weekdayAbbrev } from '@ui/lib/date.ts'
 import { formatDurationCompact } from '@ui/lib/duration.ts'
 import { groupThousands } from '@ui/lib/money.ts'
@@ -25,6 +30,12 @@ function weekStatus(week: FinalSummaryWeekDto): ReviewStatus {
   return gaps > 0 ? 'NEUPLNE' : week.overall
 }
 
+function weekState(week: FinalSummaryWeekDto): WeekState {
+  if (!week.started) return 'locked'
+  if (!week.elapsed) return 'running'
+  return week.closed ? 'closed' : 'awaiting-close'
+}
+
 function toWeek(
   week: FinalSummaryWeekDto,
   locale: string,
@@ -36,10 +47,10 @@ function toWeek(
 
   return {
     weekNo: week.weekNo,
-    locked: !week.elapsed,
-    // A week still ahead gets no chip at all — a verdict computed against no
-    // data would read as a result rather than as "not there yet".
-    ...(week.elapsed && { status: weekStatus(week) }),
+    state: weekState(week),
+    // Only a closed week has a verdict: while it is running the numbers still
+    // move, and until the review closes it they are not final.
+    ...(week.closed && { status: weekStatus(week) }),
     timeUsedLabel: minutes(week.time.used),
     timeLimitLabel: minutes(week.time.limit),
     stakesUsedLabel: czk(week.stakes.used),

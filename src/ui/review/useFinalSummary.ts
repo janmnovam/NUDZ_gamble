@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { useReviewService } from '@ui/app/AppContext.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
+import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { errorMessageKey } from '@ui/errors/errorMessage.ts'
@@ -19,6 +20,9 @@ export type FinalSummaryState =
 /** Loads the four-week summary from `ReviewService` and labels it for the screens. */
 export function useFinalSummary(): FinalSummaryState {
   const review = useReviewService()
+  // The demo time machine has to move the reports too, or the weeks never
+  // progress from "running" to "needs closing" in a walkthrough.
+  const simulatedTime = useAdminStore((s) => s.simulatedTime)
   const userId = useCurrentUser((s) => s.userId)
   const { t, locale } = useTranslation()
   const [state, setState] = useState<FinalSummaryState>({ status: 'loading' })
@@ -26,7 +30,7 @@ export function useFinalSummary(): FinalSummaryState {
   useEffect(() => {
     if (userId === null) return
     let cancelled = false
-    const now = clientNow()
+    const now = simulatedTime ?? clientNow()
 
     void review.getFinalSummary(userId, now).then((res) => {
       if (cancelled) return
@@ -50,7 +54,7 @@ export function useFinalSummary(): FinalSummaryState {
     return () => {
       cancelled = true
     }
-  }, [review, userId, t, locale])
+  }, [review, userId, t, locale, simulatedTime])
 
   return state
 }

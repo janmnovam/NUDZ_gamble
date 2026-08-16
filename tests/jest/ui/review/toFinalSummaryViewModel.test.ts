@@ -24,6 +24,8 @@ function week(overrides: Partial<FinalSummaryWeekDto> = {}): FinalSummaryWeekDto
     days,
     filledDays: 7,
     elapsed: true,
+    started: true,
+    closed: true,
     ...overrides,
   }
 }
@@ -79,18 +81,33 @@ describe('toFinalSummaryViewModel', () => {
     expect(vm.weeks[0]?.status).toBe('PREKROCENO')
   })
 
-  it('locks a week that has not elapsed, and gives it no verdict', () => {
-    const vm = build([week({ elapsed: false })])
+  it('locks a week the programme has not reached', () => {
+    const vm = build([week({ started: false, elapsed: false, closed: false })])
 
-    expect(vm.weeks[0]?.locked).toBe(true)
+    expect(vm.weeks[0]?.state).toBe('locked')
     // A status here would read as a result, when the week simply hasn't happened.
     expect(vm.weeks[0]?.status).toBeUndefined()
   })
 
-  it('leaves an elapsed week unlocked and judged', () => {
+  it('marks the week you are in as running, without a verdict', () => {
+    const vm = build([week({ started: true, elapsed: false, closed: false })])
+
+    // The numbers still move, so calling it OK or POZOR would be premature.
+    expect(vm.weeks[0]?.state).toBe('running')
+    expect(vm.weeks[0]?.status).toBeUndefined()
+  })
+
+  it('reports an elapsed week that has no review as awaiting closure', () => {
+    const vm = build([week({ started: true, elapsed: true, closed: false })])
+
+    expect(vm.weeks[0]?.state).toBe('awaiting-close')
+    expect(vm.weeks[0]?.status).toBeUndefined()
+  })
+
+  it('gives a closed week its verdict', () => {
     const vm = build([week()])
 
-    expect(vm.weeks[0]?.locked).toBe(false)
+    expect(vm.weeks[0]?.state).toBe('closed')
     expect(vm.weeks[0]?.status).toBe('POZOR')
   })
 

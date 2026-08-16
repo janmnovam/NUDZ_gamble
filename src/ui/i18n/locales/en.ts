@@ -62,6 +62,8 @@ export const en: Record<TranslationKey, string> = {
   'status.POZOR': 'CAUTION',
   'status.PREKROCENO': 'EXCEEDED',
   'status.NEUPLNE': 'INCOMPLETE',
+  'status.PROBIHA': 'IN PROGRESS',
+  'status.CHYBI_UZAVRENI': 'NEEDS CLOSING',
   'nav.tabs.aria': 'Main navigation',
   'nav.tabs.home': 'Home',
   'nav.tabs.coping': 'Strategies',

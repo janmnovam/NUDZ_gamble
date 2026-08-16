@@ -66,6 +66,8 @@ export const cs = {
   'status.POZOR': 'POZOR',
   'status.PREKROCENO': 'PŘEKROČENO',
   'status.NEUPLNE': 'NEÚPLNÉ',
+  'status.PROBIHA': 'PROBÍHÁ',
+  'status.CHYBI_UZAVRENI': 'CHYBÍ UZAVŘENÍ',
   'nav.tabs.aria': 'Hlavní navigace',
   'nav.tabs.home': 'Domů',
   'nav.tabs.coping': 'Strategie',

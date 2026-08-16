@@ -9,14 +9,19 @@ export interface ReviewDayCell {
   state: DayReviewState
 }
 
+/**
+ * Where a week sits in the programme:
+ * - `locked` — not reached yet; nothing to show, not openable
+ * - `running` — the week you are in; openable, days still fillable
+ * - `awaiting-close` — over, but its review hasn't closed it, so nothing final
+ * - `closed` — reviewed; carries the verdict
+ */
+export type WeekState = 'locked' | 'running' | 'awaiting-close' | 'closed'
+
 export interface FinalSummaryWeek {
   weekNo: number
-  /**
-   * A week still ahead is locked: it shows no status and can't be opened,
-   * because there is nothing recorded to show yet.
-   */
-  locked: boolean
-  /** Absent while `locked` — an unreached week carries no verdict. */
+  state: WeekState
+  /** Present only on a `closed` week — the others have no verdict to give. */
   status?: ReviewStatus
   timeUsedLabel: string
   timeLimitLabel: string

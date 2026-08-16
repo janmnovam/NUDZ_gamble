@@ -1,7 +1,7 @@
 import { ChevronRight, Lock } from 'lucide-react'
 
 import { useTranslation } from '@ui/i18n/context.ts'
-import { StatusChip } from '@ui/components/StatusChip.tsx'
+import { StatusChip, type ChipStatus } from '@ui/components/StatusChip.tsx'
 import { ReviewShell } from '@ui/review/components/ReviewShell.tsx'
 import type { FinalSummaryViewModel, FinalSummaryWeek } from '@ui/review/types.ts'
 
@@ -10,6 +10,15 @@ interface FinalSummaryScreenProps {
   onOpenWeek: (week: FinalSummaryWeek) => void
   onOpenProgramme: () => void
   onExport: () => void
+}
+
+/**
+ * A running week shows that it is under way and an elapsed one that it still
+ * needs closing — neither is a verdict, which only a reviewed week has.
+ */
+function chipFor(week: FinalSummaryWeek): ChipStatus {
+  if (week.state === 'running') return 'PROBIHA'
+  return week.status ?? 'CHYBI_UZAVRENI'
 }
 
 export function FinalSummaryScreen({
@@ -36,7 +45,7 @@ export function FinalSummaryScreen({
             button, so there is no affordance for a week with nothing to show. */}
         <div className="flex flex-col gap-2">
           {summary.weeks.map((week) =>
-            week.locked || week.status === undefined ? (
+            week.state === 'locked' ? (
               // Locked: the canvas tint and the lighter border read as recessed
               // next to a reached week's white surface and stronger border.
               <div
@@ -63,7 +72,7 @@ export function FinalSummaryScreen({
                 <span className="type-body-emphasis text-ink flex-1">
                   {t('review.week.label', { week: week.weekNo })}
                 </span>
-                <StatusChip status={week.status} />
+                <StatusChip status={chipFor(week)} />
                 <ChevronRight className="text-muted size-6 shrink-0" aria-hidden />
               </button>
             ),

@@ -50,6 +50,10 @@ export interface FinalSummaryWeekDto {
   filledDays: number
   /** False while the week is still ahead — it then carries no verdict. */
   elapsed: boolean
+  /** Whether the programme has reached this week at all. */
+  started: boolean
+  /** Whether a completed review has closed the week; until then its numbers aren't final. */
+  closed: boolean
 }
 
 export interface FinalSummaryResponse {

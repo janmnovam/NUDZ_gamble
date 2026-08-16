@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, TriangleAlert, type LucideIcon } from 'lucide-react'
+import { CircleAlert, CircleCheck, Clock, TriangleAlert, type LucideIcon } from 'lucide-react'
 
 import { type Status } from '@domain/config.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
@@ -9,7 +9,12 @@ import { cn } from '@ui/lib/cn.ts'
  * The three limit states plus `NEUPLNE`, which reports a missing check-in in
  * the week rather than a limit outcome (Figma "StatusChip").
  */
-export type ChipStatus = Status | 'NEUPLNE'
+/**
+ * Limit verdicts plus two week-lifecycle states. They share the pill because
+ * they occupy the same slot in a week row — but only one of them is ever a
+ * verdict, so a running week never reads as a result.
+ */
+export type ChipStatus = Status | 'NEUPLNE' | 'PROBIHA' | 'CHYBI_UZAVRENI'
 
 /**
  * Figma note on this component: "Barva nikdy nenese význam sama — vždy s
@@ -21,6 +26,8 @@ const STATUS_CLASSES: Record<ChipStatus, string> = {
   POZOR: 'bg-status-caution-subtle text-status-caution',
   PREKROCENO: 'bg-status-exceeded-subtle text-status-exceeded',
   NEUPLNE: 'bg-status-caution-subtle text-status-caution',
+  PROBIHA: 'bg-brand-subtle text-brand-ink',
+  CHYBI_UZAVRENI: 'bg-status-caution-subtle text-status-caution',
 }
 
 const STATUS_ICONS: Record<ChipStatus, LucideIcon> = {
@@ -28,6 +35,8 @@ const STATUS_ICONS: Record<ChipStatus, LucideIcon> = {
   POZOR: TriangleAlert,
   PREKROCENO: CircleAlert,
   NEUPLNE: TriangleAlert,
+  PROBIHA: Clock,
+  CHYBI_UZAVRENI: TriangleAlert,
 }
 
 const STATUS_KEYS = {
@@ -35,6 +44,8 @@ const STATUS_KEYS = {
   POZOR: 'status.POZOR',
   PREKROCENO: 'status.PREKROCENO',
   NEUPLNE: 'status.NEUPLNE',
+  PROBIHA: 'status.PROBIHA',
+  CHYBI_UZAVRENI: 'status.CHYBI_UZAVRENI',
 } as const satisfies Record<ChipStatus, TranslationKey>
 
 interface StatusChipProps {

@@ -77,6 +77,14 @@ export interface FinalSummaryWeekVM {
    * no verdict — its statuses are computed against no data and mean nothing.
    */
   elapsed: boolean
+  /** Whether the programme has reached this week at all. */
+  started: boolean
+  /**
+   * Whether a completed review has closed the week (doc 09: a week is closed by
+   * its review, not by the calendar). An elapsed week that is not closed is
+   * still awaiting its review, so its numbers are not final.
+   */
+  closed: boolean
 }
 
 export interface FinalSummaryVM {
@@ -249,6 +257,8 @@ export async function getFinalSummary(deps: ReviewDeps): Promise<FinalSummaryVM>
   const today = calendarDate(deps.time)
   const checkIns = await deps.checkIns.listByUser(deps.userId)
   const limits = await deps.limits.listByUser(deps.userId)
+  const reviews = await deps.reviews.listByUser(deps.userId)
+  const currentWeek = calendar.weekNo(Math.max(calendar.currentDay(), 1))
   const recorded = new Set(checkIns.map((c) => calendarDate(c.behaviorDate)))
 
   const weeks: FinalSummaryWeekVM[] = []
@@ -281,6 +291,8 @@ export async function getFinalSummary(deps: ReviewDeps): Promise<FinalSummaryVM>
       days,
       filledDays: days.filter((d) => d.state === 'completed').length,
       elapsed: calendar.isWeekElapsed(w),
+      started: w <= currentWeek,
+      closed: isWeekClosed(w, reviews),
     })
   }
 
