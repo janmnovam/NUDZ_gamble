@@ -80,7 +80,9 @@ export function Screen({ children, header, footer, nav, contentClassName }: Scre
         {children}
       </div>
       {footer ? <div className={cn('px-4 pt-1', nav ? 'pb-5' : 'pb-safe')}>{footer}</div> : null}
-      {nav ? <div className="pb-safe-inset">{nav}</div> : null}
+      {/* Surface-colored so the tab bar fills through the home-indicator inset
+          to the bottom edge, instead of leaving a canvas strip below it. */}
+      {nav ? <div className="bg-surface pb-safe-inset">{nav}</div> : null}
     </div>
   )
 }
