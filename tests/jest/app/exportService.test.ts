@@ -9,7 +9,7 @@ function makeService(): ExportServiceImpl {
   const checkIn: CheckIn = {
     checkInId: 'c1',
     userId: USER_ID,
-    behaviorDate: '2026-09-01',
+    behaviorDate: '2026-09-01T00:00:00.000Z',
     weekNo: 1,
     played: true,
     timeMin: 60,

@@ -6,7 +6,7 @@ describe('toCheckInCsv', () => {
     const checkIn: CheckIn = {
       checkInId: 'c1',
       userId: 'A001',
-      behaviorDate: '2026-09-01',
+      behaviorDate: '2026-09-01T00:00:00.000Z',
       weekNo: 1,
       played: true,
       timeMin: 60,
@@ -21,6 +21,24 @@ describe('toCheckInCsv', () => {
       'check_in_id,user_id,behavior_date,played,time_min,stakes_czk,winnings_czk,submitted_at,updated_at',
     )
     expect(lines[1]).toBe('c1,A001,2026-09-01,true,60,500,0,2026-09-02T08:00:00+02:00,')
+  })
+
+  it('truncates the canonical behaviorDate timestamp to a bare YYYY-MM-DD date', () => {
+    const checkIn: CheckIn = {
+      checkInId: 'c1',
+      userId: 'A001',
+      behaviorDate: '2026-09-01T00:00:00.000Z',
+      weekNo: 1,
+      played: false,
+      timeMin: 0,
+      stakesCzk: 0,
+      winningsCzk: 0,
+      submittedAt: '2026-09-02T08:00:00+02:00',
+      updatedAt: null,
+    }
+    const csv = toCheckInCsv([checkIn])
+    expect(csv).toContain(',2026-09-01,')
+    expect(csv).not.toContain('T00:00:00.000Z')
   })
 })
 

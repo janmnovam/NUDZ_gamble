@@ -5,6 +5,7 @@
  * `src/app/lib/zip.ts`; turning that byte array into a browser download
  * (Blob + object URL) is a UI concern, out of scope here.
  */
+import { calendarDate } from '@domain/clock.ts'
 import type { CheckIn, CopingStrategy, Limit } from '@domain/model.ts'
 
 /** RFC 4180 field quoting — only when the value actually needs it. */
@@ -29,13 +30,14 @@ const CHECK_IN_COLUMNS = [
   'updated_at',
 ] as const
 
+/** `behavior_date` is README's "date YYYY-MM-DD" column — `CheckIn.behaviorDate` itself is now a canonical UTC-midnight timestamp (`refactor(data): store day fields as canonical timestamps`), so it's truncated here rather than passed through raw. */
 export function toCheckInCsv(rows: readonly CheckIn[]): string {
   return toCsv(
     CHECK_IN_COLUMNS,
     rows.map((r) => [
       r.checkInId,
       r.userId,
-      r.behaviorDate,
+      calendarDate(r.behaviorDate),
       String(r.played),
       String(r.timeMin),
       String(r.stakesCzk),

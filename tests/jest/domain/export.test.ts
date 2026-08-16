@@ -15,7 +15,7 @@ function checkIn(overrides: Partial<CheckIn>): CheckIn {
     updatedAt: null,
     timeMin: 0,
     stakesCzk: 0,
-    behaviorDate: '2026-09-01',
+    behaviorDate: '2026-09-01T00:00:00.000Z',
     ...overrides,
   }
 }
@@ -81,8 +81,8 @@ describe('buildExportBundle', () => {
     const bundle = await buildExportBundle(
       fakeDeps({
         checkIns: [
-          checkIn({ behaviorDate: '2026-09-03' }),
-          checkIn({ behaviorDate: '2026-09-01' }),
+          checkIn({ behaviorDate: '2026-09-03T00:00:00.000Z' }),
+          checkIn({ behaviorDate: '2026-09-01T00:00:00.000Z' }),
         ],
         limits: [limit({ weekNo: 2, limitId: 'l2' }), limit({ weekNo: 1, limitId: 'l1' })],
         copingStrategies: [
@@ -92,7 +92,10 @@ describe('buildExportBundle', () => {
       }),
     )
 
-    expect(bundle.checkIns.map((c) => c.behaviorDate)).toEqual(['2026-09-01', '2026-09-03'])
+    expect(bundle.checkIns.map((c) => c.behaviorDate)).toEqual([
+      '2026-09-01T00:00:00.000Z',
+      '2026-09-03T00:00:00.000Z',
+    ])
     expect(bundle.limits.map((l) => l.weekNo)).toEqual([1, 2])
     expect(bundle.copingStrategies.map((c) => c.copingStrategyId)).toEqual(['cs1', 'cs2'])
   })
