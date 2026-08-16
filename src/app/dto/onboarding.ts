@@ -14,7 +14,7 @@ export interface TimeStakesDto {
 }
 
 export interface CopingDto {
-  id: string
+  id?: string | null
   label: string
   type: CopingType
 }
