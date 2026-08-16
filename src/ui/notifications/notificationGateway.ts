@@ -22,10 +22,22 @@ export async function requestPermission(): Promise<NotificationPermission> {
   return Notification.requestPermission()
 }
 
-/** No-op unless permission is already granted — callers request it first. */
-export function showNotification(title: string, body: string): void {
+/**
+ * No-op unless permission is already granted — callers request it first.
+ * `onClick`, if given, wires the notification's click-through: focuses the
+ * app tab and runs the callback (e.g. routing to the check-in or review
+ * screen), mirroring how clicking a real OS notification would surface it.
+ */
+export function showNotification(title: string, body: string, onClick?: () => void): void {
   if (!isNotificationSupported() || Notification.permission !== 'granted') return
-  new Notification(title, { body })
+  const notification = new Notification(title, { body })
+  if (onClick) {
+    notification.onclick = () => {
+      window.focus()
+      notification.close()
+      onClick()
+    }
+  }
 }
 
 export function getLastFiredAt(): ISOTimestamp | null {
@@ -36,4 +48,15 @@ export function getLastFiredAt(): ISOTimestamp | null {
 export function setLastFiredAt(time: ISOTimestamp): void {
   if (typeof window === 'undefined') return
   window.localStorage.setItem(LAST_FIRED_KEY, time)
+}
+
+/**
+ * Forgets the last-fired bookkeeping so the next configured slot re-arms
+ * immediately. Used by the time machine when a tester jumps the simulated
+ * clock, so a demo run isn't blocked by "already fired today" from a
+ * previous, unrelated instant.
+ */
+export function clearLastFiredAt(): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.removeItem(LAST_FIRED_KEY)
 }

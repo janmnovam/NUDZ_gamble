@@ -222,6 +222,8 @@ export const cs = {
 
   'notification.reminder.title': 'Nezapomeňte na check-in',
   'notification.reminder.body': 'Doplňte prosím záznam za {date}.',
+  'notification.reminder.review.title': 'Týdenní shrnutí čeká',
+  'notification.reminder.review.body': 'Nastavte prosím limity pro týden {week}.',
 
   'coping.title': 'Váš Coping',
   'coping.lead':
@@ -234,6 +236,7 @@ export const cs = {
   'dashboard.timeMachine.exit': 'Opustit stroj času',
   'admin.timeMachine.title': 'Stroj času',
   'admin.timeMachine.dayLabel': 'Přejít na den intervence:',
+  'admin.timeMachine.timeLabel': 'Čas dne (pro test notifikace):',
   'admin.timeMachine.confirm': 'Potvrdit',
   'admin.timeMachine.wipe': 'Smazat data',
   'admin.timeMachine.wipeConfirm': 'Opravdu smazat všechna data a začít od začátku?',

@@ -31,14 +31,21 @@ export function clientNow(): ISOTimestamp {
 }
 
 /**
- * Offset-bearing instant (local noon) for study `day` of an intervention that
- * started on `interventionStartDate` — day 1 is the start date itself, so day N
- * is start + (N − 1) days. Noon anchoring keeps the date stable across DST and
- * midnight; the backend derives the study day from this instant's date. The demo
- * time machine passes the result in place of `clientNow()` to simulate that day.
+ * Offset-bearing instant for study `day` of an intervention that started on
+ * `interventionStartDate` — day 1 is the start date itself, so day N is
+ * start + (N − 1) days. Defaults to local noon, which keeps the date stable
+ * across DST and midnight; the backend derives the study day from this
+ * instant's date. `timeOfDay` ("HH:mm") lets the time machine additionally
+ * pin the wall-clock time within that day — e.g. to reach a configured
+ * `REMINDER_TIMES` slot for testing a popup notification. The demo time
+ * machine passes the result in place of `clientNow()` to simulate that day.
  */
-export function isoForDay(interventionStartDate: ISOTimestamp, day: number): ISOTimestamp {
-  const d = new Date(`${interventionStartDate.slice(0, 10)}T12:00:00`) // local noon of day 1
+export function isoForDay(
+  interventionStartDate: ISOTimestamp,
+  day: number,
+  timeOfDay = '12:00',
+): ISOTimestamp {
+  const d = new Date(`${interventionStartDate.slice(0, 10)}T${timeOfDay}:00`)
   d.setDate(d.getDate() + (day - 1))
   return formatOffsetIso(d)
 }

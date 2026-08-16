@@ -8,9 +8,19 @@ import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { Button } from '@ui/components/Button.tsx'
 import { TextField } from '@ui/components/TextField.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
+import * as gateway from '@ui/notifications/notificationGateway.ts'
 
 /** Programme length in days — the reachable range of the time machine. */
 const MAX_DAY = 28
+
+/**
+ * Preselected time-of-day, matching `config.ts`'s `REMINDER_TIMES` — jumping
+ * to a day with this default already lands on the configured reminder slot,
+ * so confirming without touching the time field is enough to test a popup.
+ */
+const DEFAULT_TIME = '15:30'
+
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/
 
 interface TimeMachineModalProps {
   /** The study day currently on screen; used to prefill the input. */
@@ -34,6 +44,7 @@ export function TimeMachineModal({ currentDay }: TimeMachineModalProps) {
   const interventionStartDate = useAdminStore((s) => s.interventionStartDate)
 
   const [dayInput, setDayInput] = useState(() => String(Math.max(currentDay, 1)))
+  const [timeInput, setTimeInput] = useState(DEFAULT_TIME)
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -47,12 +58,19 @@ export function TimeMachineModal({ currentDay }: TimeMachineModalProps) {
 
   const parsedDay = Number.parseInt(dayInput, 10)
   const dayValid = Number.isInteger(parsedDay) && parsedDay >= 1 && parsedDay <= MAX_DAY
+  const timeValid = TIME_PATTERN.test(timeInput)
   // Without a known day 1 (e.g. onboarding not completed this device) we can't
   // map a day number to an instant, so the jump is disabled.
-  const canConfirm = dayValid && interventionStartDate !== null
+  const canConfirm = dayValid && timeValid && interventionStartDate !== null
 
   const confirm = () => {
-    if (canConfirm) simulateDay(parsedDay)
+    if (!canConfirm) return
+    // Forget any earlier "last fired" bookkeeping so jumping to a reminder
+    // slot (e.g. the default 15:30) always re-arms the popup for testing,
+    // instead of staying quiet because some unrelated earlier instant already
+    // fired it "today".
+    gateway.clearLastFiredAt()
+    simulateDay(parsedDay, timeInput)
   }
 
   // Wipe through the AdminService inbound port (drops the current user's data,
@@ -105,6 +123,13 @@ export function TimeMachineModal({ currentDay }: TimeMachineModalProps) {
           value={dayInput}
           onChange={setDayInput}
           placeholder="1"
+        />
+
+        <TextField
+          label={t('admin.timeMachine.timeLabel')}
+          value={timeInput}
+          onChange={setTimeInput}
+          placeholder={DEFAULT_TIME}
         />
 
         <Button size="md" fullWidth onClick={confirm} disabled={!canConfirm}>

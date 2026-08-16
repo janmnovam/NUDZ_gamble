@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 
+import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { useNotificationService } from '@ui/app/AppContext.ts'
+import { useAppView } from '@ui/app/appView.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
@@ -11,16 +13,25 @@ const POLL_INTERVAL_MS = 60_000
 /**
  * Polls `NotificationService` every minute while the app is open and pops a
  * system notification once a configured reminder slot (`config.ts`'s
- * `REMINDER_TIMES`) is crossed and a check-in is actually missing.
+ * `REMINDER_TIMES`) is crossed and there's something to prompt about — a
+ * missing check-in (`checkin_due`) or an open weekly review (`review_due`).
+ * Clicking the popup focuses the app and routes to the matching screen.
  *
  * Simplified trigger, per CLAUDE.md's allowance for the one reminder
  * scenario: this is a local-only, single-demo-user app with no push server,
  * so nothing wakes the app while it's fully closed — the popup only fires
  * for as long as the installed app (or a tab) is open. Documented in README.
+ *
+ * Uses the time machine's simulated instant when engaged (falling back to the
+ * real clock) so a tester can dial the clock up to a `REMINDER_TIMES` slot
+ * (`admin/TimeMachineModal.tsx`'s time-of-day input) to see a popup fire
+ * without waiting for the real wall clock.
  */
 export function useReminderNotifications(): void {
   const notification = useNotificationService()
   const userId = useCurrentUser((s) => s.userId)
+  const simulatedTime = useAdminStore((s) => s.simulatedTime)
+  const navigate = useAppView((s) => s.navigate)
   const { t, locale } = useTranslation()
 
   useEffect(() => {
@@ -35,30 +46,40 @@ export function useReminderNotifications(): void {
     async function check() {
       if (userId === null || !gateway.isNotificationSupported()) return
 
-      const time = clientNow()
+      const time = simulatedTime ?? clientNow()
       const result = await notification.checkSchedule({
         userId,
         time,
         lastFiredAt: gateway.getLastFiredAt(),
       })
-      // TODO(reminder): `review_due` is a real, distinct reminder kind now
-      // (see @domain/reminder.ts) but this hook only has copy/routing for
-      // `checkin_due` so far — it deliberately no-ops on `review_due` rather
-      // than mislabeling it, until the review-reminder UI is built.
-      if (isCancelled() || !result.due || result.reminder?.kind !== 'checkin_due') return
+      if (isCancelled() || !result.due || result.reminder === null) return
 
       if (gateway.getPermission() === 'default') {
         await gateway.requestPermission()
       }
       if (isCancelled() || gateway.getPermission() !== 'granted') return
 
-      const date = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'numeric' }).format(
-        new Date(result.reminder.behaviorDate),
-      )
-      gateway.showNotification(
-        t('notification.reminder.title'),
-        t('notification.reminder.body', { date }),
-      )
+      const reminder = result.reminder
+      if (reminder.kind === 'checkin_due') {
+        const date = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'numeric' }).format(
+          new Date(reminder.behaviorDate),
+        )
+        gateway.showNotification(
+          t('notification.reminder.title'),
+          t('notification.reminder.body', { date }),
+          () => {
+            navigate('checkin')
+          },
+        )
+      } else {
+        gateway.showNotification(
+          t('notification.reminder.review.title'),
+          t('notification.reminder.review.body', { week: reminder.weekNo }),
+          () => {
+            navigate('review')
+          },
+        )
+      }
       gateway.setLastFiredAt(time)
     }
 
@@ -68,5 +89,5 @@ export function useReminderNotifications(): void {
       cancelled = true
       window.clearInterval(interval)
     }
-  }, [notification, userId, t, locale])
+  }, [notification, userId, simulatedTime, navigate, t, locale])
 }

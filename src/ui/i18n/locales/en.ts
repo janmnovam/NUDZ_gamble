@@ -216,6 +216,8 @@ export const en: Record<TranslationKey, string> = {
 
   'notification.reminder.title': "Don't forget your check-in",
   'notification.reminder.body': 'Please fill in the record for {date}.',
+  'notification.reminder.review.title': 'Your weekly review is waiting',
+  'notification.reminder.review.body': 'Please set your limits for week {week}.',
 
   'coping.title': 'Your Coping',
   'coping.lead': "Your coping strategies. Turn off one you're not using, or add your own.",
@@ -227,6 +229,7 @@ export const en: Record<TranslationKey, string> = {
   'dashboard.timeMachine.exit': 'Exit time machine',
   'admin.timeMachine.title': 'Time machine',
   'admin.timeMachine.dayLabel': 'Go to intervention day:',
+  'admin.timeMachine.timeLabel': 'Time of day (to test notifications):',
   'admin.timeMachine.confirm': 'Confirm',
   'admin.timeMachine.wipe': 'Delete data',
   'admin.timeMachine.wipeConfirm': 'Delete all data and start over?',

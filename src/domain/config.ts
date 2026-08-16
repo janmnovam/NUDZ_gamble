@@ -45,6 +45,10 @@ export interface DomainConfig {
    * reminder and, if one is due, pops a system notification (doc 08's "one
    * working reminder scenario" — `NotificationService`/`reminder.ts`). Edit
    * this list to change when reminders fire; nothing else needs to change.
+   * Single slot, hardcoded to 15:30 per an explicit product call so the demo
+   * has one predictable moment to click through both `checkin_due` and
+   * `review_due` popups — no runtime settings UI for it (the time machine's
+   * time-of-day input is what testers use to dial the clock up to this slot).
    */
   readonly REMINDER_TIMES: readonly string[]
 }
@@ -64,5 +68,5 @@ export const DEFAULT_CONFIG: DomainConfig = {
   PROGRAMME_DAYS: 28,
   EDIT_WINDOW_DAYS: 7,
   BACKFILL_WINDOW_DAYS: 5,
-  REMINDER_TIMES: ['09:00', '20:00'],
+  REMINDER_TIMES: ['15:30'],
 }

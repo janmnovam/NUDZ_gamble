@@ -460,7 +460,7 @@ would otherwise be computed against no data and read as a result.
 
 ### ReminderService
 
-**Status:** ✅ DONE — `src/domain/reminder.ts` implements `getDueReminder` (two reminder kinds, see below) and `isReminderTimeDue` (the wall-clock-slot gate); `ReminderServiceImpl` (`src/app/services/reminderServiceImpl.ts`) wraps it, `NotificationServiceImpl` (`src/app/services/notificationServiceImpl.ts`) composes the two, both wired via `createApp()`. The UI side (`src/ui/notifications/useReminderNotifications.ts`) polls `NotificationService.checkSchedule` every minute and pops a system notification — but today it only has copy/routing for `checkin_due`; it deliberately no-ops on `review_due` until that half of the UI is built (see the port's TODO note below).
+**Status:** ✅ DONE — `src/domain/reminder.ts` implements `getDueReminder` (two reminder kinds, see below) and `isReminderTimeDue` (the wall-clock-slot gate); `ReminderServiceImpl` (`src/app/services/reminderServiceImpl.ts`) wraps it, `NotificationServiceImpl` (`src/app/services/notificationServiceImpl.ts`) composes the two, both wired via `createApp()`. The UI side (`src/ui/notifications/useReminderNotifications.ts`) polls `NotificationService.checkSchedule` every minute and pops a system notification for both kinds — `checkin_due` (copy: `notification.reminder.*`, click-through routes to `checkin`) and `review_due` (copy: `notification.reminder.review.*`, click-through routes to `review`) — via `notificationGateway.ts`'s `Notification.onclick` wiring. `config.ts`'s `REMINDER_TIMES` is a single hardcoded `15:30` slot (a deliberate demo simplification over a settings UI); the time machine (`src/ui/admin/TimeMachineModal.tsx`) has a time-of-day input, defaulted to `15:30`, so a tester can jump the simulated clock straight onto that slot and see a popup fire without waiting for the real wall clock.
 
 **Depends on**
 - Inbound
@@ -486,7 +486,6 @@ would otherwise be computed against no data and read as a result.
 
 `review_due` is the earliest elapsed-but-unreviewed week (same `canReview`/`isWeekClosed` guards the review flow itself uses) and stays due past the final-summary boundary until the review is actually completed. `checkin_due` — the earliest missing day in the current study week — only surfaces once there's no open review left to nudge about. Neither the domain nor this port emits a `final_summary` reminder; that screen has no notification copy of its own today.
 
-**TODO — frontend not yet built for `review_due`:** `useReminderNotifications.ts` currently branches on `result.reminder?.kind !== 'checkin_due'` and returns early otherwise, so a due review never pops a notification yet — it's a placeholder, not a dead end. To wire it up: add `notification.reminder.review.title` / `.review.body` (with a `{weekNo}` placeholder) to both locale files (`src/ui/i18n/locales/cs.ts` / `en.ts`, kept as key-for-key mirrors per CLAUDE.md), branch on `result.reminder.kind` in the hook to pick title/body and pass `weekNo` instead of formatting `behaviorDate`, and have the notification's click-through route into the review flow (`ReviewFlow`/whatever the week-N review route is) instead of the check-in route — mirroring how `checkin_due` already routes to check-in today.
 
 ### ExportService
 

@@ -41,8 +41,12 @@ interface AdminStore {
   closePanel: () => void
   /** Remember day 1 (from onboarding's `complete()` response). */
   setInterventionStartDate: (iso: ISOTimestamp) => void
-  /** Simulate study `day` by pinning the clock to that day's instant. */
-  simulateDay: (day: number) => void
+  /**
+   * Simulate study `day` by pinning the clock to that day's instant, optionally
+   * at a specific wall-clock `timeOfDay` ("HH:mm") instead of the default noon —
+   * used to dial into a configured `REMINDER_TIMES` slot for testing.
+   */
+  simulateDay: (day: number, timeOfDay?: string) => void
   /** Return to the real clock. */
   exitTimeMachine: () => void
   /** Drop the remembered start date (after the data behind it has been wiped). */
@@ -67,10 +71,14 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
     }
     set({ interventionStartDate: iso })
   },
-  simulateDay: (day) => {
+  simulateDay: (day, timeOfDay) => {
     const start = get().interventionStartDate
     if (start === null) return // no known day 1 — nothing to anchor to
-    set({ simulatedTime: isoForDay(start, day), panelOpen: false })
+    set({
+      simulatedTime:
+        timeOfDay === undefined ? isoForDay(start, day) : isoForDay(start, day, timeOfDay),
+      panelOpen: false,
+    })
   },
   exitTimeMachine: () => {
     set({ simulatedTime: null, panelOpen: false })

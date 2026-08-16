@@ -18,7 +18,7 @@ describe('NotificationServiceImpl.checkSchedule', () => {
     const service = makeService({ kind: 'checkin_due', behaviorDate: '2026-09-01T00:00:00.000Z' })
     const result = await service.checkSchedule({
       userId: USER_ID,
-      time: '2026-09-05T08:59:00+02:00',
+      time: '2026-09-05T15:29:00+02:00',
       lastFiredAt: null,
     })
     expect(result).toEqual({ due: false, reminder: null })
@@ -28,7 +28,7 @@ describe('NotificationServiceImpl.checkSchedule', () => {
     const service = makeService(null)
     const result = await service.checkSchedule({
       userId: USER_ID,
-      time: '2026-09-05T09:00:00+02:00',
+      time: '2026-09-05T15:30:00+02:00',
       lastFiredAt: null,
     })
     expect(result).toEqual({ due: false, reminder: null })
@@ -42,7 +42,7 @@ describe('NotificationServiceImpl.checkSchedule', () => {
     const service = makeService(reminder)
     const result = await service.checkSchedule({
       userId: USER_ID,
-      time: '2026-09-05T09:00:00+02:00',
+      time: '2026-09-05T15:30:00+02:00',
       lastFiredAt: null,
     })
     expect(result).toEqual({ due: true, reminder })
@@ -56,8 +56,8 @@ describe('NotificationServiceImpl.checkSchedule', () => {
     const service = makeService(reminder)
     const result = await service.checkSchedule({
       userId: USER_ID,
-      time: '2026-09-05T09:30:00+02:00',
-      lastFiredAt: '2026-09-05T09:00:00+02:00',
+      time: '2026-09-05T16:00:00+02:00',
+      lastFiredAt: '2026-09-05T15:30:00+02:00',
     })
     expect(result).toEqual({ due: false, reminder: null })
   })
