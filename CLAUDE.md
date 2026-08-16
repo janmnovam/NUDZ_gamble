@@ -12,6 +12,7 @@ beats more half-finished features.**
 
 - Stack, commands, scripts, layout, licenses → [README.md](README.md).
 - Full requirements, data model, CSV export spec → [Zadání_Hackathon_2026_shared.docx.md](Zadání_Hackathon_2026_shared.docx.md) (Czech, authoritative). The rules below are an English digest, not a replacement.
+- **Where we knowingly deviate from that spec → [docs/decisions.md](docs/decisions.md).** Check it before "fixing" something that looks wrong against the spec — it may be a decision, not a bug.
 - Hexagon layout, ports, DTOs, per-port build status → [docs/architecture.md](docs/architecture.md) (authoritative). The Architecture section below is a digest, not a replacement — check that doc for the current status of any port before assuming it's implemented.
 - **Runtime stack:** TypeScript + Tailwind + React + Vite, persistence on IndexedDB via Dexie in `src/data/`. (Test runners, ESLint/Prettier, and `vite-plugin-pwa` are dev tooling, not runtime deps.)
 - **Architecture rule that bites:** the ESLint `no-restricted-imports` rule forbids `src/domain/**` from importing react/dexie/zustand/`@ui`/`@data`. Keep domain pure and storage-agnostic, or the lint gate fails.
@@ -50,7 +51,7 @@ Multilanguage, **Czech-first**. Czech is the source of truth; every user-facing 
 - **Missing ≠ no-play.** A no-play day is a valid record (played=false, zeros). A missing check-in is NA — must be surfaced on the dashboard and via a reminder. Backfill allowed only for still-missing days of the *current* week; closed weeks cannot be edited. Backfill status is never shown to the user.
 - **States**: OK ≤ 80%, POZOR (warning) > 80% ≤ 100%, PŘEKROČENO (exceeded) > 100%. Computed separately for time and stakes; overall = the worse of the two, but UI always shows both + remaining. Percentages are vs the **weekly limit**, not the reference.
 - **Coping strategy**: chosen at onboarding (≥1). Feedback reminds it on POZOR/PŘEKROČENO.
-- **28-day self-tracking, individual weeks.** Day 1 = **the calendar day onboarding is completed** (`intervention_start_date`), so the first check-in comes the very next morning. (The spec's wording is "first full calendar day after onboarding"; starting a day later left a dead day — the app announced Den 1 with nothing to do and no check-in for two more days — so the team moved it. Day 1 is therefore a partial day.) Week 1 = days 1–7, …, Week 4 = days 22–28. Not calendar weeks, not rolling 7 days.
+- **28-day self-tracking, individual weeks.** Day 1 = **the calendar day onboarding is completed** (`intervention_start_date`), so the first check-in comes the very next morning. (Deviates from the spec's "first full calendar day after onboarding" — see [docs/decisions.md](docs/decisions.md). Day 1 is therefore a partial day.) Week 1 = days 1–7, …, Week 4 = days 22–28. Not calendar weeks, not rolling 7 days.
 - **Reviews** offered after days 7/14/21 (e.g. week-1 review opens during day 8, even if day-7 check-in is missing). Set both limits for next week, again ≤ 90% of reference. Previous limits are never overwritten — one historical record per week. Final summary opens during day 29, no next-week limits. Reviews must be completable even with missing check-ins (saved as `incomplete`).
 - **Derived, never stored**: cumulative usage, net loss, weekly totals, overall state — always computed from source records + limit history.
 
@@ -68,7 +69,7 @@ Reference 600 min (10h) / 10 000 CZK → suggested 480 min (8h) / 8 000 CZK → 
 
 ## CSV export (mandatory)
 
-**Agreed shape: raw tables, as raw as it gets.** User-triggered, one ZIP with four CSVs — `profile`, `check_in`, `limit`, `coping_strategy` — each a straight dump of the stored table, no derived rows. This is a deliberate team decision (see README's "Exporting data from app"), taken over the person-day shape the spec's Příloha 2 describes.
+**Agreed shape: raw tables, as raw as it gets** ([why](docs/decisions.md)). User-triggered, one ZIP with four CSVs — `profile`, `check_in`, `limit`, `coping_strategy` — each a straight dump of the stored table, no derived rows. This is a deliberate team decision (see README's "Exporting data from app"), taken over the person-day shape the spec's Příloha 2 describes.
 
 What that means in practice, and why it is not an oversight: a day with no check-in has **no row at all** rather than a blank-valued one, and there is no derived `study_day` / `checkin_status` / `is_backfill`. Anyone comparing the export against Příloha 2 will see the difference — it is intended.
 
