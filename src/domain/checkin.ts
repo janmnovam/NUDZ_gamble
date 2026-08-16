@@ -36,12 +36,19 @@ export type ValidateCheckIn = (
   context: { today: ISODate; weekFirstDay: ISOCalendarTimestamp },
 ) => CheckInValidation
 
-/** Pure command handler: a validated draft + `time` → the record to persist (upsert on `behaviorDate`). */
+/**
+ * Pure command handler: a validated draft + `time` + `newId` → the record to
+ * persist (upsert on `behaviorDate`). On `existing` it edits in place — keeps
+ * the original `checkInId`/`submittedAt` and sets `updatedAt`; otherwise it
+ * mints a fresh id and stamps `submittedAt`. `newId` is threaded in (the domain
+ * never calls `crypto.randomUUID()`), so record construction stays in one place.
+ */
 export type SubmitCheckIn = (
   userId: UserId,
   draft: CheckInDraft,
   weekNo: number,
   time: ISOTimestamp,
+  newId: () => string,
   existing?: CheckIn,
 ) => CheckIn
 
@@ -70,3 +77,60 @@ export const dayStateOf: DayStateOf = ({ behaviorDate, today, checkIn }) => {
   if (!checkIn) return 'missing'
   return isBackfill(behaviorDate, checkIn.submittedAt) ? 'backfilled' : 'completed'
 }
+
+/**
+ * Doc 05's validation table. Numeric bounds apply only when `played`; when not
+ * played all three numerics must be 0 (the form hides them). `behaviorDate`
+ * must fall in the current week (≥ `weekFirstDay`) and be ≤ today − 1
+ * (`< today` for whole calendar dates). Never validates against the limit —
+ * exceeding it is a legal outcome (doc 06), not a form error.
+ */
+export const validateCheckIn: ValidateCheckIn = (draft, { today, weekFirstDay }) => {
+  const errors: CheckInFieldError[] = []
+  const behaviorDay = calendarDate(draft.behaviorDate)
+
+  if (behaviorDay < calendarDate(weekFirstDay)) {
+    errors.push({ field: 'behaviorDate', message: "Date is before the current week's start." })
+  }
+  if (behaviorDay >= today) {
+    errors.push({ field: 'behaviorDate', message: 'Date must be on or before yesterday.' })
+  }
+
+  if (draft.played) {
+    if (!Number.isInteger(draft.timeMin) || draft.timeMin < 0 || draft.timeMin > 1440) {
+      errors.push({ field: 'timeMin', message: 'Minutes must be a whole number between 0 and 1440.' })
+    }
+    if (!Number.isInteger(draft.stakesCzk) || draft.stakesCzk < 0) {
+      errors.push({ field: 'stakesCzk', message: 'Stakes must be a non-negative whole number.' })
+    }
+    if (!Number.isInteger(draft.winningsCzk) || draft.winningsCzk < 0) {
+      errors.push({ field: 'winningsCzk', message: 'Winnings must be a non-negative whole number.' })
+    }
+  } else {
+    if (draft.timeMin !== 0) {
+      errors.push({ field: 'timeMin', message: 'Must be 0 when you did not play.' })
+    }
+    if (draft.stakesCzk !== 0) {
+      errors.push({ field: 'stakesCzk', message: 'Must be 0 when you did not play.' })
+    }
+    if (draft.winningsCzk !== 0) {
+      errors.push({ field: 'winningsCzk', message: 'Must be 0 when you did not play.' })
+    }
+  }
+
+  return errors.length === 0 ? { valid: true } : { valid: false, errors }
+}
+
+/** See `SubmitCheckIn`. Assumes the draft already passed `validateCheckIn`. */
+export const submitCheckIn: SubmitCheckIn = (userId, draft, weekNo, time, newId, existing) => ({
+  checkInId: existing?.checkInId ?? newId(),
+  userId,
+  behaviorDate: draft.behaviorDate,
+  weekNo,
+  played: draft.played,
+  timeMin: draft.played ? draft.timeMin : 0,
+  stakesCzk: draft.played ? draft.stakesCzk : 0,
+  winningsCzk: draft.played ? draft.winningsCzk : 0,
+  submittedAt: existing?.submittedAt ?? time,
+  updatedAt: existing ? time : null,
+})
