@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { jest } from '@jest/globals'
 
 import { DEMO_USER_ID } from '@/app/constants.ts'
@@ -7,6 +7,7 @@ import type { DashboardResponse } from '@/app/dto/dashboard.ts'
 import type { CheckInService } from '@/app/ports/checkInService.ts'
 import type { DashboardService } from '@/app/ports/dashboardService.ts'
 import type { App } from '@/core/index.ts'
+import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
 import { CheckInRoute } from '@ui/checkin/CheckInRoute.tsx'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
@@ -29,6 +30,35 @@ const DASHBOARD: DashboardResponse = {
   missingDays: ['2026-09-03T00:00:00.000Z'],
   pendingAction: 'checkin_due',
   cautionThresholdPercent: 80,
+}
+
+const NO_MISSING_DASHBOARD: DashboardResponse = {
+  ...DASHBOARD,
+  days: DASHBOARD.days.map((day) =>
+    day.studyDay === 3 ? { ...day, state: 'completed' as const } : day,
+  ),
+  missingDays: [],
+  pendingAction: 'none',
+}
+
+const WAITING_DASHBOARD: DashboardResponse = {
+  ...DASHBOARD,
+  studyDay: 0,
+  days: DASHBOARD.days.map((day) => ({ ...day, state: 'future' as const })),
+  missingDays: [],
+  pendingAction: 'none',
+}
+
+const DAY_2_DASHBOARD: DashboardResponse = {
+  ...DASHBOARD,
+  studyDay: 2,
+  days: DASHBOARD.days.map((day) =>
+    day.studyDay === 1
+      ? { ...day, state: 'missing' as const }
+      : { ...day, state: 'future' as const },
+  ),
+  missingDays: ['2026-09-01T00:00:00.000Z'],
+  pendingAction: 'checkin_due',
 }
 
 function success(req: CheckInRequest) {
@@ -57,10 +87,21 @@ function success(req: CheckInRequest) {
   } as const
 }
 
-function renderRoute(checkIn: CheckInService, onComplete = jest.fn()) {
-  const dashboard: DashboardService = {
+function defaultDashboardService(): DashboardService {
+  return {
     getDashboard: () => Promise.resolve(DASHBOARD),
   }
+}
+
+function renderRoute({
+  checkIn,
+  dashboard = defaultDashboardService(),
+  onComplete = jest.fn(),
+}: {
+  checkIn: CheckInService
+  dashboard?: DashboardService
+  onComplete?: jest.Mock
+}) {
   render(
     <I18nProvider>
       <AppProvider app={{ dashboard, checkIn } as App}>
@@ -72,13 +113,24 @@ function renderRoute(checkIn: CheckInService, onComplete = jest.fn()) {
 }
 
 describe('CheckInRoute', () => {
+  afterEach(() => {
+    cleanup()
+    useAdminStore.setState({
+      panelOpen: false,
+      simulatedTime: null,
+      interventionStartDate: null,
+    })
+  })
+
   it('submits a not-played check-in as zeros and completes', async () => {
     const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
       Promise.resolve(success(req)),
     )
     const { onComplete } = renderRoute({
-      submitCheckIn,
-      editCheckIn: () => Promise.reject(new Error('unused')),
+      checkIn: {
+        submitCheckIn,
+        editCheckIn: () => Promise.reject(new Error('unused')),
+      },
     })
 
     fireEvent.click(await screen.findByRole('button', { name: /Ne\s+nehrál jsem/ }))
@@ -104,8 +156,10 @@ describe('CheckInRoute', () => {
       Promise.resolve(success(req)),
     )
     const { onComplete } = renderRoute({
-      submitCheckIn,
-      editCheckIn: () => Promise.reject(new Error('unused')),
+      checkIn: {
+        submitCheckIn,
+        editCheckIn: () => Promise.reject(new Error('unused')),
+      },
     })
 
     fireEvent.click(await screen.findByRole('button', { name: /Ano\s+hrál jsem/ }))
@@ -127,5 +181,92 @@ describe('CheckInRoute', () => {
       DEMO_USER_ID,
       expect.any(String),
     )
+  })
+
+  it('opens the previous day for temporary manual testing when no check-in is due', async () => {
+    const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
+      Promise.resolve(success(req)),
+    )
+    const { onComplete } = renderRoute({
+      checkIn: {
+        submitCheckIn,
+        editCheckIn: () => Promise.reject(new Error('unused')),
+      },
+      dashboard: {
+        getDashboard: () => Promise.resolve(NO_MISSING_DASHBOARD),
+      },
+    })
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ne\s+nehrál jsem/ }))
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalled()
+    })
+    expect(submitCheckIn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        behaviorDate: '2026-09-03T00:00:00.000Z',
+        played: false,
+      }),
+      DEMO_USER_ID,
+      expect.any(String),
+    )
+  })
+
+  it('advances the route clock for temporary testing before the first check-in is due', async () => {
+    useAdminStore.setState({ interventionStartDate: '2026-09-01T00:00:00.000Z' })
+    let dashboardCall = 0
+    const getDashboard = jest.fn<DashboardService['getDashboard']>(() => {
+      dashboardCall += 1
+      return Promise.resolve(dashboardCall === 1 ? WAITING_DASHBOARD : DAY_2_DASHBOARD)
+    })
+    const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
+      Promise.resolve(success(req)),
+    )
+    const { onComplete } = renderRoute({
+      checkIn: {
+        submitCheckIn,
+        editCheckIn: () => Promise.reject(new Error('unused')),
+      },
+      dashboard: { getDashboard },
+    })
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ne\s+nehrál jsem/ }))
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalled()
+    })
+    expect(getDashboard).toHaveBeenCalledTimes(2)
+    expect(submitCheckIn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        behaviorDate: '2026-09-01T00:00:00.000Z',
+        played: false,
+      }),
+      DEMO_USER_ID,
+      getDashboard.mock.calls[1]?.[1],
+    )
+  })
+
+  it('uses the admin simulated time when opening from the dashboard', async () => {
+    const simulatedTime = '2026-09-04T10:00:00+02:00'
+    useAdminStore.setState({ simulatedTime })
+    const getDashboard = jest.fn<DashboardService['getDashboard']>(() => Promise.resolve(DASHBOARD))
+    const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
+      Promise.resolve(success(req)),
+    )
+    const { onComplete } = renderRoute({
+      checkIn: {
+        submitCheckIn,
+        editCheckIn: () => Promise.reject(new Error('unused')),
+      },
+      dashboard: { getDashboard },
+    })
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ne\s+nehrál jsem/ }))
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalled()
+    })
+    expect(getDashboard).toHaveBeenCalledWith(DEMO_USER_ID, simulatedTime)
+    expect(submitCheckIn).toHaveBeenCalledWith(expect.any(Object), DEMO_USER_ID, simulatedTime)
   })
 })

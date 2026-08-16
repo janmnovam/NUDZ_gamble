@@ -2,17 +2,24 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import type { DashboardResponse, DayCellDto } from '@/app/dto/dashboard.ts'
+import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { CheckInFlow, type CheckInFlowResult } from '@ui/checkin/CheckInFlow.tsx'
 import { Button } from '@ui/components/Button.tsx'
 import { Screen } from '@ui/components/Screen.tsx'
 import { useCheckInService, useDashboardService } from '@ui/app/AppContext.ts'
-import { clientNow } from '@ui/clock.ts'
+import { clientNow, isoForDay } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { dayOfMonth } from '@ui/lib/date.ts'
+import type { ISOTimestamp } from '@domain/model.ts'
 
 type LoadState =
   | { status: 'loading' }
-  | { status: 'ready'; dashboard: DashboardResponse; behaviorDay: DayCellDto }
+  | {
+      status: 'ready'
+      dashboard: DashboardResponse
+      behaviorDay: DayCellDto
+      time: ISOTimestamp
+    }
   | { status: 'failed' }
   | { status: 'unavailable' }
 
@@ -21,9 +28,25 @@ interface CheckInRouteProps {
   onCancel: () => void
 }
 
-function latestMissingDay(dashboard: DashboardResponse): DayCellDto | undefined {
+function behaviorDayForCheckIn(dashboard: DashboardResponse): DayCellDto | undefined {
   const missing = new Set(dashboard.missingDays)
-  return [...dashboard.days].reverse().find((day) => missing.has(day.date))
+  const latestMissing = [...dashboard.days].reverse().find((day) => missing.has(day.date))
+  if (latestMissing) return latestMissing
+
+  // Temporary manual-test fallback: when the dashboard says "check-in bude zítra"
+  // there is no missing day, but we still want the CTA to open the previous row.
+  if (dashboard.studyDay > 1) {
+    return dashboard.days.find((day) => day.studyDay === dashboard.studyDay - 1)
+  }
+  return undefined
+}
+
+function nextManualTestTime(
+  dashboard: DashboardResponse,
+  interventionStartDate: ISOTimestamp | null,
+): ISOTimestamp | null {
+  if (interventionStartDate === null) return null
+  return isoForDay(interventionStartDate, Math.max(dashboard.studyDay + 1, 2))
 }
 
 function dayWithinWeek(studyDay: number): number {
@@ -39,19 +62,38 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
   const { t, locale } = useTranslation()
   const dashboardService = useDashboardService()
   const checkInService = useCheckInService()
-  const [time] = useState(() => clientNow())
+  const simulatedTime = useAdminStore((s) => s.simulatedTime)
+  const interventionStartDate = useAdminStore((s) => s.interventionStartDate)
+  const [baseTime] = useState(() => simulatedTime ?? clientNow())
   const submittingRef = useRef(false)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
 
   useEffect(() => {
     let active = true
-    void dashboardService.getDashboard(DEMO_USER_ID, time).then(
-      (dashboard) => {
+
+    const loadDashboardForCheckIn = async () => {
+      const dashboard = await dashboardService.getDashboard(DEMO_USER_ID, baseTime)
+      const behaviorDay = behaviorDayForCheckIn(dashboard)
+      if (behaviorDay) return { dashboard, behaviorDay, time: baseTime }
+
+      const manualTime = nextManualTestTime(dashboard, interventionStartDate)
+      if (manualTime === null || manualTime === baseTime) return null
+
+      const manualDashboard = await dashboardService.getDashboard(DEMO_USER_ID, manualTime)
+      const manualBehaviorDay = behaviorDayForCheckIn(manualDashboard)
+      if (!manualBehaviorDay) return null
+
+      return { dashboard: manualDashboard, behaviorDay: manualBehaviorDay, time: manualTime }
+    }
+
+    void loadDashboardForCheckIn().then(
+      (ready) => {
         if (!active) return
-        const behaviorDay = latestMissingDay(dashboard)
-        setState(
-          behaviorDay ? { status: 'ready', dashboard, behaviorDay } : { status: 'unavailable' },
-        )
+        if (ready) {
+          setState({ status: 'ready', ...ready })
+          return
+        }
+        setState({ status: 'unavailable' })
       },
       (error: unknown) => {
         console.error('[checkin] getDashboard failed', error)
@@ -61,7 +103,7 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
     return () => {
       active = false
     }
-  }, [dashboardService, time])
+  }, [baseTime, dashboardService, interventionStartDate])
 
   const labels = useMemo(() => {
     if (state.status !== 'ready') return null
@@ -97,8 +139,8 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
       userId={DEMO_USER_ID}
       behaviorDate={state.behaviorDay.date}
       weekNo={state.dashboard.weekNo}
-      today={time.slice(0, 10)}
-      time={time}
+      today={state.time.slice(0, 10)}
+      time={state.time}
       {...labels}
       onComplete={(result: CheckInFlowResult) => {
         if (submittingRef.current) return
@@ -113,7 +155,7 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
               winningsCzk: 0,
             },
             DEMO_USER_ID,
-            time,
+            state.time,
           )
           .then((response) => {
             submittingRef.current = false
