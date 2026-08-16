@@ -194,7 +194,7 @@ export const en: Record<TranslationKey, string> = {
   'dashboard.percent': '{value}%',
   'dashboard.remaining': '{remaining} left of {limit}',
   'dashboard.exceededBy': 'over by {over} of {limit}',
-  'dashboard.week.overline': 'This week',
+  'dashboard.week.overline': 'Programme progress',
   'dashboard.day.aria': '{weekday} {day} — {state}',
   'dashboard.dayState.completed': 'filled in',
   'dashboard.dayState.missing': 'record missing',

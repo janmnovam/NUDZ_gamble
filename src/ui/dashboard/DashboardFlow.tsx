@@ -14,6 +14,7 @@ import { useDashboardService } from '@ui/app/AppContext.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { useAppView } from '@ui/app/appView.ts'
 import { clientNow } from '@ui/clock.ts'
+import { useFinalSummary } from '@ui/review/useFinalSummary.ts'
 
 type LoadState =
   | { status: 'loading' }
@@ -36,6 +37,7 @@ export function DashboardFlow({ onCheckIn, onBackfill }: DashboardFlowProps = {}
   const { t } = useTranslation()
   // Injected by <AppProvider>, which is also how tests supply a fake.
   const dashboardService = useDashboardService()
+  const programmeState = useFinalSummary()
   const navigate = useAppView((s) => s.navigate)
   const userId = useCurrentUser((s) => s.userId)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
@@ -92,6 +94,7 @@ export function DashboardFlow({ onCheckIn, onBackfill }: DashboardFlowProps = {}
     <>
       <DashboardScreen
         dashboard={state.dashboard}
+        {...(programmeState.status === 'ready' ? { programme: programmeState.programme } : {})}
         {...(onCheckIn ? { onCheckIn } : {})}
         {...(onBackfill ? { onBackfillDay: onBackfill } : {})}
         onSecretTap={onSecretTap}

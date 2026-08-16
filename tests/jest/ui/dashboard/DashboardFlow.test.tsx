@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { jest } from '@jest/globals'
 
 import type { DashboardResponse } from '@/app/dto/dashboard.ts'
+import type { FinalSummaryResponse } from '@/app/dto/review.ts'
 import type { DashboardService } from '@/app/ports/dashboardService.ts'
 import { fail, ok, type Result } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
@@ -28,12 +29,43 @@ const DASHBOARD: DashboardResponse = {
   cautionThresholdPercent: 80,
 }
 
+const PROGRAMME: FinalSummaryResponse = {
+  studyDay: 1,
+  weeks: Array.from({ length: 4 }, (_, weekIndex) => ({
+    weekNo: weekIndex + 1,
+    time: { used: 0, limit: 480 },
+    stakes: { used: 0, limit: 8000 },
+    timeStatus: 'OK' as const,
+    stakesStatus: 'OK' as const,
+    overall: 'OK' as const,
+    days: Array.from({ length: 7 }, (_, dayIndex) => {
+      const studyDay = weekIndex * 7 + dayIndex + 1
+      return {
+        studyDay,
+        date: new Date(Date.UTC(2026, 8, studyDay)).toISOString(),
+        state: 'future' as const,
+      }
+    }),
+    filledDays: 0,
+    elapsed: false,
+    started: weekIndex === 0,
+    closed: false,
+  })),
+}
+
 // Only the dashboard seam matters here, so a narrowed cast keeps the fake focused.
 function renderFlow(dashboard: DashboardService) {
   useCurrentUser.setState({ userId: 'test-user' })
   render(
     <I18nProvider>
-      <AppProvider app={{ dashboard } as App}>
+      <AppProvider
+        app={
+          {
+            dashboard,
+            review: { getFinalSummary: () => Promise.resolve(ok(PROGRAMME)) },
+          } as unknown as App
+        }
+      >
         <DashboardFlow />
       </AppProvider>
     </I18nProvider>,

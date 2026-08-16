@@ -97,6 +97,7 @@ describe('toProgrammeSummary', () => {
       studyDay: 29,
       weeks: [
         week(1, {
+          closed: false,
           days: week(1).days.map((d, i) => (i === 2 ? { ...d, state: 'missing' as const } : d)),
         }),
         week(2),
@@ -104,8 +105,99 @@ describe('toProgrammeSummary', () => {
         week(4),
       ],
     }
-    const s = toProgrammeSummary(response, () => 'po', iso(0))
+    const s = toProgrammeSummary(response, () => 'po', iso(3))
 
     expect(s.weeks.flat().filter((d) => d.state === 'missing')).toHaveLength(1)
+  })
+
+  it('makes a missing day actionable within the last five days, across a week boundary', () => {
+    const response: FinalSummaryResponse = {
+      studyDay: 9,
+      weeks: [
+        week(1, {
+          closed: false,
+          days: week(1).days.map((day, index) =>
+            index === 3 ? { ...day, state: 'missing' as const } : day,
+          ),
+        }),
+        week(2),
+        week(3),
+        week(4),
+      ],
+    }
+
+    const summary = toProgrammeSummary(response, () => 'po', iso(8))
+    const programmeDayFour = summary.weeks.flat().find((day) => day.date === iso(3))
+
+    expect(programmeDayFour?.backfillable).toBe(true)
+    expect(programmeDayFour?.state).toBe('missing')
+  })
+
+  it('does not make an older or review-closed missing day actionable', () => {
+    const response: FinalSummaryResponse = {
+      studyDay: 9,
+      weeks: [
+        week(1, {
+          closed: false,
+          days: week(1).days.map((day, index) =>
+            index === 2 ? { ...day, state: 'missing' as const } : day,
+          ),
+        }),
+        week(2, {
+          closed: true,
+          days: week(2).days.map((day, index) =>
+            index === 0 ? { ...day, state: 'missing' as const } : day,
+          ),
+        }),
+        week(3),
+        week(4),
+      ],
+    }
+
+    const summary = toProgrammeSummary(response, () => 'po', iso(8))
+    const dayThree = summary.weeks.flat().find((day) => day.date === iso(2))
+    const dayEight = summary.weeks.flat().find((day) => day.date === iso(7))
+
+    expect(dayThree?.backfillable).toBe(false)
+    expect(dayEight?.backfillable).toBe(false)
+    expect(dayThree?.state).toBe('locked')
+    expect(dayEight?.state).toBe('locked')
+  })
+
+  it('on day 14 locks every older day and keeps only the previous five days statusful', () => {
+    const response: FinalSummaryResponse = {
+      studyDay: 14,
+      weeks: [
+        week(1, { closed: false }),
+        week(2, {
+          closed: false,
+          days: week(2).days.map((day, index) => ({
+            ...day,
+            state:
+              index === 0 || index === 1
+                ? ('completed' as const)
+                : index < 6
+                  ? ('missing' as const)
+                  : ('future' as const),
+          })),
+        }),
+        week(3),
+        week(4),
+      ],
+    }
+
+    const summary = toProgrammeSummary(response, () => 'po', iso(13))
+    const programmeDays = summary.weeks.flat().filter((day) => day.date >= iso(0))
+    const active = programmeDays.filter((day) => day.backfillable)
+
+    expect(active.map((day) => day.date)).toEqual([iso(9), iso(10), iso(11), iso(12)])
+    // Days 1–8 are older than five days. Day 1 and day 8 were completed, but
+    // both deliberately lose their green state once their window has elapsed.
+    expect(programmeDays.find((day) => day.date === iso(0))?.state).toBe('locked')
+    expect(programmeDays.find((day) => day.date === iso(7))?.state).toBe('locked')
+    // Day 9 is exactly five days back, so its completed state still shows.
+    expect(programmeDays.find((day) => day.date === iso(8))?.state).toBe('completed')
+    expect(programmeDays.find((day) => day.date === iso(12))?.state).toBe('missing')
+    expect(programmeDays.find((day) => day.date === iso(13))?.state).toBe('future')
   })
 })

@@ -281,8 +281,8 @@ test('Scénář 1 — den 8: check-in due, then filled in, then verified via CSV
 
   await expect(page.getByRole('heading', { name: 'Den 9' })).toBeVisible()
   await expect(page.getByText('Týden 2/4')).toBeVisible()
-  await expect(page.getByRole('img', { name: /chybí záznam/ })).toBeVisible()
-  await expect(page.getByText('Vyplnit chybějící dny')).toBeVisible()
+  await expect(page.getByRole('button', { name: /chybí záznam/ })).toBeVisible()
+  await expect(page.getByText(/Nemáte vyplněný/)).toBeVisible()
 
   // Click through the real check-in flow for day 8 — this is docs/Tests.txt's
   // day 8 entry (50 min / 200 Kč), submitted for real via CheckInService
@@ -294,7 +294,8 @@ test('Scénář 1 — den 8: check-in due, then filled in, then verified via CSV
 
   const minutesDrum = page.getByRole('listbox', { name: 'Minuty' })
   await minutesDrum.focus()
-  for (let i = 0; i < 50; i++) {
+  // The minutes wheel moves in five-minute steps: ten presses enter 50 min.
+  for (let i = 0; i < 10; i++) {
     await minutesDrum.press('ArrowDown')
   }
   await page.getByRole('textbox', { name: 'Sázky' }).fill('200')
@@ -303,7 +304,7 @@ test('Scénář 1 — den 8: check-in due, then filled in, then verified via CSV
   // Back on the dashboard, day 8 now completed.
   await expect(page.getByRole('heading', { name: 'Den 9' })).toBeVisible()
   await expect(page.getByText('Týden 2/4')).toBeVisible()
-  await expect(page.getByRole('img', { name: /chybí záznam/ })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /chybí záznam/ })).toHaveCount(0)
   await expect(page.getByRole('button', { name: 'Check-in bude zítra' })).toBeVisible()
 
   // Week 2's first day: 50/80 min (63 %), 200/800 Kč (25 %) — both comfortably OK.

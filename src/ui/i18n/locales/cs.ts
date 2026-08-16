@@ -200,7 +200,7 @@ export const cs = {
   'dashboard.remaining': 'zbývá {remaining} z {limit}',
   'dashboard.exceededBy': 'překročeno o {over} z {limit}',
   // Uppercased by `.type-overline`, so it stays sentence case here.
-  'dashboard.week.overline': 'Průběh týdne',
+  'dashboard.week.overline': 'Průběh programu',
   'dashboard.day.aria': '{weekday} {day} — {state}',
   'dashboard.dayState.completed': 'vyplněno',
   'dashboard.dayState.missing': 'chybí záznam',

@@ -11,6 +11,8 @@ export interface ProgrammeDay {
   today: boolean
   /** ISO date, used as a stable key. */
   date: string
+  /** UI hint: a missing day from the last five days in a still-open week. */
+  backfillable: boolean
 }
 
 export interface ProgrammeSummary {
@@ -25,6 +27,7 @@ export interface ProgrammeSummary {
 }
 
 const DAY_MS = 86_400_000
+const BACKFILL_WINDOW_DAYS = 5
 
 /** UTC parts, because the DTO's dates are timestamps pinned to UTC midnight. */
 function utcNoon(date: string): Date {
@@ -43,14 +46,18 @@ function mondayIndex(date: Date): number {
  * The grid is padded to whole Monday–Sunday rows, so days on either side of the
  * programme appear too: before it they read as `locked` (the programme hadn't
  * started), after it as `outside`. Neither is a gap in the record — only a day
- * *inside* the programme with no check-in is `missing`.
+ * *inside* the programme keeps its completed/missing state for five days. Once
+ * that window closes, every older day becomes visually `locked`, regardless of
+ * whether its check-in was completed.
  */
 export function toProgrammeSummary(
   response: FinalSummaryResponse,
   weekdayOf: (isoDate: string) => string,
   todayIso: string,
 ): ProgrammeSummary {
-  const days = response.weeks.flatMap((week) => week.days)
+  const days = response.weeks.flatMap((week) =>
+    week.days.map((day) => ({ ...day, weekClosed: week.closed })),
+  )
   const totals = response.weeks.reduce(
     (acc, week) => ({
       timeUsed: acc.timeUsed + week.time.used,
@@ -77,8 +84,18 @@ export function toProgrammeSummary(
   for (let time = start; time <= end; time += DAY_MS) {
     const day = byDate.get(time)
     const iso = new Date(time).toISOString()
+    const daysAgo = (todayTime - time) / DAY_MS
+    const expired = day !== undefined && daysAgo > BACKFILL_WINDOW_DAYS
+    const backfillable =
+      day?.state === 'missing' && !day.weekClosed && daysAgo >= 1 && daysAgo <= BACKFILL_WINDOW_DAYS
     const state: DayCellState =
-      day === undefined ? (time < utcNoon(first.date).getTime() ? 'locked' : 'outside') : day.state
+      day === undefined
+        ? time < utcNoon(first.date).getTime()
+          ? 'locked'
+          : 'outside'
+        : expired || (day.state === 'missing' && !backfillable)
+          ? 'locked'
+          : day.state
 
     const cell: ProgrammeDay = {
       dayOfMonth: new Date(time).getUTCDate(),
@@ -86,6 +103,7 @@ export function toProgrammeSummary(
       state,
       today: time === todayTime,
       date: iso,
+      backfillable,
     }
     const row = weeks[weeks.length - 1]
     if (row === undefined || row.length === 7) weeks.push([cell])
