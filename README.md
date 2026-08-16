@@ -153,13 +153,14 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Debug mode
 
-- What does it do
-- Where
-- How to start
+- Is a special feature, hidden for the standard user, where QA / testing can set a specific date of intervention.
+- This allows testing specific time periods without the need to physically wait for the time to pass.
+- This feature is hidden behind version nr. mentioned on Dashboard screen.
+- QA / testing has to tap the version nr. exactly 5 times to let show the GUI for Debug mode.
 
 ## Exporting data from app
 
-- User can export data at any point of the intervention via dedicated button at the bottom of screen "overview" or during weekly review.
+- User can export data at any point of the intervention via dedicated button at the bottom of screen Dashboard or during weekly review.
 - Fields: user_id, intervention_start_date, reference_time_min, reference_stakes_czk, study_day, week_no, behavior_date, weekly_limit_time_min, weekly_limit_stakes_czk, checkin_status, played, time_min, stakes_czk, winnings_czk, submitted_at, updated_at, is_backfill.
 - Exported into .csv
 - UTF-8
