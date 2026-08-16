@@ -73,11 +73,7 @@ export function WeekReviewScreen({
           <span className="type-body-emphasis text-ink">{t('onboarding.limits.time.label')}</span>
           <span className="type-body-sm text-faint">
             {t('review.previous', {
-              value: formatHoursMinutes(
-                review.suggestedNextLimits.timeMinutes,
-                hourUnit,
-                minuteUnit,
-              ),
+              value: formatHoursMinutes(review.time.limit, hourUnit, minuteUnit),
             })}
           </span>
         </div>
@@ -96,7 +92,7 @@ export function WeekReviewScreen({
           <span className="type-body-emphasis text-ink">{t('onboarding.limits.stakes.label')}</span>
           <span className="type-body-sm text-faint">
             {t('review.previous', {
-              value: `${groupThousands(review.suggestedNextLimits.stakesAmount)} ${currency}`,
+              value: `${groupThousands(review.stakes.limit)} ${currency}`,
             })}
           </span>
         </div>

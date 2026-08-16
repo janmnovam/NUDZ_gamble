@@ -35,7 +35,7 @@ export const cs = {
     'I den bez hraní je platný záznam. Nevyplněný den je něco jiného — je to chybějící údaj.',
   'checkin.dayState.future': 'Tento den ještě není možné vyplnit.',
   'checkin.played.question': 'Hrál/a jste včera?',
-  'checkin.played.questionDated': 'Hrál/a jste {day}?',
+  'checkin.played.questionDated': 'Hrál/a jste {day}.?',
   'checkin.played.yesShort': 'Ano',
   'checkin.played.noShort': 'Ne',
   'checkin.played.yes': 'hrál jsem',

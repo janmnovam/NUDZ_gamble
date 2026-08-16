@@ -5,7 +5,7 @@ import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { CopingStep } from '@ui/onboarding/steps/CopingStep.tsx'
 import { DoneStep } from '@ui/onboarding/steps/DoneStep.tsx'
 import { IntroStep } from '@ui/onboarding/steps/IntroStep.tsx'
-import { RefLimitsStep } from '@ui/onboarding/steps/RefLimitsStep.tsx'
+import { LimitsStep } from '@ui/onboarding/steps/LimitsStep.tsx'
 import { RefStakesStep } from '@ui/onboarding/steps/RefStakesStep.tsx'
 import { RefTimeStep } from '@ui/onboarding/steps/RefTimeStep.tsx'
 import { type CopingDto, type SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
@@ -152,7 +152,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       )
     case 3:
       return (
-        <RefLimitsStep
+        <LimitsStep
+          referenceTimeMinutes={refTimeMinutes}
           referenceStakes={refStakesCzk}
           suggestedTimeMinutes={suggestedLimits?.timeMinutes ?? 0}
           suggestedStakesCzk={suggestedLimits?.stakesAmount ?? 0}

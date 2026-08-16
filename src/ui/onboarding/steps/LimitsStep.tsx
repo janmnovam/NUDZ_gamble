@@ -9,6 +9,7 @@ import { formatHoursMinutes } from '@ui/lib/duration.ts'
 import { groupThousands } from '@ui/lib/money.ts'
 
 interface RefLimitsStepProps {
+  referenceTimeMinutes: number
   referenceStakes: number
   /** Suggested (80%) limits from the OnboardingService, used as the slider defaults. */
   suggestedTimeMinutes: number
@@ -30,7 +31,8 @@ interface RefLimitsStepProps {
  * the same inputs as the reference screens (duration wheel + money field); the
  * cap is enforced by the wheel's hour range and the field's `maxValue`.
  */
-export function RefLimitsStep({
+export function LimitsStep({
+  referenceTimeMinutes,
   referenceStakes,
   suggestedTimeMinutes,
   suggestedStakesCzk,
@@ -70,7 +72,7 @@ export function RefLimitsStep({
           <span className="type-body-emphasis text-ink">{t('onboarding.limits.time.label')}</span>
           <span className="type-body-sm text-faint">
             {t('onboarding.limits.time.sub', {
-              reference: formatHoursMinutes(suggestedTimeMinutes, hourUnit, minuteUnit),
+              reference: formatHoursMinutes(referenceTimeMinutes, hourUnit, minuteUnit),
             })}
           </span>
         </div>
