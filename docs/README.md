@@ -10,6 +10,7 @@ them disagree.
 | [architecture.md](architecture.md) | The hexagon: layers, every inbound/outbound port, DTO seams, per-port build status | **Authoritative** for structure |
 | [data-model.md](data-model.md) | The 7 user tables + the global `contact` table, field names, invariants, Dexie stores | **Authoritative** for the data layer |
 | [decisions.md](decisions.md) | Where we knowingly deviate from the brief, and why | **Authoritative** for deviations |
+| [design/](design/) | `Hackathon2026Figma.fig` — the Figma the screens were built from, agreed with the team and the clinicians | **Authoritative** for how the UI looks |
 | [../README.md](../README.md) | Stack, commands, scripts, layout, CI/CD, CSV export shape, known gaps | **Authoritative** for tooling |
 | [../CLAUDE.md](../CLAUDE.md) | English digest of the domain rules, for contributors and agents | Digest — never the source |
 | [../Zadání_Hackathon_2026_shared.docx.md](../Zadání_Hackathon_2026_shared.docx.md) | The assignment as delivered (Czech) | **Authoritative** for requirements |
@@ -23,7 +24,10 @@ them disagree.
    rows. Both were deliberate.
 3. **architecture.md and data-model.md win on shape** — how the code is arranged and how
    rows are stored. The brief does not prescribe either.
-4. **CLAUDE.md is a digest.** When it disagrees with the brief or with these docs, the
+4. **[design/](design/) wins on what the UI looks like.** The Figma was agreed with the
+   team and the clinicians, so a screen that disagrees with it is the screen's problem —
+   unless the brief says otherwise, in which case the brief still wins.
+5. **CLAUDE.md is a digest.** When it disagrees with the brief or with these docs, the
    digest is what's wrong.
 
 The one thing no document may contradict: cumulative usage, net loss, weekly totals and
@@ -67,10 +71,6 @@ see [decisions.md](decisions.md).
 - [Tests.txt](Tests.txt) — a hand-written 29-day scenario (limits per week, which days are
   filled, backfilled or left missing) used to exercise the demo by hand. Test *data*, not
   a test plan.
-- [design/Hackathon2026Figma.fig](design/Hackathon2026Figma.fig) — the Figma file the UI
-  was built from, agreed with the team and the clinicians. The reference for any visual
-  question the docs don't answer; see
-  [architecture.md § Design source](architecture.md#design-source) for how to treat it.
 
 ## Diagrams
 

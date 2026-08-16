@@ -696,6 +696,71 @@ models a calendar day, exactly like `behavior_date`.
 |---|---|---|---|
 | dropUserData | `userId` | `—` | Deletes every record owned by that user, atomically |
 
+## Domain core — inside `src/domain`
+
+The middle of the hexagon: every rule that would survive replacing React with anything
+else, and IndexedDB with a server. Pure functions and types only — no I/O, no `new Date()`,
+no framework imports (the ESLint boundary rule enforces the last part).
+
+| Module | Owns |
+|---|---|
+| `model.ts` | The domain types — `Profile`, `CheckIn`, `Limit`, `Review`, `CopingStrategy`, `Contact`, `UsageEvent`, `CheckInEdit` — plus the `ISODate` / `ISOTimestamp` / `ISOCalendarTimestamp` distinctions |
+| `config.ts` | Every tunable constant in one frozen `DEFAULT_CONFIG`: the 80/90 limit percentages, the POZOR/PŘEKROČENO thresholds, week length, programme length, the 5-day backfill window, reminder slots |
+| `clock.ts` | The study calendar — day 1–28, week 1–4, and the calendar-date helpers. Despite the name, **not** a clock: it converts an instant the caller supplies |
+| `limits.ts` | `suggestLimit` (80 %), `maxLimit` (90 %), `isWithinCap`, and the status rules `classifyStatus` / `worseStatus` |
+| `checkin.ts` | `validateCheckIn`, `dayStateOf` (completed · backfilled · missing · future) and `isBackfill` |
+| `guards.ts` | The "is this allowed right now" policies — see below |
+| `feedback.ts` | The post-check-in feedback payload (doc 07) |
+| `dashboard.ts` | `buildDashboardVM` / `buildDayCell` — the dashboard read model |
+| `review.ts` | Week review and final-summary view models, and `completeReview` |
+| `reminder.ts` | `getDueReminder` (which of the two reminder kinds applies) and `isReminderTimeDue` (the wall-clock slot gate) |
+| `onboarding.ts` | `completeOnboarding` — the atomic profile + week-1 limit + coping use case |
+| `coping.ts` | Label/detail normalisation and `nextCopingPriority` |
+| `export.ts` | `buildExportBundle` — fetches and sorts the tables the CSV export dumps |
+| `errors.ts` · `errorCodes.ts` | `DomainError`, the four `ERROR_TYPES`, and the frozen `ERROR_CODES` registry |
+| `ports.ts` | The ten outbound port interfaces (documented below) |
+| `usageEventType.ts` | The four `UsageEventType` values |
+
+### `guards.ts` — the policies, in one copy each
+
+This module is small and disproportionately important: it is where "can the user do X
+right now?" is answered, **once**, for every caller that asks. The comment at the top says
+why — so a second, slightly different copy never appears at a second call site.
+
+- **`canEditCheckIn`** — the backfill policy. Returns `allowed` · `future_date` ·
+  `locked_week` · `outside_window`, in that precedence. The caller reduces dates to scalars
+  first (`studyDayDiff`, `weekClosed`), so the policy itself has no calendar arithmetic in
+  it. The check-in service and the dashboard's fill-in links share this one function, which
+  is why a day is never offered as fillable and then refused on submit.
+- **`isWeekClosed`** — a week is closed iff a review row exists for it. Closing is driven
+  by a *completed review*, not by the calendar, which is why this lives here and not in the
+  study calendar.
+- **`canReview`** — review N opens once day 7N has elapsed and stays open until completed.
+- **`resolvePendingAction`** — the dashboard shows exactly one primary call to action,
+  resolved by a fixed priority: `final_summary` > `review_available` > `checkin_due` >
+  `none`.
+- **`evaluateLimitAdjustment`** — what the limit slider renders (bounds in the reference's
+  own unit, the 80/90 labels, whether the current value is allowed). Shared by onboarding
+  and every weekly review, so the cap cannot drift between them.
+
+### `feedback.ts` — the moment after a check-in
+
+`buildCheckInFeedback` turns the week's check-ins, the week's limit and the user's coping
+strategies into one flat payload: a `time` and `stakes` axis (used, limit, percent,
+remaining, status), the `overall` status, an `incompleteWeek` flag, and `copingReminder`.
+
+Three details that are rules, not presentation:
+
+- `percent` is `null` when the limit is 0 — the UI hides the percentage rather than showing
+  a division by zero, exactly as on the dashboard.
+- `remaining` is deliberately **unclamped**, so it can read negative and the UI can say
+  "over by".
+- `copingReminder` is the top-priority *active* strategy, and only at POZOR or PŘEKROČENO —
+  the reminder is a response to trouble, not a constant nag.
+
+It reuses `classifyStatus` / `worseStatus` from `limits.ts` rather than re-deriving them, so
+the feedback and the dashboard can never disagree about what "POZOR" means.
+
 ## Outbound ports (driven)
 
 Storage contracts the domain depends on, each implemented by a data-layer adapter (and,
@@ -1091,8 +1156,9 @@ The mappers also canonicalise: day-valued fields pass through
 
 `createDataLayer(database = db)` (`src/core/index.ts`) instantiates all ten adapters and
 returns them as a `DataLayer` object. Passing a different `AppDatabase` is what lets tests
-run against `fake-indexeddb` with no other change. `createApp()` then builds the ten
-services on top of that `DataLayer`.
+run against `fake-indexeddb` with no other change. `createApp()` (`src/core/app.ts`) then
+builds the ten services on top of that `DataLayer` and returns the `App` object the UI's
+`AppProvider` puts on context — the two files are the entire composition root.
 
 `StudyCalendar` is deliberately **not** part of `DataLayer`: it needs a user's
 `interventionStartDate`, which isn't known until a profile is loaded, so it is built
@@ -1192,6 +1258,36 @@ The time machine (`admin/`) is a UI concern end to end: a 7-tap gesture on the d
 day heading (`useMultiTap`) opens a modal that sets a simulated instant, which flows into
 the same `time` parameter every service already takes. Nothing in `src/domain` or
 `src/data` knows it exists.
+
+## Bootstrap, PWA and demo tooling
+
+**`src/main.tsx`** is the entry point and does four things: imports the two variable fonts
+and `index.css`, mounts `<App/>` into `#root` under `StrictMode`, throws loudly if `#root`
+is missing, and — **only under `import.meta.env.DEV`** — dynamically imports
+`src/dev/devTools.ts`. That dynamic import is what keeps the dev seeding helper out of
+production bundles entirely.
+
+**Service worker.** There is no registration code to find: `vite-plugin-pwa` is configured
+with `registerType: 'autoUpdate'` and injects it at build time. The SW is off in dev, so
+verifying PWA behaviour means `npm run build && npm run preview`. The dev server runs over
+mkcert HTTPS for a related reason — a browser refuses to register a service worker over an
+untrusted certificate, and `crypto.randomUUID()` (which mints every id) needs a secure
+context, so plain HTTP over the LAN would break id generation on a phone.
+
+**`src/dev/seed.ts`** — `window.__seed(scenario)`, dev builds only. It writes **straight
+through the outbound repositories** via `createDataLayer()`, bypassing every inbound
+service and guard, which is the point: it is the test suite's shortcut aimed at the real
+IndexedDB so a 28-day scenario can be eyeballed in a browser instead of asserted in Jest.
+
+The way it fakes time is worth knowing, because it is not a clock: a scenario says which
+study day "today" should be, and the seeder **backdates `interventionStartDate`** from the
+real calendar date so `createStudyCalendar` derives that day on its own. No clock, guard or
+domain code is touched or mocked.
+
+> **Gap:** because `__seed` is dev-only, the deployed build has no way to load a scenario.
+> The time machine (day/time jump, reset) *is* available in production behind the 7-tap
+> gesture, but seed data is not — worth knowing before a jury session runs off the
+> GitHub Pages build. See README's "Known gaps".
 
 ## TODO — what is left
 
