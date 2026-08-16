@@ -30,16 +30,15 @@ function makeService(params: { profile?: Profile; checkIns: CheckIn[] }) {
 describe('ReminderServiceImpl.getDueReminder', () => {
   it('is null when there is no profile yet (onboarding not done)', async () => {
     const service = makeService({ checkIns: [] })
-    await expect(
-      service.getDueReminder(USER_ID, '2026-09-02T08:00:00+02:00'),
-    ).resolves.toEqual({ data: null, error: null })
+    await expect(service.getDueReminder(USER_ID, '2026-09-02T08:00:00+02:00')).resolves.toEqual({
+      data: null,
+      error: null,
+    })
   })
 
   it('reports the missing day once onboarding is done and a day was skipped', async () => {
     const service = makeService({ profile: profile(), checkIns: [] })
-    await expect(
-      service.getDueReminder(USER_ID, '2026-09-02T08:00:00+02:00'),
-    ).resolves.toEqual({
+    await expect(service.getDueReminder(USER_ID, '2026-09-02T08:00:00+02:00')).resolves.toEqual({
       data: { kind: 'checkin_due', behaviorDate: '2026-09-01T00:00:00.000Z' },
       error: null,
     })
