@@ -21,10 +21,19 @@ export interface CopingDto {
 /** Input to `getSuggestedLimits` — the user's usual weekly time & stakes. */
 export type ReferenceWeekRequest = TimeStakesDto
 
-/** The 80% suggestion plus the percentages the slider labels itself with. */
+/**
+ * The 80% suggested limits, the percentages the slider labels itself with, and
+ * the 90% cap (the highest the user may adjust to) — everything the onboarding
+ * limits screen needs to render its wheels/fields without re-deriving the rules.
+ */
 export interface SuggestedLimitsResponse extends TimeStakesDto {
   timePercent: number
   stakePercent: number
+  /** Upper bound (90% of reference) the user may adjust up to. */
+  timeCapMinutes: number
+  stakesCapAmount: number
+  /** The cap as a whole-number percent (90). */
+  capPercent: number
 }
 
 /** Input to `complete` — reference week, the adjusted weekly limits, and ≥1 coping strategy. */

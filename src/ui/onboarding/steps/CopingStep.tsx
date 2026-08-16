@@ -6,7 +6,7 @@ import { TextField } from '@ui/components/TextField.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { pluralCategory, type PluralCategory } from '@ui/i18n/plural.ts'
 import { type TranslationKey } from '@ui/i18n/types.ts'
-import { type CopingStrategy } from '@ui/onboarding/mockCopingStrategies.ts'
+import { type CopingSuggestionDto } from '@/app/dto/coping.ts'
 
 const SELECTED_KEYS = {
   one: 'onboarding.coping.selected.one',
@@ -15,8 +15,8 @@ const SELECTED_KEYS = {
 } as const satisfies Record<PluralCategory, TranslationKey>
 
 interface CopingStepProps {
-  /** Predefined strategies, provided by the domain layer (mocked for now). */
-  options: CopingStrategy[]
+  /** Predefined strategies, provided by the CopingStrategyService. */
+  options: CopingSuggestionDto[]
   /** Ids of the selected predefined strategies. */
   selected: string[]
   onSelectedChange: (selected: string[]) => void

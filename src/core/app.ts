@@ -8,7 +8,9 @@
  *   await app.onboarding.complete(request)
  */
 import { OnboardingServiceImpl } from '@/app/services/onboardingServiceImpl.ts'
+import { CopingStrategyServiceImpl } from '@/app/services/copingStrategyServiceImpl.ts'
 import type { OnboardingService } from '@/app/ports/onboardingService.ts'
+import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
 import { newId } from '@data/ids.ts'
 import { systemTodayClock } from '@data/clock.ts'
 import { type DataLayer, createDataLayer } from '@/core/index.ts'
@@ -16,6 +18,7 @@ import { type DataLayer, createDataLayer } from '@/core/index.ts'
 /** The inbound services the UI calls, wired to a data layer. */
 export interface App {
   onboarding: OnboardingService
+  coping: CopingStrategyService
 }
 
 export function createApp(data: DataLayer = createDataLayer()): App {
@@ -28,5 +31,6 @@ export function createApp(data: DataLayer = createDataLayer()): App {
       today: systemTodayClock,
       newId,
     }),
+    coping: new CopingStrategyServiceImpl({ repo: data.copingStrategies }),
   }
 }

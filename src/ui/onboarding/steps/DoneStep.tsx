@@ -21,7 +21,7 @@ interface DoneStepProps {
   timeLimitMinutes: number
   stakesLimitCzk: number
   copingCount: number
-  /** Day 1, taken from the completeOnboarding response (not computed here). */
+  /** Day 1, taken from the OnboardingService `complete()` response (not computed here). */
   startDate: Date | null
   onDone: () => void
 }

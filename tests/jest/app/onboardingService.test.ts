@@ -44,6 +44,9 @@ describe('OnboardingServiceImpl.getSuggestedLimits', () => {
       stakesAmount: 8_000,
       timePercent: 80,
       stakePercent: 80,
+      timeCapMinutes: 540,
+      stakesCapAmount: 9_000,
+      capPercent: 90,
     })
   })
 })

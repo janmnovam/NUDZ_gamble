@@ -18,7 +18,7 @@ import type {
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import { toOnboardingInput, toOnboardingProfileResponse } from '@/app/mappers/onboardingMapper.ts'
 import { type TodayClock, nextDate } from '@domain/clock.ts'
-import { limitPercentView, suggestLimit } from '@domain/limits.ts'
+import { limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
 import type { UserId } from '@domain/model.ts'
 import { completeOnboarding } from '@domain/onboarding.ts'
 import type { Clock, OnboardingRepository } from '@domain/ports.ts'
@@ -44,12 +44,15 @@ export class OnboardingServiceImpl implements OnboardingService {
   }
 
   getSuggestedLimits(req: ReferenceWeekRequest): Promise<SuggestedLimitsResponse> {
-    const pct = limitPercentView().suggestedPct
+    const { suggestedPct, maxPct } = limitPercentView()
     return Promise.resolve({
       timeMinutes: suggestLimit(req.timeMinutes),
       stakesAmount: suggestLimit(req.stakesAmount),
-      timePercent: pct,
-      stakePercent: pct,
+      timePercent: suggestedPct,
+      stakePercent: suggestedPct,
+      timeCapMinutes: maxLimit(req.timeMinutes),
+      stakesCapAmount: maxLimit(req.stakesAmount),
+      capPercent: maxPct,
     })
   }
 

@@ -9,11 +9,15 @@ import { StepHeader } from '@ui/components/StepHeader.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { formatHoursMinutes } from '@ui/lib/duration.ts'
 import { groupThousands } from '@ui/lib/money.ts'
-import { capFromReference, suggestedFromReference } from '@ui/onboarding/deriveLimits.ts'
 
 interface RefLimitsStepProps {
-  referenceMinutes: number
   referenceStakes: number
+  /** Suggested (80%) limits from the OnboardingService, used as the slider defaults. */
+  suggestedTimeMinutes: number
+  suggestedStakesCzk: number
+  /** The 90% cap from the OnboardingService — the wheel/field upper bounds. */
+  timeCapMinutes: number
+  stakesCapCzk: number
   /** Current limits, or null to fall back to the suggested value. */
   timeLimit: number | null
   stakesLimit: number | null
@@ -29,8 +33,11 @@ interface RefLimitsStepProps {
  * cap is enforced by the wheel's hour range and the field's `maxValue`.
  */
 export function RefLimitsStep({
-  referenceMinutes,
   referenceStakes,
+  suggestedTimeMinutes,
+  suggestedStakesCzk,
+  timeCapMinutes,
+  stakesCapCzk,
   timeLimit,
   stakesLimit,
   onTimeLimitChange,
@@ -44,11 +51,8 @@ export function RefLimitsStep({
   const minuteUnit = t('onboarding.limits.unitMinute')
   const currency = t('onboarding.limits.currency')
 
-  const timeCap = capFromReference(referenceMinutes)
-  const stakesCap = capFromReference(referenceStakes)
-  const suggestedTime = suggestedFromReference(referenceMinutes)
-  const currentTime = timeLimit ?? suggestedTime
-  const currentStakes = stakesLimit ?? suggestedFromReference(referenceStakes)
+  const currentTime = timeLimit ?? suggestedTimeMinutes
+  const currentStakes = stakesLimit ?? suggestedStakesCzk
 
   return (
     <Screen
@@ -68,7 +72,7 @@ export function RefLimitsStep({
           <span className="type-body-emphasis text-ink">{t('onboarding.limits.time.label')}</span>
           <span className="type-body-sm text-faint">
             {t('onboarding.limits.time.sub', {
-              reference: formatHoursMinutes(suggestedTime, hourUnit, minuteUnit),
+              reference: formatHoursMinutes(suggestedTimeMinutes, hourUnit, minuteUnit),
             })}
           </span>
         </div>
@@ -79,7 +83,7 @@ export function RefLimitsStep({
           minutesLabel={t('onboarding.refTime.minutesLabel')}
           hourUnit={t('onboarding.refTime.unitHour')}
           minuteUnit={t('onboarding.refTime.unitMinute')}
-          maxMinutes={timeCap}
+          maxMinutes={timeCapMinutes}
         />
       </Card>
 
@@ -93,7 +97,7 @@ export function RefLimitsStep({
         <MoneyField
           value={currentStakes}
           onChange={onStakesLimitChange}
-          maxValue={stakesCap}
+          maxValue={stakesCapCzk}
           ariaLabel={t('onboarding.limits.stakes.label')}
           currencySuffix={currency}
         />

@@ -91,3 +91,5 @@ export { CONTACTS } from '@data/seeds/contacts.ts'
 
 export { createApp, type App } from '@/core/app.ts'
 export type { OnboardingService } from '@/app/ports/onboardingService.ts'
+export type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
+export type { CopingSuggestionDto } from '@/app/dto/coping.ts'

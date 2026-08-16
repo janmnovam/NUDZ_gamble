@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-import { completeOnboarding } from '@ui/onboarding/completeOnboarding.ts'
-import { suggestedFromReference } from '@ui/onboarding/deriveLimits.ts'
-import { MOCK_COPING_STRATEGIES } from '@ui/onboarding/mockCopingStrategies.ts'
+import { type CopingSuggestionDto } from '@/app/dto/coping.ts'
+import { type SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
+import { app } from '@ui/services.ts'
 import { CopingStep } from '@ui/onboarding/steps/CopingStep.tsx'
 import { DoneStep } from '@ui/onboarding/steps/DoneStep.tsx'
 import { IntroStep } from '@ui/onboarding/steps/IntroStep.tsx'
@@ -10,7 +10,7 @@ import { RefLimitsStep } from '@ui/onboarding/steps/RefLimitsStep.tsx'
 import { RefStakesStep } from '@ui/onboarding/steps/RefStakesStep.tsx'
 import { RefTimeStep } from '@ui/onboarding/steps/RefTimeStep.tsx'
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 5
 
 interface OnboardingFlowProps {
   /** Called when the user acknowledges the final screen (seam to the dashboard). */
@@ -28,8 +28,34 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [timeLimitMin, setTimeLimitMin] = useState<number | null>(null)
   const [stakesLimitCzk, setStakesLimitCzk] = useState<number | null>(null)
   const [copingSelected, setCopingSelected] = useState<string[]>([])
+  const [copingOptions, setCopingOptions] = useState<CopingSuggestionDto[]>([])
   const [customStrategy, setCustomStrategy] = useState('')
+  const [suggestedLimits, setSuggestedLimits] = useState<SuggestedLimitsResponse | null>(null)
   const [interventionStartDate, setInterventionStartDate] = useState<Date | null>(null)
+
+  // Load the predefined coping suggestions from the service once.
+  useEffect(() => {
+    let active = true
+    void app.coping.getSuggestions().then((suggestions) => {
+      if (active) setCopingOptions(suggestions)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // Recompute the 80% suggested limits and 90% cap whenever the reference changes.
+  useEffect(() => {
+    let active = true
+    void app.onboarding
+      .getSuggestedLimits({ timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk })
+      .then((limits) => {
+        if (active) setSuggestedLimits(limits)
+      })
+    return () => {
+      active = false
+    }
+  }, [refTimeMinutes, refStakesCzk])
 
   const goNext = () => {
     setStep((current) => Math.min(current + 1, TOTAL_STEPS - 1))
@@ -38,22 +64,31 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setStep((current) => Math.max(current - 1, 0))
   }
 
-  const resolvedTimeLimit = timeLimitMin ?? suggestedFromReference(refTimeMinutes)
-  const resolvedStakesLimit = stakesLimitCzk ?? suggestedFromReference(refStakesCzk)
+  const resolvedTimeLimit = timeLimitMin ?? suggestedLimits?.timeMinutes ?? 0
+  const resolvedStakesLimit = stakesLimitCzk ?? suggestedLimits?.stakesAmount ?? 0
   const copingCount = copingSelected.length + (customStrategy.trim().length > 0 ? 1 : 0)
 
-  // Hand the collected answers to the domain, then confirm.
-  const finishSetup = () => {
-    const { interventionStartDate: startDate } = completeOnboarding({
-      referenceTimeMinutes: refTimeMinutes,
-      referenceStakesCzk: refStakesCzk,
-      timeLimitMinutes: resolvedTimeLimit,
-      stakesLimitCzk: resolvedStakesLimit,
-      copingStrategyIds: copingSelected,
-      customStrategy: customStrategy.trim() || null,
-    })
-    setInterventionStartDate(startDate)
-    goNext()
+  // Hand the collected answers to the OnboardingService, then confirm.
+  const finishSetup = async () => {
+    // Selected predefined strategies (by id) + the optional custom one → domain coping DTOs.
+    const selected = copingSelected
+      .map((id) => copingOptions.find((option) => option.id === id))
+      .filter((option): option is CopingSuggestionDto => option !== undefined)
+      .map((option) => ({ label: option.label, type: 'default' as const }))
+    const custom = customStrategy.trim()
+    const coping = custom ? [...selected, { label: custom, type: 'custom' as const }] : selected
+
+    try {
+      const { interventionStartDate: startDate } = await app.onboarding.complete({
+        reference: { timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk },
+        limits: { timeMinutes: resolvedTimeLimit, stakesAmount: resolvedStakesLimit },
+        coping,
+      })
+      setInterventionStartDate(new Date(startDate))
+      goNext()
+    } catch (error) {
+      console.error('[onboarding] complete failed', error)
+    }
   }
 
   switch (step) {
@@ -80,8 +115,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     case 3:
       return (
         <RefLimitsStep
-          referenceMinutes={refTimeMinutes}
           referenceStakes={refStakesCzk}
+          suggestedTimeMinutes={suggestedLimits?.timeMinutes ?? 0}
+          suggestedStakesCzk={suggestedLimits?.stakesAmount ?? 0}
+          timeCapMinutes={suggestedLimits?.timeCapMinutes ?? 0}
+          stakesCapCzk={suggestedLimits?.stakesCapAmount ?? 0}
           timeLimit={timeLimitMin}
           stakesLimit={stakesLimitCzk}
           onTimeLimitChange={setTimeLimitMin}
@@ -93,12 +131,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     case 4:
       return (
         <CopingStep
-          options={MOCK_COPING_STRATEGIES}
+          options={copingOptions}
           selected={copingSelected}
           onSelectedChange={setCopingSelected}
           customStrategy={customStrategy}
           onCustomStrategyChange={setCustomStrategy}
-          onFinish={finishSetup}
+          onFinish={() => {
+            void finishSetup()
+          }}
           onBack={goBack}
         />
       )

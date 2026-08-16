@@ -22,7 +22,7 @@ flowchart TB
     end
 
     subgraph coreHex["Domain core — src/domain (pure, no I/O)"]
-        IN(["Inbound ports<br/>Onboarding · CheckIn · Dashboard<br/>Review · Reminder · Export"])
+        IN(["Inbound ports<br/>Onboarding · CopingStrategy · CheckIn · Dashboard<br/>Review · Reminder · Export"])
         SVC["Domain services<br/>+ pure functions & model"]
         OUT(["Outbound ports<br/>Profile · Limit · CopingStrategy<br/>CheckIn · Review · UsageEvent · Clock"])
         IN --> SVC --> OUT
@@ -77,16 +77,14 @@ outbound sub-lists.
 
 ### OnboardingService
 
-**Status:** 🚧 IN PROGRESS — `completeOnboarding()` built & tested (`src/domain/onboarding.ts`, `tests/jest/domain/onboarding.test.ts`); `setReference`/`getSuggestedLimits` not wrapped as service methods yet (logic exists as `suggestLimit`/`limitPercentView` in `limits.ts`)
+**Status:** ✅ DONE — `getSuggestedLimits` + `complete` implemented as `OnboardingServiceImpl` (`src/app/services/onboardingServiceImpl.ts`), tested (`tests/jest/app/onboardingService.test.ts`), wired via `createApp()` and consumed by the UI onboarding flow (`src/ui/onboarding/OnboardingFlow.tsx`).
 
 **Depends on**
 - Inbound
   - (none)
 - Outbound
-  - ProfileRepository
-  - LimitRepository
-  - CopingStrategyRepository
-  - Clock
+  - OnboardingRepository — the atomic profile + week-1 limit + coping write the built `completeOnboarding` use case relies on (stands in for the separate Profile/Limit/CopingStrategy repos)
+  - Clock (`now` + `TodayClock`, injected at the composition root)
 
 | Method             | Accepts                    | Returns                     | Description                                                  |
 |--------------------|----------------------------|-----------------------------|--------------------------------------------------------------|
@@ -109,7 +107,10 @@ outbound sub-lists.
   "timeMinutes": 480,
   "stakesAmount": 8000,
   "timePercent": 80,
-  "stakePercent": 80
+  "stakePercent": 80,
+  "timeCapMinutes": 540,
+  "stakesCapAmount": 9000,
+  "capPercent": 90
 }
 ```
 
@@ -172,6 +173,29 @@ flowchart LR
     PA --> DBx[("IndexedDB")]
     LA --> DBx
     CA --> DBx
+```
+
+### CopingStrategyService
+
+**Status:** ✅ DONE — `getSuggestions` implemented as `CopingStrategyServiceImpl` (`src/app/services/copingStrategyServiceImpl.ts`), tested (`tests/jest/app/copingStrategyService.test.ts`), wired via `createApp()` and consumed by the onboarding coping picker (`src/ui/onboarding/steps/CopingStep.tsx`). Post-onboarding management (create/toggle/list) can be surfaced here as those screens land.
+
+**Depends on**
+- Inbound
+  - (none)
+- Outbound
+  - CopingStrategyRepository
+
+| Method         | Accepts | Returns                | Description                                             |
+|----------------|---------|------------------------|---------------------------------------------------------|
+| getSuggestions | `—`     | `CopingSuggestionDto[]` | Predefined coping suggestions for the onboarding picker |
+
+**CopingSuggestionDto**
+
+```json
+{
+  "id": "change_environment",
+  "label": "Na chvíli změním prostředí"
+}
 ```
 
 ### CheckInService
