@@ -16,7 +16,6 @@ import type {
   ReferenceWeekRequest,
   SuggestedLimitsResponse,
 } from '@/app/dto/onboarding.ts'
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import { toOnboardingInput, toOnboardingProfileResponse } from '@/app/mappers/onboardingMapper.ts'
 import { calendarTimestamp, dateOf, nextDate } from '@domain/clock.ts'
 import { limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
@@ -29,29 +28,29 @@ export interface OnboardingServiceDeps {
   /** Read-only lookup for `getStatus` — `OnboardingRepository` is a write-only atomic port. */
   profiles: ProfileRepository
   newId: () => string
-  /** The single demo user these records belong to. */
-  userId?: UserId
 }
 
 export class OnboardingServiceImpl implements OnboardingService {
   private readonly deps: OnboardingServiceDeps
-  private readonly userId: UserId
 
   constructor(deps: OnboardingServiceDeps) {
     this.deps = deps
-    this.userId = deps.userId ?? DEMO_USER_ID
   }
 
-  async getStatus(): Promise<OnboardingStatusResponse> {
-    const profile = await this.deps.profiles.get(this.userId)
+  async getStatus(userId: UserId, _time: ISOTimestamp): Promise<OnboardingStatusResponse> {
+    const profile = await this.deps.profiles.get(userId)
     return {
-      userId: this.userId,
+      userId,
       completed: profile !== undefined,
       completedAt: profile?.onboardingCompletedAt ?? null,
     }
   }
 
-  getSuggestedLimits(req: ReferenceWeekRequest): Promise<SuggestedLimitsResponse> {
+  getSuggestedLimits(
+    req: ReferenceWeekRequest,
+    _userId: UserId,
+    _time: ISOTimestamp,
+  ): Promise<SuggestedLimitsResponse> {
     const { suggestedPct, maxPct } = limitPercentView()
     return Promise.resolve({
       timeMinutes: suggestLimit(req.timeMinutes),
@@ -66,9 +65,10 @@ export class OnboardingServiceImpl implements OnboardingService {
 
   async complete(
     req: OnboardingProfileRequest,
+    userId: UserId,
     time: ISOTimestamp,
   ): Promise<OnboardingProfileResponse> {
-    const input = toOnboardingInput(req, this.userId)
+    const input = toOnboardingInput(req, userId)
     await completeOnboarding(input, {
       repo: this.deps.repo,
       time,

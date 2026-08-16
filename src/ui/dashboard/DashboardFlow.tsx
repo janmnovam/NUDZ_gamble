@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { type DashboardResponse } from '@/app/dto/dashboard.ts'
 import { Screen } from '@ui/components/Screen.tsx'
 import { DashboardScreen } from '@ui/dashboard/DashboardScreen.tsx'
+import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { useDashboardService } from '@ui/app/AppContext.ts'
 import { clientNow } from '@ui/clock.ts'
@@ -25,7 +26,7 @@ export function DashboardFlow() {
   useEffect(() => {
     let cancelled = false
 
-    void dashboardService.getDashboard(clientNow()).then(
+    void dashboardService.getDashboard(DEMO_USER_ID, clientNow()).then(
       (dashboard) => {
         if (!cancelled) setState({ status: 'ready', dashboard })
       },

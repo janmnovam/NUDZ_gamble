@@ -65,7 +65,6 @@ function makeService(params: { checkIns: CheckIn[]; today: string; noProfile?: b
     limits,
     checkIns,
     reviews,
-    userId: USER_ID,
   }
   return { service: new DashboardServiceImpl(deps), time: `${params.today}T12:00:00.000Z` }
 }
@@ -97,7 +96,7 @@ describe('DashboardServiceImpl.getDashboard', () => {
       ],
     })
 
-    const res = await service.getDashboard(time)
+    const res = await service.getDashboard(USER_ID, time)
 
     expect(res.studyDay).toBe(5)
     expect(res.weekNo).toBe(1)
@@ -131,6 +130,6 @@ describe('DashboardServiceImpl.getDashboard', () => {
 
   it('rejects when no profile has been onboarded yet', async () => {
     const { service, time } = makeService({ today: '2026-09-05', checkIns: [], noProfile: true })
-    await expect(service.getDashboard(time)).rejects.toThrow(/no profile/)
+    await expect(service.getDashboard(USER_ID, time)).rejects.toThrow(/no profile/)
   })
 })

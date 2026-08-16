@@ -5,6 +5,7 @@
 import type { CopingSuggestionDto } from '@/app/dto/coping.ts'
 import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
 import { toCopingSuggestionDto } from '@/app/mappers/copingMapper.ts'
+import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import type { CopingStrategyRepository } from '@domain/ports.ts'
 
 export interface CopingStrategyServiceDeps {
@@ -18,7 +19,7 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
     this.deps = deps
   }
 
-  async getSuggestions(): Promise<CopingSuggestionDto[]> {
+  async getSuggestions(_userId: UserId, _time: ISOTimestamp): Promise<CopingSuggestionDto[]> {
     const defaults = await this.deps.repo.loadDefaults()
     return defaults.map(toCopingSuggestionDto)
   }

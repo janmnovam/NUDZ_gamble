@@ -10,7 +10,6 @@ import type {
   ReviewResponse,
   ReviewService,
 } from '@/app/ports/reviewService.ts'
-import { DEMO_USER_ID } from '@/app/constants.ts'
 import {
   completeReview,
   getFinalSummary,
@@ -31,22 +30,18 @@ export interface ReviewServiceDeps {
   checkIns: CheckInRepository
   reviews: ReviewRepository
   newId: () => string
-  /** The single demo user these records belong to. */
-  userId?: UserId
 }
 
 export class ReviewServiceImpl implements ReviewService {
   private readonly deps: ReviewServiceDeps
-  private readonly userId: UserId
 
   constructor(deps: ReviewServiceDeps) {
     this.deps = deps
-    this.userId = deps.userId ?? DEMO_USER_ID
   }
 
-  private domainDeps(time: ISOTimestamp): ReviewDeps {
+  private domainDeps(userId: UserId, time: ISOTimestamp): ReviewDeps {
     return {
-      userId: this.userId,
+      userId,
       profiles: this.deps.profiles,
       limits: this.deps.limits,
       checkIns: this.deps.checkIns,
@@ -56,15 +51,15 @@ export class ReviewServiceImpl implements ReviewService {
     }
   }
 
-  getPendingReview(time: ISOTimestamp): Promise<ReviewResponse | null> {
-    return getPendingReview(this.domainDeps(time))
+  getPendingReview(userId: UserId, time: ISOTimestamp): Promise<ReviewResponse | null> {
+    return getPendingReview(this.domainDeps(userId, time))
   }
 
-  completeReview(req: CompleteReviewRequest, time: ISOTimestamp): Promise<void> {
-    return completeReview(req, this.domainDeps(time))
+  completeReview(req: CompleteReviewRequest, userId: UserId, time: ISOTimestamp): Promise<void> {
+    return completeReview(req, this.domainDeps(userId, time))
   }
 
-  getFinalSummary(time: ISOTimestamp): Promise<FinalSummaryResponse> {
-    return getFinalSummary(this.domainDeps(time))
+  getFinalSummary(userId: UserId, time: ISOTimestamp): Promise<FinalSummaryResponse> {
+    return getFinalSummary(this.domainDeps(userId, time))
   }
 }

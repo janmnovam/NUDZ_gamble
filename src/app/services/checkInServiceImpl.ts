@@ -8,6 +8,7 @@ import type {
   CheckInResultResponse,
   CheckInService,
 } from '@/app/ports/checkInService.ts'
+import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import type {
   CheckInEditRepository,
   CheckInRepository,
@@ -29,11 +30,19 @@ export class CheckInServiceImpl implements CheckInService {
     this.deps = deps
   }
 
-  submitCheckIn(_req: CheckInRequest): Promise<CheckInResultResponse> {
+  submitCheckIn(
+    _req: CheckInRequest,
+    _userId: UserId,
+    _time: ISOTimestamp,
+  ): Promise<CheckInResultResponse> {
     return Promise.reject(new Error('CheckInService.submitCheckIn: not implemented (wiring only)'))
   }
 
-  editCheckIn(_req: CheckInRequest): Promise<CheckInResultResponse> {
+  editCheckIn(
+    _req: CheckInRequest,
+    _userId: UserId,
+    _time: ISOTimestamp,
+  ): Promise<CheckInResultResponse> {
     return Promise.reject(new Error('CheckInService.editCheckIn: not implemented (wiring only)'))
   }
 }

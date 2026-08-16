@@ -58,13 +58,13 @@ function makeService(): ExportServiceImpl {
       }),
     setActive: () => Promise.resolve(),
   }
-  const deps: ExportServiceDeps = { checkIns, limits, copingStrategies, userId: USER_ID }
+  const deps: ExportServiceDeps = { checkIns, limits, copingStrategies }
   return new ExportServiceImpl(deps)
 }
 
 describe('ExportServiceImpl.exportDataZip', () => {
   it('bundles check_in.csv, limit.csv and coping_strategy.csv into one ZIP archive', async () => {
-    const zip = await makeService().exportDataZip()
+    const zip = await makeService().exportDataZip(USER_ID, '2026-09-01T12:00:00.000Z')
 
     const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength)
     expect(view.getUint32(0, true)).toBe(0x04034b50) // first local file header

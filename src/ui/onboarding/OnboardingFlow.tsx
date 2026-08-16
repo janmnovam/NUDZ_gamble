@@ -9,6 +9,8 @@ import { RefStakesStep } from '@ui/onboarding/steps/RefStakesStep.tsx'
 import { RefTimeStep } from '@ui/onboarding/steps/RefTimeStep.tsx'
 import type { CopingDto, SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
 import type { CopingSuggestionDto } from '@/app/dto/coping.ts'
+import { DEMO_USER_ID } from '@/app/constants.ts'
+import { clientNow } from '@ui/clock.ts'
 
 const TOTAL_STEPS = 6
 
@@ -40,7 +42,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // Load the predefined coping suggestions once; map each to the domain-shaped
   useEffect(() => {
     let active = true
-    void coping.getSuggestions().then((suggestions) => {
+    void coping.getSuggestions(DEMO_USER_ID, clientNow()).then((suggestions) => {
       if (active) setCopingStrategies(suggestions)
     })
     return () => {
@@ -52,7 +54,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   useEffect(() => {
     let active = true
     void onboarding
-      .getSuggestedLimits({ timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk })
+      .getSuggestedLimits(
+        { timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk },
+        DEMO_USER_ID,
+        clientNow(),
+      )
       .then((limits) => {
         if (active) setSuggestedLimits(limits)
       })
@@ -83,7 +89,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           limits: { timeMinutes: resolvedTimeLimit, stakesAmount: resolvedStakesLimit },
           coping: [...copingSelected, ...(customCoping ? [customCoping] : [])],
         },
-        new Date().toISOString(),
+        DEMO_USER_ID,
+        clientNow(),
       )
       setInterventionStartDate(new Date(res.interventionStartDate))
       goNext()

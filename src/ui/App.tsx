@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 
+import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useOnboardingService } from '@ui/app/AppContext.ts'
 import { useAppView } from '@ui/app/appView.ts'
+import { clientNow } from '@ui/clock.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
 import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
 import { useExportDownload } from '@ui/export/useExportDownload.ts'
@@ -50,7 +52,7 @@ function AppRoutes() {
   useEffect(() => {
     let active = true
     void onboarding
-      .getStatus()
+      .getStatus(DEMO_USER_ID, clientNow())
       .then((status) => {
         if (active) navigate(status.completed ? 'dashboard' : 'onboarding')
       })

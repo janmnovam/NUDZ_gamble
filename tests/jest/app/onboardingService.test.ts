@@ -40,7 +40,7 @@ const completeRequest: OnboardingProfileRequest = {
 describe('OnboardingServiceImpl.getStatus', () => {
   it('reports not completed when no profile is stored', async () => {
     const { service } = makeService()
-    await expect(service.getStatus()).resolves.toEqual({
+    await expect(service.getStatus('demo-user', FIXED_NOW)).resolves.toEqual({
       userId: 'demo-user',
       completed: false,
       completedAt: null,
@@ -56,7 +56,7 @@ describe('OnboardingServiceImpl.getStatus', () => {
       referenceStakesCzk: 10_000,
     }
     const { service } = makeService(profile)
-    await expect(service.getStatus()).resolves.toEqual({
+    await expect(service.getStatus('demo-user', FIXED_NOW)).resolves.toEqual({
       userId: 'demo-user',
       completed: true,
       completedAt: FIXED_NOW,
@@ -65,8 +65,8 @@ describe('OnboardingServiceImpl.getStatus', () => {
 
   it('reports completed right after complete() persists the profile', async () => {
     const { service } = makeService()
-    await service.complete(completeRequest, FIXED_NOW)
-    await expect(service.getStatus()).resolves.toEqual({
+    await service.complete(completeRequest, 'demo-user', FIXED_NOW)
+    await expect(service.getStatus('demo-user', FIXED_NOW)).resolves.toEqual({
       userId: 'demo-user',
       completed: true,
       completedAt: FIXED_NOW,
@@ -77,7 +77,7 @@ describe('OnboardingServiceImpl.getStatus', () => {
 describe('OnboardingServiceImpl.getSuggestedLimits', () => {
   it('suggests 80% of the reference for time and money, with percentages', async () => {
     const { service } = makeService()
-    await expect(service.getSuggestedLimits(reference)).resolves.toEqual({
+    await expect(service.getSuggestedLimits(reference, 'demo-user', FIXED_NOW)).resolves.toEqual({
       timeMinutes: 480,
       stakesAmount: 8_000,
       timePercent: 80,
@@ -92,7 +92,7 @@ describe('OnboardingServiceImpl.getSuggestedLimits', () => {
 describe('OnboardingServiceImpl.complete', () => {
   it('persists profile + week-1 limit + coping and echoes the next-day start', async () => {
     const { service, saved } = makeService()
-    const res = await service.complete(completeRequest, FIXED_NOW)
+    const res = await service.complete(completeRequest, 'demo-user', FIXED_NOW)
 
     expect(saved.profile).toMatchObject({
       referenceTimeMin: 600,
@@ -122,6 +122,7 @@ describe('OnboardingServiceImpl.complete', () => {
     await expect(
       service.complete(
         { ...completeRequest, limits: { timeMinutes: 541, stakesAmount: 8_000 } },
+        'demo-user',
         FIXED_NOW,
       ),
     ).rejects.toThrow(/time limit/)
@@ -133,6 +134,7 @@ describe('OnboardingServiceImpl.complete', () => {
     await expect(
       service.complete(
         { ...completeRequest, limits: { timeMinutes: 480, stakesAmount: 9_001 } },
+        'demo-user',
         FIXED_NOW,
       ),
     ).rejects.toThrow(/stakes limit/)

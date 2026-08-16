@@ -79,7 +79,6 @@ function makeService(params: { today: string; checkIns?: CheckIn[]; limits?: Lim
     checkIns,
     reviews,
     newId: () => `id-${String((seq += 1))}`,
-    userId: USER_ID,
   }
   // "today" is the calendar date of the instant passed per call; a fixed 09:00Z
   // instant keeps the day stable and doubles as the `reviewCompletedAt` stamp.
@@ -94,7 +93,7 @@ describe('ReviewServiceImpl', () => {
 
   it('surfaces the elapsed, unreviewed week with totals, missing days, suggested limits', async () => {
     const { service, time } = makeService({ today: '2026-09-08', checkIns: week1CheckIns })
-    await expect(service.getPendingReview(time)).resolves.toEqual({
+    await expect(service.getPendingReview(USER_ID, time)).resolves.toEqual({
       weekNo: 1,
       time: { used: 350, limit: 480, status: 'OK' },
       stakes: { used: 6_500, limit: 8_000, status: 'POZOR' },
@@ -112,7 +111,7 @@ describe('ReviewServiceImpl', () => {
 
   it('returns null while the current week has not elapsed', async () => {
     const { service, time } = makeService({ today: '2026-09-04', checkIns: week1CheckIns })
-    await expect(service.getPendingReview(time)).resolves.toBeNull()
+    await expect(service.getPendingReview(USER_ID, time)).resolves.toBeNull()
   })
 
   it('completeReview writes a review + next week limit and closes the week', async () => {
@@ -126,6 +125,7 @@ describe('ReviewServiceImpl', () => {
         nextLimits: { timeMinutes: 460, stakesAmount: 7_500 },
         incomplete: false,
       },
+      USER_ID,
       time,
     )
     expect(reviewStore[0]).toMatchObject({
@@ -138,7 +138,7 @@ describe('ReviewServiceImpl', () => {
       weeklyLimitTimeMin: 460,
       weeklyLimitStakesCzk: 7_500,
     })
-    await expect(service.getPendingReview(time)).resolves.toBeNull()
+    await expect(service.getPendingReview(USER_ID, time)).resolves.toBeNull()
   })
 
   it('completeReview rejects next limits above the 90% cap', async () => {
@@ -150,6 +150,7 @@ describe('ReviewServiceImpl', () => {
           nextLimits: { timeMinutes: 541, stakesAmount: 7_500 },
           incomplete: false,
         },
+        USER_ID,
         time,
       ),
     ).rejects.toThrow(/cap/)
@@ -157,7 +158,7 @@ describe('ReviewServiceImpl', () => {
 
   it('getFinalSummary reports per-week statuses without setting limits', async () => {
     const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
-    const summary = await service.getFinalSummary(time)
+    const summary = await service.getFinalSummary(USER_ID, time)
     expect(summary.weeks).toHaveLength(4)
     expect(summary.weeks[0]).toEqual({
       weekNo: 1,

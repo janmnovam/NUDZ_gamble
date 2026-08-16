@@ -14,7 +14,7 @@ describe('CopingStrategyServiceImpl.getSuggestions', () => {
     } as unknown as CopingStrategyRepository
     const service = new CopingStrategyServiceImpl({ repo })
 
-    await expect(service.getSuggestions()).resolves.toEqual([
+    await expect(service.getSuggestions('demo-user', '2026-09-01T12:00:00.000Z')).resolves.toEqual([
       { id: 'change_environment', label: 'Na chvíli změním prostředí', type: 'default' },
       { id: 'reach_out', label: 'Ozvu se někomu, komu důvěřuji', type: 'default' },
     ])
@@ -25,7 +25,7 @@ describe('CopingStrategyServiceImpl.getSuggestions', () => {
     const data: DataLayer = createDataLayer(db)
     const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
 
-    const suggestions = await service.getSuggestions()
+    const suggestions = await service.getSuggestions('demo-user', '2026-09-01T12:00:00.000Z')
     expect(suggestions.length).toBeGreaterThanOrEqual(1)
     expect(typeof suggestions[0]?.id).toBe('string')
     expect(typeof suggestions[0]?.label).toBe('string')
