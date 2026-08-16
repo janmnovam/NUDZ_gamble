@@ -67,9 +67,6 @@ see [decisions.md](decisions.md).
 - [Tests.txt](Tests.txt) — a hand-written 29-day scenario (limits per week, which days are
   filled, backfilled or left missing) used to exercise the demo by hand. Test *data*, not
   a test plan.
-- [superpowers/plans/](superpowers/plans/) — implementation plans written before building
-  a service, kept as a record of intent. **Historical**: they describe what was planned,
-  not necessarily what shipped. Trust the code and architecture.md over a plan.
 
 ## Diagrams
 

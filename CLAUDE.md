@@ -16,7 +16,7 @@ beats more half-finished features.**
 - Full requirements, data model, CSV export spec → [Zadání_Hackathon_2026_shared.docx.md](Zadání_Hackathon_2026_shared.docx.md) (Czech, authoritative). The rules below are an English digest, not a replacement.
 - **Where we knowingly deviate from that spec → [docs/decisions.md](docs/decisions.md).** Check it before "fixing" something that looks wrong against the spec — it may be a decision, not a bug.
 - Hexagon layout, ports, DTOs, per-port build status → [docs/architecture.md](docs/architecture.md) (authoritative). The Architecture section below is a digest, not a replacement — check that doc for the current status of any port before assuming it's implemented.
-- **Runtime stack:** TypeScript + Tailwind + React + Vite, persistence on IndexedDB via Dexie in `src/data/`. (Test runners, ESLint/Prettier, and `vite-plugin-pwa` are dev tooling, not runtime deps.)
+- **Runtime deps** (everything in `dependencies`): React + React DOM, Dexie (IndexedDB, in `src/data/`), Zustand (UI state only — persistent data stays in Dexie), `lucide-react` icons, and two `@fontsource-variable` families. Written in TypeScript, styled with Tailwind 4 — but the compiler, Vite, Tailwind's plugin, test runners, ESLint/Prettier and `vite-plugin-pwa` are all **dev tooling**, not runtime deps.
 - **Architecture rule that bites:** the ESLint `no-restricted-imports` rule forbids `src/domain/**` from importing react/dexie/zustand/`@ui`/`@data`. Keep domain pure and storage-agnostic, or the lint gate fails.
 
 ## Architecture (digest — [docs/architecture.md](docs/architecture.md) is the source of truth)
@@ -39,7 +39,9 @@ Hexagonal (ports & adapters). Calls flow outward from the UI, dependencies point
 
 **camelCase everywhere in TypeScript** — the rename of `src/domain/model.ts` is done, so there is no snake_case left to tolerate in code.
 
-snake_case survives in exactly two places, and both are contracts rather than identifiers: the **Dexie store rows** (`src/data/model.ts`, mapped at the adapter boundary) and the **CSV export column names** (`src/app/mappers/exportMapper.ts`). Neither may be camelCased — the store shape is persisted data and the CSV headers are what the researchers read.
+That rule is about **identifiers**. As identifiers, snake_case survives in exactly two places, and both are contracts rather than names we chose: the **Dexie store rows** (`src/data/model.ts`, plus the schema strings in `src/data/db.ts`, mapped at the adapter boundary) and the **CSV export column names** (`src/app/mappers/exportMapper.ts`). Neither may be camelCased — the store shape is persisted data and the CSV headers are what the researchers read.
+
+Separately, plenty of **string literal values** are snake_case on purpose — `'not_found'`, `'checkin_due'`, `'review_due'`, `'review_available'`, `'future_date'`, `'locked_week'`, `'outside_window'`. Those are domain union members, not identifiers; leave them alone.
 
 ## Language
 
@@ -60,7 +62,9 @@ Multilanguage, **Czech-first**. Czech is the source of truth; every user-facing 
 
 ## Data model — the rule, not the fields
 
-Four record types: `profile`, `limit` (one per week), `check-in`, `review`. Exact fields are in the spec. **The one thing to never break:** cumulative usage, net loss, weekly totals, and overall state are *derived* from source records + limit history — never stored.
+Four record types carry the intervention: `profile`, `limit` (one per week), `check_in`, `review`. Four more exist and are just as real — `coping_strategy` and `usage_event` (both required by the brief), `check_in_edit` (the append-only edit audit trail) and the global `contact` directory (no `user_id`, not per-user). Exact fields, keys and invariants: [docs/data-model.md](docs/data-model.md).
+
+**The one thing to never break:** cumulative usage, net loss, weekly totals, and overall state are *derived* from source records + limit history — never stored.
 
 ## Must work (jury clicks through on a phone, no code changes)
 
