@@ -4,18 +4,19 @@ import { AdminServiceImpl } from '@/app/services/adminServiceImpl.ts'
 import { AppDatabase, createApp, createDataLayer, type DataLayer } from '@/core'
 import type { DatabaseAdmin } from '@domain/ports.ts'
 
-describe('AdminServiceImpl.dropAllData', () => {
-  it('delegates to the DatabaseAdmin port', async () => {
-    const clearAll = jest.fn<() => Promise<void>>().mockResolvedValue(undefined)
-    const databaseAdmin = { clearAll } as unknown as DatabaseAdmin
+describe('AdminServiceImpl.dropUserData', () => {
+  it('delegates to the DatabaseAdmin port with the given userId', async () => {
+    const clearUserData = jest.fn<(userId: string) => Promise<void>>().mockResolvedValue(undefined)
+    const databaseAdmin = { clearUserData } as unknown as DatabaseAdmin
     const service = new AdminServiceImpl({ databaseAdmin })
 
-    await service.dropAllData()
+    await service.dropUserData('demo-user')
 
-    expect(clearAll).toHaveBeenCalledTimes(1)
+    expect(clearUserData).toHaveBeenCalledTimes(1)
+    expect(clearUserData).toHaveBeenCalledWith('demo-user')
   })
 
-  it('wipes every table when wired through createApp', async () => {
+  it("drops the user's data but keeps the global contacts directory when wired through createApp", async () => {
     const db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
     const data: DataLayer = createDataLayer(db)
     const app = createApp(data)
@@ -27,13 +28,13 @@ describe('AdminServiceImpl.dropAllData', () => {
       referenceTimeMin: 600,
       referenceStakesCzk: 10000,
     })
+    await data.contacts.seed()
     expect(await db.profile.count()).toBe(1)
 
-    await app.admin.dropAllData()
+    await app.admin.dropUserData('demo-user')
 
-    for (const table of db.tables) {
-      expect(await table.count()).toBe(0)
-    }
+    expect(await db.profile.count()).toBe(0)
+    expect(await db.contacts.count()).toBeGreaterThan(0)
 
     db.close()
     await db.delete()

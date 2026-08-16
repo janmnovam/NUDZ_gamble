@@ -65,8 +65,8 @@ function todayDate(): string {
 
 export async function seedScenario(scenario: Scenario): Promise<void> {
   const data = createDataLayer()
-  await data.databaseAdmin.clearAll()
   const userId = DEMO_USER_ID
+  await data.databaseAdmin.clearUserData(userId)
 
   const startDate = addDays(todayDate(), -(scenario.today - 1))
   const interventionStartDate = calendarTimestamp(startDate)

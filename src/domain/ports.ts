@@ -81,10 +81,14 @@ export interface UsageEventRepository {
 
 /**
  * Administrative outbound port. Destructive, coarse-grained maintenance
- * operations over the whole store — not per-entity CRUD. Backed by a single
- * adapter that reaches straight into the database; no domain objects cross it.
+ * operations — not per-entity CRUD. Backed by a single adapter that reaches
+ * straight into the database; no domain objects cross it.
  */
 export interface DatabaseAdmin {
-  /** Wipes every table. Irreversible; admin/dev use only. */
-  clearAll(): Promise<void>
+  /**
+   * Deletes every row owned by `userId` across all user-scoped tables. The
+   * global contacts directory (no `user_id`) is preserved. Irreversible;
+   * admin/dev use only.
+   */
+  clearUserData(userId: UserId): Promise<void>
 }

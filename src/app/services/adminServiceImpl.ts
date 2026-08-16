@@ -4,6 +4,7 @@
  * service so the destructive path has an explicit, testable inbound seam.
  */
 import type { AdminService } from '@/app/ports/adminService.ts'
+import type { UserId } from '@domain/model.ts'
 import type { DatabaseAdmin } from '@domain/ports.ts'
 
 export interface AdminServiceDeps {
@@ -17,7 +18,7 @@ export class AdminServiceImpl implements AdminService {
     this.deps = deps
   }
 
-  async dropAllData(): Promise<void> {
-    await this.deps.databaseAdmin.clearAll()
+  async dropUserData(userId: UserId): Promise<void> {
+    await this.deps.databaseAdmin.clearUserData(userId)
   }
 }
