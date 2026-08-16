@@ -25,18 +25,21 @@ const TOTAL_WEEKS = 4
  * covers the *previous* calendar day — so a day already filled in keeps
  * reading as `completed` rather than being overwritten by the highlight.
  */
-function toCellState(day: DayCellDto, currentStudyDay: number): DayCellState {
+function toCellState(day: DayCellDto, currentStudyDay: number): WeekStripState {
   if (day.state === 'completed' || day.state === 'backfilled') return 'completed'
   if (day.studyDay === currentStudyDay && day.state === 'future') return 'today'
   return day.state
 }
+
+/** The dashboard's week strip only ever produces these four of DayCell's states. */
+type WeekStripState = Extract<DayCellState, 'completed' | 'missing' | 'today' | 'future'>
 
 const DAY_STATE_KEYS = {
   completed: 'dashboard.dayState.completed',
   missing: 'dashboard.dayState.missing',
   today: 'dashboard.dayState.today',
   future: 'dashboard.dayState.future',
-} as const satisfies Record<DayCellState, TranslationKey>
+} as const satisfies Record<WeekStripState, TranslationKey>
 
 interface DashboardScreenProps {
   dashboard: DashboardResponse

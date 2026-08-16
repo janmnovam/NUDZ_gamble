@@ -5,10 +5,14 @@ import { useReviewService } from '@ui/app/AppContext.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { toFinalSummaryViewModel } from '@ui/review/toFinalSummaryViewModel.ts'
+import { toProgrammeSummary, type ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
+import { weekdayAbbrev } from '@ui/lib/date.ts'
 import type { FinalSummaryViewModel } from '@ui/review/types.ts'
 
 export type FinalSummaryState =
-  { status: 'loading' } | { status: 'ready'; summary: FinalSummaryViewModel } | { status: 'failed' }
+  | { status: 'loading' }
+  | { status: 'ready'; summary: FinalSummaryViewModel; programme: ProgrammeSummary }
+  | { status: 'failed' }
 
 /** Loads the four-week summary from `ReviewService` and labels it for the screens. */
 export function useFinalSummary(): FinalSummaryState {
@@ -19,7 +23,8 @@ export function useFinalSummary(): FinalSummaryState {
   useEffect(() => {
     let cancelled = false
 
-    void review.getFinalSummary(DEMO_USER_ID, clientNow()).then((res) => {
+    const now = clientNow()
+    void review.getFinalSummary(DEMO_USER_ID, now).then((res) => {
       if (cancelled) return
       if (res.error || !res.data) {
         console.error('[reports] getFinalSummary failed', res.error)
@@ -28,6 +33,7 @@ export function useFinalSummary(): FinalSummaryState {
       }
       setState({
         status: 'ready',
+        programme: toProgrammeSummary(res.data, (isoDate) => weekdayAbbrev(isoDate, locale), now),
         summary: toFinalSummaryViewModel(res.data, locale, {
           hourUnit: t('dashboard.unitHour'),
           minuteUnit: t('dashboard.unitMinute'),

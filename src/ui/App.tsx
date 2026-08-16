@@ -45,7 +45,13 @@ function ReportsSection() {
     )
   }
 
-  return <FinalSummaryFlow summary={summary.summary} onExport={exportData} />
+  return (
+    <FinalSummaryFlow
+      summary={summary.summary}
+      programme={summary.programme}
+      onExport={exportData}
+    />
+  )
 }
 
 /**

@@ -47,12 +47,17 @@ export interface ReviewVM {
   suggestedNextLimits: { timeMinutes: number; stakesAmount: number }
 }
 
-/** One day of a closed week. `missing` is a gap in the record, never a zero. */
+/**
+ * One day of the programme. `missing` is a gap in the record — a day that has
+ * passed with no check-in — and never a zero. A day that simply hasn't arrived
+ * yet is `future`: the summary is reachable from day 1, so most of the
+ * programme is still ahead and must not read as missing data.
+ */
 export interface FinalSummaryDayVM {
   /** 1..28 — the day's position in the programme. */
   studyDay: StudyDay
   date: ISOCalendarTimestamp
-  state: 'completed' | 'missing'
+  state: 'completed' | 'missing' | 'future'
 }
 
 export interface FinalSummaryWeekVM {
@@ -241,6 +246,7 @@ export async function getFinalSummary(deps: ReviewDeps): Promise<FinalSummaryVM>
   if (!profile) throw new Error(`review: no profile for ${deps.userId}`)
 
   const calendar = createStudyCalendar(profile.interventionStartDate, deps.time, config)
+  const today = calendarDate(deps.time)
   const checkIns = await deps.checkIns.listByUser(deps.userId)
   const limits = await deps.limits.listByUser(deps.userId)
   const recorded = new Set(checkIns.map((c) => calendarDate(c.behaviorDate)))
@@ -252,15 +258,16 @@ export async function getFinalSummary(deps: ReviewDeps): Promise<FinalSummaryVM>
     const timeStatus = classifyStatus(totals.timeMin, limit?.weeklyLimitTimeMin ?? 0, config)
     const stakesStatus = classifyStatus(totals.stakesCzk, limit?.weeklyLimitStakesCzk ?? 0, config)
 
-    // A closed week has no `future` days left, so each day is either recorded
-    // or a gap — "missing" here means NA, never a zero-filled day.
     const days: FinalSummaryDayVM[] = []
     for (let day = calendar.firstDay(w); day <= calendar.lastDay(w); day += 1) {
       const date = calendar.dateOf(day)
+      // Same cutoff as `missingDaysForWeek`: today is not yet due either, since
+      // a check-in always covers the previous day.
+      const due = calendarDate(date) < today
       days.push({
         studyDay: day,
         date,
-        state: recorded.has(calendarDate(date)) ? 'completed' : 'missing',
+        state: recorded.has(calendarDate(date)) ? 'completed' : due ? 'missing' : 'future',
       })
     }
 

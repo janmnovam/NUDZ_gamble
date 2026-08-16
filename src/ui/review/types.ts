@@ -1,7 +1,7 @@
 import type { Status } from '@domain/config.ts'
 
 export type ReviewStatus = Status | 'NEUPLNE'
-export type DayReviewState = 'completed' | 'missing'
+export type DayReviewState = 'completed' | 'missing' | 'future'
 
 export interface ReviewDayCell {
   dayLabel: string

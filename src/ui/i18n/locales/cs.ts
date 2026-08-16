@@ -75,6 +75,17 @@ export const cs = {
   'review.week.filledValue': '{filled} ze {total} dnů',
   'review.week.progressTitle': 'Průběh týdne',
   'review.week.missingNote': 'Chybějící den není den bez hraní — je to nevyplněný údaj.',
+  'review.programme.title': 'Souhrnný přehled',
+  'review.programme.entry': 'Souhrnný přehled',
+  'review.programme.summaryOverline': 'Souhrn programu',
+  'review.programme.progressOverline': 'Průběh programu',
+  'review.programme.dayAria': '{weekday} {day} — {state}',
+  'review.programme.dayState.completed': 'vyplněno',
+  'review.programme.dayState.missing': 'chybí záznam',
+  'review.programme.dayState.today': 'dnes',
+  'review.programme.dayState.future': 'zatím nenastal',
+  'review.programme.dayState.locked': 'před začátkem programu',
+  'review.programme.dayState.outside': 'po skončení programu',
 
   'onboarding.intro.title': 'Získej přehled\nnad svým hraním',
   'onboarding.intro.lead':

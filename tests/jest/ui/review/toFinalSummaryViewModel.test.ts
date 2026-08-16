@@ -55,6 +55,13 @@ describe('toFinalSummaryViewModel', () => {
     expect(build([week()]).weeks[0]?.status).toBe('POZOR')
   })
 
+  it('does not call a week incomplete for days that are merely still ahead', () => {
+    const days = week().days.map((d, i) => (i > 3 ? { ...d, state: 'future' as const } : d))
+    const vm = build([week({ days, filledDays: 4 })])
+
+    expect(vm.weeks[0]?.status).toBe('POZOR')
+  })
+
   it('reports a week with gaps as NEUPLNE, since the totals are only a floor', () => {
     const days = week().days.map((d, i) => (i === 2 ? { ...d, state: 'missing' as const } : d))
     const vm = build([week({ days, filledDays: 6 })])

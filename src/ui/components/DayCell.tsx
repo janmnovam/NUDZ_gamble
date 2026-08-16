@@ -1,3 +1,5 @@
+import { Lock } from 'lucide-react'
+
 import { cn } from '@ui/lib/cn.ts'
 
 /**
@@ -6,7 +8,15 @@ import { cn } from '@ui/lib/cn.ts'
  * CLAUDE.md) and `today` is a presentation state the read model doesn't carry.
  * The screen maps `DayCellDto` onto this.
  */
-export type DayCellState = 'completed' | 'missing' | 'today' | 'future'
+export type DayCellState =
+  | 'completed'
+  | 'missing'
+  | 'today'
+  | 'future'
+  /** Calendar day before the programme started — shown with a lock, no dot. */
+  | 'locked'
+  /** Calendar day after the programme ended; padding in the month grid. */
+  | 'outside'
 
 interface DayCellStyle {
   container: string
@@ -38,6 +48,18 @@ const STATE_STYLES: Record<DayCellState, DayCellStyle> = {
     day: 'text-brand',
     dot: 'bg-brand',
   },
+  locked: {
+    container: 'border-2 border-transparent',
+    weekday: 'text-faint',
+    day: 'text-faint',
+    dot: '',
+  },
+  outside: {
+    container: 'bg-sunken border-2 border-transparent',
+    weekday: 'text-faint',
+    day: 'text-faint',
+    dot: '',
+  },
   future: {
     container: 'bg-sunken border-2 border-transparent',
     weekday: 'text-disabled',
@@ -52,6 +74,12 @@ interface DayCellProps {
   /** Day of the month shown in the cell. */
   day: number
   state: DayCellState
+  /**
+   * Rings the cell as the current day. Separate from `state` because in the
+   * month grid today usually already *has* a state — a filled-in day that
+   * happens to be today keeps its fill and gains the ring.
+   */
+  ring?: boolean
   /** Full description for screen readers, e.g. "út 3 — chybí záznam". */
   ariaLabel: string
   /** Only `missing` days are actionable — they click through to backfill. */
@@ -59,18 +87,23 @@ interface DayCellProps {
 }
 
 /** One day of the current week's strip (Figma "DayCell"). */
-export function DayCell({ weekday, day, state, ariaLabel, onClick }: DayCellProps) {
+export function DayCell({ weekday, day, state, ring, ariaLabel, onClick }: DayCellProps) {
   const style = STATE_STYLES[state]
   const content = (
     <>
       <span className={cn('type-overline', style.weekday)}>{weekday}</span>
-      <span className={cn('type-label', style.day)}>{day}</span>
-      <span aria-hidden className={cn('size-1.5 rounded-full', style.dot)} />
+      <span className={cn('type-label', ring ? 'text-brand' : style.day)}>{day}</span>
+      {state === 'locked' ? (
+        <Lock className="text-muted size-3" aria-hidden />
+      ) : (
+        <span aria-hidden className={cn('size-1.5 rounded-full', style.dot || 'bg-transparent')} />
+      )}
     </>
   )
   const shared = cn(
     'flex h-[62px] flex-col items-center justify-center gap-0.5 rounded-md',
     style.container,
+    ring && 'border-brand',
   )
 
   if (!onClick) {

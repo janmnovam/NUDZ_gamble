@@ -20,7 +20,9 @@ export interface SummaryLabels {
  */
 function weekStatus(week: FinalSummaryWeekDto): ReviewStatus {
   if (week.overall === 'PREKROCENO') return 'PREKROCENO'
-  return week.filledDays < week.days.length ? 'NEUPLNE' : week.overall
+  // Only a day that was actually due can be a gap; a day still ahead isn't one.
+  const gaps = week.days.filter((day) => day.state === 'missing').length
+  return gaps > 0 ? 'NEUPLNE' : week.overall
 }
 
 function toWeek(

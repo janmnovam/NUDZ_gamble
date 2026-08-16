@@ -3,6 +3,18 @@ import { jest } from '@jest/globals'
 
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
 import { FinalSummaryFlow } from '@ui/review/FinalSummaryFlow.tsx'
+import type { ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
+
+/** The month grid has its own tests; this flow only needs something to render. */
+const PROGRAMME: ProgrammeSummary = {
+  timeUsed: 0,
+  timeLimit: 0,
+  stakesUsed: 0,
+  stakesLimit: 0,
+  filledDays: 0,
+  totalDays: 28,
+  weeks: [],
+}
 import type { FinalSummaryViewModel } from '@ui/review/types.ts'
 
 const TEST_SUMMARY: FinalSummaryViewModel = {
@@ -30,7 +42,7 @@ const TEST_SUMMARY: FinalSummaryViewModel = {
 function renderFinalSummary(summary = TEST_SUMMARY, onExport: jest.Mock = jest.fn()) {
   render(
     <I18nProvider>
-      <FinalSummaryFlow summary={summary} onExport={onExport} />
+      <FinalSummaryFlow programme={PROGRAMME} summary={summary} onExport={onExport} />
     </I18nProvider>,
   )
 }

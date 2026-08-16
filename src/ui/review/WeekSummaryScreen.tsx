@@ -5,8 +5,15 @@ import { DayCell } from '@ui/components/DayCell.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { StatusChip } from '@ui/components/StatusChip.tsx'
 import { ReviewShell } from '@ui/review/components/ReviewShell.tsx'
-import type { FinalSummaryWeek } from '@ui/review/types.ts'
+import type { DayReviewState, FinalSummaryWeek } from '@ui/review/types.ts'
+import { type TranslationKey } from '@ui/i18n/types.ts'
 import { cn } from '@ui/lib/cn.ts'
+
+const DAY_STATE_KEYS = {
+  completed: 'dashboard.dayState.completed',
+  missing: 'dashboard.dayState.missing',
+  future: 'dashboard.dayState.future',
+} as const satisfies Record<DayReviewState, TranslationKey>
 
 interface WeekSummaryScreenProps {
   week: FinalSummaryWeek
@@ -96,11 +103,7 @@ export function WeekSummaryScreen({ week, onBack, onExport }: WeekSummaryScreenP
                 ariaLabel={t('dashboard.day.aria', {
                   weekday: day.dayLabel,
                   day: day.dayNumber,
-                  state: t(
-                    day.state === 'missing'
-                      ? 'dashboard.dayState.missing'
-                      : 'dashboard.dayState.completed',
-                  ),
+                  state: t(DAY_STATE_KEYS[day.state]),
                 })}
               />
             ))}

@@ -30,8 +30,11 @@ export interface FinalSummaryDayDto {
   /** 1..28 — the day's position in the programme. */
   studyDay: number
   date: ISOCalendarTimestamp
-  /** `missing` is a gap in the record (NA), never a zero-filled day. */
-  state: 'completed' | 'missing'
+  /**
+   * `missing` is a gap in the record (NA), never a zero-filled day; `future` is
+   * a day that hasn't arrived yet and so cannot be missing.
+   */
+  state: 'completed' | 'missing' | 'future'
 }
 
 export interface FinalSummaryWeekDto {

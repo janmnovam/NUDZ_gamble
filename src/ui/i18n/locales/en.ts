@@ -71,6 +71,17 @@ export const en: Record<TranslationKey, string> = {
   'review.week.filledValue': '{filled} of {total} days',
   'review.week.progressTitle': 'Week progress',
   'review.week.missingNote': 'A missing day is not a day without gambling — it is missing data.',
+  'review.programme.title': 'Programme overview',
+  'review.programme.entry': 'Programme overview',
+  'review.programme.summaryOverline': 'Programme summary',
+  'review.programme.progressOverline': 'Programme progress',
+  'review.programme.dayAria': '{weekday} {day} — {state}',
+  'review.programme.dayState.completed': 'filled in',
+  'review.programme.dayState.missing': 'record missing',
+  'review.programme.dayState.today': 'today',
+  'review.programme.dayState.future': "hasn't started yet",
+  'review.programme.dayState.locked': 'before the programme started',
+  'review.programme.dayState.outside': 'after the programme ended',
 
   'onboarding.intro.title': 'Get a clear view\nof your gambling',
   'onboarding.intro.lead':

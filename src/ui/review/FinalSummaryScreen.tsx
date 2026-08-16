@@ -8,10 +8,16 @@ import type { FinalSummaryViewModel, FinalSummaryWeek } from '@ui/review/types.t
 interface FinalSummaryScreenProps {
   summary: FinalSummaryViewModel
   onOpenWeek: (week: FinalSummaryWeek) => void
+  onOpenProgramme: () => void
   onExport: () => void
 }
 
-export function FinalSummaryScreen({ summary, onOpenWeek, onExport }: FinalSummaryScreenProps) {
+export function FinalSummaryScreen({
+  summary,
+  onOpenWeek,
+  onOpenProgramme,
+  onExport,
+}: FinalSummaryScreenProps) {
   const { t } = useTranslation()
 
   return (
@@ -68,6 +74,15 @@ export function FinalSummaryScreen({ summary, onOpenWeek, onExport }: FinalSumma
           <p className="type-label text-ink">{t('review.final.limitsDoneTitle')}</p>
           <p className="type-body-sm text-muted">{t('review.final.limitsDoneBody')}</p>
         </div>
+
+        <button
+          type="button"
+          onClick={onOpenProgramme}
+          className="bg-surface border-line-strong focus-visible:ring-brand flex h-[52px] w-full items-center gap-3 rounded-sm border px-3 text-left focus-visible:ring-2 focus-visible:outline-none"
+        >
+          <span className="type-body-emphasis text-ink flex-1">{t('review.programme.entry')}</span>
+          <ChevronRight className="text-muted size-6 shrink-0" aria-hidden />
+        </button>
       </div>
     </ReviewShell>
   )
