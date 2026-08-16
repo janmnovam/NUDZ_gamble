@@ -8,6 +8,12 @@ import '@fontsource-variable/inter'
 import '@fontsource-variable/fraunces'
 import './index.css'
 
+if (import.meta.env.DEV) {
+  void import('@/dev/devTools.ts').then(({ install }) => {
+    install()
+  })
+}
+
 const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('Root element #root not found')
 
