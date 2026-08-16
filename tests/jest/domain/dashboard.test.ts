@@ -20,7 +20,7 @@ function checkIn(overrides: Partial<CheckIn>): CheckIn {
   }
 }
 
-function fakeDeps(params: { checkIns: CheckIn[]; today: string }): DashboardDeps {
+function fakeDeps(params: { checkIns: CheckIn[]; today: string; limits?: Limit[] }): DashboardDeps {
   const profile: Profile = {
     userId: USER_ID,
     onboardingCompletedAt: '2026-08-31T21:30:00+02:00',
@@ -41,7 +41,7 @@ function fakeDeps(params: { checkIns: CheckIn[]; today: string }): DashboardDeps
     save: () => Promise.resolve(),
   }
   const limitRepo: LimitRepository = {
-    listByUser: () => Promise.resolve([limit]),
+    listByUser: () => Promise.resolve(params.limits ?? [limit]),
     save: () => Promise.resolve(),
   }
   const checkInRepo: CheckInRepository = {
@@ -157,5 +157,34 @@ describe('buildDashboardVM', () => {
     expect(vm.days.every((d) => d.state === 'future')).toBe(true)
     expect(vm.missingDays).toEqual([])
     expect(vm.pendingAction).toBe('none')
+  })
+
+  it('clamps to week 4 past day 28 instead of throwing on a week-5 limit lookup', async () => {
+    const weekLimit = (weekNo: number, timeMin: number, stakesCzk: number): Limit => ({
+      limitId: `l${String(weekNo)}`,
+      userId: USER_ID,
+      weekNo,
+      weeklyLimitTimeMin: timeMin,
+      weeklyLimitStakesCzk: stakesCzk,
+      limitSetAt: '2026-08-31T21:30:00+02:00',
+    })
+    const deps = fakeDeps({
+      today: '2026-09-29', // study day 29 — one past the 28-day programme.
+      checkIns: [],
+      limits: [
+        weekLimit(1, 540, 9_000),
+        weekLimit(2, 80, 800),
+        weekLimit(3, 100, 1_000),
+        weekLimit(4, 50, 450),
+      ],
+    })
+
+    const vm = await buildDashboardVM(deps)
+
+    expect(vm.studyDay).toBe(29)
+    expect(vm.weekNo).toBe(4)
+    expect(vm.limits).toEqual({ timeMin: 50, stakesCzk: 450 })
+    expect(vm.days.map((d) => d.studyDay)).toEqual([22, 23, 24, 25, 26, 27, 28])
+    expect(vm.pendingAction).toBe('final_summary')
   })
 })

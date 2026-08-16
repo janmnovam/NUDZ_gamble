@@ -12,6 +12,7 @@ import { useExportDownload } from '@ui/export/useExportDownload.ts'
 import { Screen } from '@ui/components/Screen.tsx'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
+import { useReminderNotifications } from '@ui/notifications/useReminderNotifications.ts'
 import { OnboardingFlow } from '@ui/onboarding/OnboardingFlow.tsx'
 import { FinalSummaryFlow } from '@ui/review/FinalSummaryFlow.tsx'
 import { useFinalSummary } from '@ui/review/useFinalSummary.ts'
@@ -62,6 +63,8 @@ function AppRoutes() {
   const onboarding = useOnboardingService()
   const view = useAppView((state) => state.view)
   const navigate = useAppView((state) => state.navigate)
+
+  useReminderNotifications()
 
   // Resolve the entry screen once: returning (onboarded) users land on the
   // dashboard, everyone else starts onboarding. Runs while `view` is 'loading'.

@@ -19,6 +19,7 @@ import { CheckInServiceImpl } from '@/app/services/checkInServiceImpl.ts'
 import { DashboardServiceImpl } from '@/app/services/dashboardServiceImpl.ts'
 import { ReviewServiceImpl } from '@/app/services/reviewServiceImpl.ts'
 import { ReminderServiceImpl } from '@/app/services/reminderServiceImpl.ts'
+import { NotificationServiceImpl } from '@/app/services/notificationServiceImpl.ts'
 import { ExportServiceImpl } from '@/app/services/exportServiceImpl.ts'
 import type { OnboardingService } from '@/app/ports/onboardingService.ts'
 import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
@@ -27,6 +28,7 @@ import type { CheckInService } from '@/app/ports/checkInService.ts'
 import type { DashboardService } from '@/app/ports/dashboardService.ts'
 import type { ReviewService } from '@/app/ports/reviewService.ts'
 import type { ReminderService } from '@/app/ports/reminderService.ts'
+import type { NotificationService } from '@/app/ports/notificationService.ts'
 import type { ExportService } from '@/app/ports/exportService.ts'
 import { newId } from '@data/ids.ts'
 import { type DataLayer, createDataLayer } from '@/core/index.ts'
@@ -40,10 +42,13 @@ export interface App {
   dashboard: DashboardService
   review: ReviewService
   reminder: ReminderService
+  notification: NotificationService
   export: ExportService
 }
 
 export function createApp(data: DataLayer = createDataLayer()): App {
+  const reminder = new ReminderServiceImpl({ checkIns: data.checkIns, profiles: data.profiles })
+
   return {
     onboarding: new OnboardingServiceImpl({
       repo: data.onboarding,
@@ -73,11 +78,8 @@ export function createApp(data: DataLayer = createDataLayer()): App {
       reviews: data.reviews,
       newId,
     }),
-    // Wired but not yet implemented — its methods throw until it's built.
-    reminder: new ReminderServiceImpl({
-      checkIns: data.checkIns,
-      profiles: data.profiles,
-    }),
+    reminder,
+    notification: new NotificationServiceImpl({ reminders: reminder }),
     export: new ExportServiceImpl({
       profiles: data.profiles,
       checkIns: data.checkIns,

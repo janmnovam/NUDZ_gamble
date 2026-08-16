@@ -67,3 +67,21 @@ export function useReviewService() {
   }
   return app.review
 }
+
+/** The reminder inbound port, wired to the data layer. Throws outside <AppProvider>. */
+export function useReminderService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useReminderService must be used within an <AppProvider>')
+  }
+  return app.reminder
+}
+
+/** The notification inbound port, wired to the data layer. Throws outside <AppProvider>. */
+export function useNotificationService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useNotificationService must be used within an <AppProvider>')
+  }
+  return app.notification
+}

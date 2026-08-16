@@ -1,0 +1,118 @@
+Onboarding:
+Referenční týden:
+reference_time_min
+600
+reference_stakes_czk
+10000
+
+Limity jednotlivých týdnů:
+week_no
+1
+weekly_limit_time_min
+540
+weekly_limit_stakes_czk
+9000
+week_no
+2
+weekly_limit_time_min
+80
+weekly_limit_stakes_czk
+800
+week_no
+3
+weekly_limit_time_min
+100
+weekly_limit_stakes_czk
+1000
+week_no
+4
+weekly_limit_time_min
+50
+weekly_limit_stakes_czk
+450
+
+Scénář 1
+App den 8 programu.
+Den 1 = proper fill; time_min 50; stakes_czk 1000;
+Den 2 = proper fill; time_min 50; stakes_czk 1000;
+Den 3 = proper fill; time_min 50; stakes_czk 1000;
+Den 4 = proper fill; time_min 50; stakes_czk 1000;
+Den 5 = proper fill; time_min 50; stakes_czk 1000;
+Den 6 = proper fill; time_min 50; stakes_czk 1000;
+Den 7 = proper fill; time_min 50; stakes_czk 500;
+Den 8 = proper fill; time_min 50; stakes_czk 200;
+
+Scénář 2
+App den 15 programu.
+Den 1 = proper fill; time_min 50; stakes_czk 1000;
+Den 2 = proper fill; time_min 50; stakes_czk 1000;
+Den 3 = proper fill; time_min 50; stakes_czk 1000;
+Den 4 = proper fill; time_min 50; stakes_czk 1000;
+Den 5 = proper fill; time_min 50; stakes_czk 1000;
+Den 6 = proper fill; time_min 50; stakes_czk 1000;
+Den 7 = proper fill; time_min 50; stakes_czk 500;
+Den 8 = proper fill; time_min 50; stakes_czk 200;
+Den 9 = backfill; time_min 60; stakes_czk 200;
+Den 10 = NULL
+Den 11 = NULL
+Den 12 = NULL
+Den 13 = NULL
+Den 14 = NULL
+Den 15 = NULL
+
+Scénář 3
+App den 22 programu.
+Den 1 = proper fill; time_min 10 ; stakes_czk 100;
+Den 2 = proper fill; time_min 10 ; stakes_czk 100;
+Den 3 = backfill; time_min 10 ; stakes_czk 100;
+Den 4 = proper fill; time_min 10 ; stakes_czk 100;
+Den 5 = NULL
+Den 6 = proper fill; time_min 10 ; stakes_czk 100;
+Den 7 = proper fill; time_min 10 ; stakes_czk 100;
+Den 8 = NULL
+Den 9 = backfill; time_min 60; stakes_czk 200;
+Den 10 = NULL
+Den 11 = NULL
+Den 12 = NULL
+Den 13 = backfill; time_min 60; stakes_czk 200;
+Den 14 = backfill; time_min 60; stakes_czk 200;
+Den 15 = backfill; time_min 60; stakes_czk 200;
+Den 16 = proper fill; time_min 10 ; stakes_czk 100;
+Den 17 = proper fill; time_min 0 ; stakes_czk 0;
+Den 18 = proper fill; time_min 0 ; stakes_czk 0;
+Den 19 = proper fill; time_min 0 ; stakes_czk 0;
+Den 20 = proper fill; time_min 0 ; stakes_czk 0;
+Den 21 = proper fill; time_min 0 ; stakes_czk 0;
+Den 22 = proper fill; time_min 0 ; stakes_czk 0;
+
+Scénář 4
+App den 29 programu.
+ Den 1 = proper fill; time_min 10 ; stakes_czk 100;
+Den 2 = proper fill; time_min 10 ; stakes_czk 100;
+Den 3 = backfill; time_min 10 ; stakes_czk 100;
+Den 4 = proper fill; time_min 10 ; stakes_czk 100;
+Den 5 = NULL
+Den 6 = proper fill; time_min 10 ; stakes_czk 100;
+Den 7 = proper fill; time_min 10 ; stakes_czk 100;
+Den 8 = NULL
+Den 9 = backfill; time_min 60; stakes_czk 200;
+Den 10 = NULL
+Den 11 = NULL
+Den 12 = NULL
+Den 13 = backfill; time_min 60; stakes_czk 200;
+Den 14 = backfill; time_min 60; stakes_czk 200;
+Den 15 = backfill; time_min 60; stakes_czk 200;
+Den 16 = proper fill; time_min 10 ; stakes_czk 100;
+Den 17 = proper fill; time_min 10 ; stakes_czk 100;
+Den 18 = proper fill; time_min 10 ; stakes_czk 100;
+Den 19 = proper fill; time_min 0 ; stakes_czk 0;
+Den 20 = proper fill; time_min 0 ; stakes_czk 0;
+Den 21 = proper fill; time_min 0 ; stakes_czk 0;
+Den 22 = proper fill; time_min 0 ; stakes_czk 0;
+Den 23 = backfill; time_min 60; stakes_czk 500;
+Den 24 = proper fill; time_min 0 ; stakes_czk 0;
+Den 25 = proper fill; time_min 0 ; stakes_czk 0;
+Den 26 = proper fill; time_min 0 ; stakes_czk 0;
+Den 27 = proper fill; time_min 0 ; stakes_czk 0;
+Den 28 = proper fill; time_min 0 ; stakes_czk 0;
+Den 29 = proper fill; time_min 0 ; stakes_czk 0;

@@ -119,10 +119,12 @@ export async function buildDashboardVM(deps: DashboardDeps): Promise<DashboardVM
   const calendar = createStudyCalendar(profile.interventionStartDate, deps.time, config)
   const today = calendarDate(deps.time)
   const studyDay = calendar.currentDay()
-  // Before day 1, currentDay() is <= 0 and weekNo() throws — clamp to week 1
-  // (its days all classify as `future` against `today`, so this reads as the
-  // doc-08 "waiting state", not a divide-by-zero week).
-  const weekNo = calendar.weekNo(Math.max(studyDay, 1))
+  // Clamp both ends: before day 1, currentDay() is <= 0 and weekNo() throws,
+  // so read week 1 (its days all classify as `future` against `today` — the
+  // doc-08 "waiting state"). Past day 28 there is no week 5 to look a limit
+  // up for (CLAUDE.md: "final summary opens during day 29, no next-week
+  // limits") — read week 4's already-closed strip instead of throwing.
+  const weekNo = calendar.weekNo(Math.min(Math.max(studyDay, 1), config.PROGRAMME_DAYS))
 
   const limits = await deps.limitRepo.listByUser(deps.userId)
   const limit = limits.find((l) => l.weekNo === weekNo)

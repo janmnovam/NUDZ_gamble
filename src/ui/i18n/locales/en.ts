@@ -172,6 +172,9 @@ export const en: Record<TranslationKey, string> = {
   'dashboard.unitMinute': 'min',
   'dashboard.currency': 'Kč',
 
+  'notification.reminder.title': "Don't forget your check-in",
+  'notification.reminder.body': 'Please fill in the record for {date}.',
+
   'coping.title': 'Your Coping',
   'coping.lead': "Your coping strategies. Turn off one you're not using, or add your own.",
   'coping.empty': "You don't have any strategy yet.",

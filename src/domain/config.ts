@@ -29,6 +29,13 @@ export interface DomainConfig {
    * default reading — one boundary, not two overlapping ones).
    */
   readonly EDIT_WINDOW_DAYS: number
+  /**
+   * Local wall-clock times ("HH:mm", 24h) the installed app checks for a due
+   * reminder and, if one is due, pops a system notification (doc 08's "one
+   * working reminder scenario" — `NotificationService`/`reminder.ts`). Edit
+   * this list to change when reminders fire; nothing else needs to change.
+   */
+  readonly REMINDER_TIMES: readonly string[]
 }
 
 /**
@@ -45,4 +52,5 @@ export const DEFAULT_CONFIG: DomainConfig = {
   WEEK_LENGTH_DAYS: 7,
   PROGRAMME_DAYS: 28,
   EDIT_WINDOW_DAYS: 7,
+  REMINDER_TIMES: ['09:00', '20:00'],
 }

@@ -178,6 +178,9 @@ export const cs = {
   'dashboard.unitMinute': 'min',
   'dashboard.currency': 'Kč',
 
+  'notification.reminder.title': 'Nezapomeňte na check-in',
+  'notification.reminder.body': 'Doplňte prosím záznam za {date}.',
+
   'coping.title': 'Váš Coping',
   'coping.lead':
     'Tvoje copingové strategie. Vypni tu, kterou zrovna nepoužíváš, nebo přidej vlastní.',

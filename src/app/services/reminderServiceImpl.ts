@@ -1,9 +1,10 @@
 /**
- * ReminderService wiring stub. Depends on `@domain/reminder.ts` (not built yet);
- * method body is TODO. See docs/architecture.md §ReminderService.
+ * Concrete ReminderService. Wraps `getDueReminder` (`@domain/reminder.ts`).
+ * See docs/architecture.md §ReminderService.
  */
-import type { ReminderResponse, ReminderService } from '@/app/ports/reminderService.ts'
+import type { ReminderService } from '@/app/ports/reminderService.ts'
 import { type Result, run } from '@/app/result.ts'
+import { getDueReminder, type ReminderResponse } from '@domain/reminder.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import type { CheckInRepository, ProfileRepository } from '@domain/ports.ts'
 
@@ -19,9 +20,12 @@ export class ReminderServiceImpl implements ReminderService {
     this.deps = deps
   }
 
-  getDueReminder(_userId: UserId, _time: ISOTimestamp): Promise<Result<ReminderResponse | null>> {
-    return run(() => {
-      throw new Error('ReminderService.getDueReminder: not implemented (wiring only)')
+  getDueReminder(userId: UserId, time: ISOTimestamp): Promise<Result<ReminderResponse>> {
+    return run(async () => {
+      const profile = await this.deps.profiles.get(userId)
+      if (!profile) return null
+      const checkIns = await this.deps.checkIns.listByUser(userId)
+      return getDueReminder({ profile, checkIns, time })
     })
   }
 }
