@@ -7,6 +7,7 @@
 import type { ISOTimestamp } from '@domain/model.ts'
 
 const LAST_FIRED_KEY = 'nudz.reminder.lastFiredAt'
+export const LAST_CHANCE_FIRED_KEY = 'nudz.reminder.lastChance.lastFiredAt'
 
 export function isNotificationSupported(): boolean {
   return typeof window !== 'undefined' && 'Notification' in window
@@ -40,14 +41,14 @@ export function showNotification(title: string, body: string, onClick?: () => vo
   }
 }
 
-export function getLastFiredAt(): ISOTimestamp | null {
+export function getLastFiredAt(key: string = LAST_FIRED_KEY): ISOTimestamp | null {
   if (typeof window === 'undefined') return null
-  return window.localStorage.getItem(LAST_FIRED_KEY)
+  return window.localStorage.getItem(key)
 }
 
-export function setLastFiredAt(time: ISOTimestamp): void {
+export function setLastFiredAt(time: ISOTimestamp, key: string = LAST_FIRED_KEY): void {
   if (typeof window === 'undefined') return
-  window.localStorage.setItem(LAST_FIRED_KEY, time)
+  window.localStorage.setItem(key, time)
 }
 
 /**
@@ -59,4 +60,5 @@ export function setLastFiredAt(time: ISOTimestamp): void {
 export function clearLastFiredAt(): void {
   if (typeof window === 'undefined') return
   window.localStorage.removeItem(LAST_FIRED_KEY)
+  window.localStorage.removeItem(LAST_CHANCE_FIRED_KEY)
 }
