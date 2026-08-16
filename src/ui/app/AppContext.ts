@@ -31,3 +31,12 @@ export function useDashboardService() {
   }
   return app.dashboard
 }
+
+/** The export inbound port, wired to the data layer. Throws outside <AppProvider>. */
+export function useExportService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useExportService must be used within an <AppProvider>')
+  }
+  return app.export
+}

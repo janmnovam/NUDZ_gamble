@@ -4,6 +4,7 @@ import { useOnboardingService } from '@ui/app/AppContext.ts'
 import { useAppView } from '@ui/app/appView.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
 import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
+import { useExportDownload } from '@ui/export/useExportDownload.ts'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
 import { OnboardingFlow } from '@ui/onboarding/OnboardingFlow.tsx'
 import { FinalSummaryFlow } from '@ui/review/FinalSummaryFlow.tsx'
@@ -16,6 +17,22 @@ export function App() {
         <AppRoutes />
       </AppProvider>
     </I18nProvider>
+  )
+}
+
+/**
+ * Reports, with the export wired to `ExportService`: it builds the three CSVs
+ * (check-ins, limits, coping strategies) and hands the ZIP to the browser.
+ */
+function ReportsSection() {
+  const { exportData } = useExportDownload()
+
+  return (
+    <FinalSummaryFlow
+      // ⚠️ Mock data: the weekly summaries are not read from ReviewService yet.
+      summary={MOCK_FINAL_SUMMARY}
+      onExport={exportData}
+    />
   )
 }
 
@@ -62,16 +79,6 @@ function AppRoutes() {
     case 'dashboard':
       return <DashboardFlow />
     case 'reports':
-      return (
-        <FinalSummaryFlow
-          // ⚠️ Mock data: ReviewService is still a wiring stub, so the weekly
-          // summaries are not derived from stored check-ins yet.
-          summary={MOCK_FINAL_SUMMARY}
-          onExport={() => {
-            // ExportService is a wiring stub too — CSV export isn't built.
-            console.warn('[reports] export requested, but ExportService is not implemented')
-          }}
-        />
-      )
+      return <ReportsSection />
   }
 }
