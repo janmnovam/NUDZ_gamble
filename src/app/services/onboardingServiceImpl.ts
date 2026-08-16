@@ -18,7 +18,7 @@ import type {
 } from '@/app/dto/onboarding.ts'
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import { toOnboardingInput, toOnboardingProfileResponse } from '@/app/mappers/onboardingMapper.ts'
-import { dateOf, nextDate } from '@domain/clock.ts'
+import { calendarTimestamp, dateOf, nextDate } from '@domain/clock.ts'
 import { limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import { completeOnboarding } from '@domain/onboarding.ts'
@@ -65,17 +65,17 @@ export class OnboardingServiceImpl implements OnboardingService {
   }
 
   async complete(
-      req: OnboardingProfileRequest,
-      time: ISOTimestamp,
+    req: OnboardingProfileRequest,
+    time: ISOTimestamp,
   ): Promise<OnboardingProfileResponse> {
     const input = toOnboardingInput(req, this.userId)
     await completeOnboarding(input, {
       repo: this.deps.repo,
-      time: time,
+      time,
       newId: this.deps.newId,
     })
     // Same value the domain just persisted: the day after the instant's local date.
-    const interventionStartDate = nextDate(dateOf(time))
+    const interventionStartDate = calendarTimestamp(nextDate(dateOf(time)))
     return toOnboardingProfileResponse(req, interventionStartDate)
   }
 }

@@ -4,14 +4,14 @@ Converts between calendar dates and study days/weeks. Build this before
 anything else — every other module calls into it.
 
 ## Inputs
-- `intervention_start_date` (date)
+- `intervention_start_date` (canonical day-start timestamp)
 - a calendar date, or a study_day number
 - `Clock.today()` — injected, never a bare global call
 
 ## Outputs
 - `study_day: int` (1..28, plus a marker for out-of-range)
 - `week_no: int` (1..4)
-- `behavior_date` for a given study_day
+- `behavior_date` timestamp for a given study_day
 - `currentWeek()`, `isWeekClosed(week_no)`, `isReviewAvailable(week_no)`
 
 ## Rules, straight from the brief
@@ -55,8 +55,9 @@ in_final_summary    = current_day > 28
   production, fake for tests, and a "demo" implementation whose offset the
   dev drawer can bump — that offset is how the jury travels through weeks
   on a phone.
-- A small `DateOnly` type pays for itself here. Mixing timestamps and plain
-  dates is the classic source of off-by-one bugs once timezones enter.
+- Keep a small date-only conversion layer even though the stored values are
+  timestamps. Mixing arbitrary instants with calendar days is the classic
+  source of off-by-one bugs once timezones enter.
 
 ## Edge cases
 - Timezone: compute day differences on local calendar dates, not UTC

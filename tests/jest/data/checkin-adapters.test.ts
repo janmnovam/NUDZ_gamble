@@ -19,7 +19,7 @@ describe('check-in adapters', () => {
   const checkIn: CheckIn = {
     checkInId: 'ci-1',
     userId: 'A001',
-    behaviorDate: '2026-09-02',
+    behaviorDate: '2026-09-02T00:00:00.000Z',
     weekNo: 1,
     played: true,
     timeMin: 45,
@@ -35,10 +35,17 @@ describe('check-in adapters', () => {
   })
 
   it('lists a user’s check-ins ordered by behaviorDate', async () => {
-    await data.checkIns.save({ ...checkIn, checkInId: 'ci-2', behaviorDate: '2026-09-04' })
+    await data.checkIns.save({
+      ...checkIn,
+      checkInId: 'ci-2',
+      behaviorDate: '2026-09-04T00:00:00.000Z',
+    })
     await data.checkIns.save(checkIn)
     const list = await data.checkIns.listByUser('A001')
-    expect(list.map((c) => c.behaviorDate)).toEqual(['2026-09-02', '2026-09-04'])
+    expect(list.map((c) => c.behaviorDate)).toEqual([
+      '2026-09-02T00:00:00.000Z',
+      '2026-09-04T00:00:00.000Z',
+    ])
   })
 
   it('enforces one check-in per (user, day)', async () => {

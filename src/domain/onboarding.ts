@@ -1,4 +1,4 @@
-import { dateOf, nextDate } from '@domain/clock.ts'
+import { calendarTimestamp, dateOf, nextDate } from '@domain/clock.ts'
 import { isWithinCap } from '@domain/limits.ts'
 import {
   type CopingStrategy,
@@ -62,7 +62,7 @@ export async function completeOnboarding(
   const profile: Profile = {
     userId: input.userId,
     onboardingCompletedAt: at,
-    interventionStartDate: nextDate(dateOf(at)),
+    interventionStartDate: calendarTimestamp(nextDate(dateOf(at))),
     referenceTimeMin: input.referenceTimeMin,
     referenceStakesCzk: input.referenceStakesCzk,
   }

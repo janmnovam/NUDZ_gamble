@@ -40,15 +40,15 @@ about zero-play days that were actually just unrecorded.
 
 ## Example, straight from the brief
 ```
-A001,1,1,2026-09-01,completed,false,0,0
-A001,2,1,2026-09-02,missing,,,
-A001,3,1,2026-09-03,backfilled,true,60,500
+A001,1,1,2026-09-01T00:00:00.000Z,completed,false,0,0
+A001,2,1,2026-09-02T00:00:00.000Z,missing,,,
+A001,3,1,2026-09-03T00:00:00.000Z,backfilled,true,60,500
 ```
 
 ## Conventions — recommended by the brief, document your choice in README
 - UTF-8
-- dates `YYYY-MM-DD`
-- timestamps ISO 8601, including timezone
+- calendar-day fields are canonical day-start timestamps
+- timestamps are ISO 8601, including timezone
 - `time_min` in whole minutes
 - amounts in whole CZK
 - decimal separator and CSV delimiter must be described in the README —

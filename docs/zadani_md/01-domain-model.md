@@ -9,7 +9,7 @@ these exact names.
 |---|---|---|
 | user_id | string | e.g. `A001` in seed data |
 | onboarding_completed_at | timestamp | ISO 8601 with timezone |
-| intervention_start_date | date | = day after onboarding completed |
+| intervention_start_date | timestamp | canonical day-start timestamp for the day after onboarding completed |
 | reference_time_min | int minutes | weekly reference |
 | reference_stakes_czk | int CZK | weekly reference |
 | coping_strategy | string / list | at least one chosen |
@@ -25,7 +25,7 @@ these exact names.
 ## check-in (one record per reported day)
 | Field | Type | Notes |
 |---|---|---|
-| behavior_date | date | the day the data describes |
+| behavior_date | timestamp | canonical day-start timestamp for the day the data describes |
 | played | bool | |
 | submitted_at | timestamp | when actually sent |
 | updated_at | timestamp | last edit, nullable |
@@ -48,7 +48,7 @@ history. Storing any of them is a scoring risk, not a shortcut — it's the
 kind of thing a technical jury checks by editing seed data and reloading.
 
 `is_backfill` is one comparison: calendar date of `submitted_at` >
-`behavior_date` + 1 day.
+calendar date of `behavior_date` + 1 day.
 
 ## Invariants — assert these, don't just hope for them
 1. `played == false` ⟹ `time_min == 0 && stakes_czk == 0`

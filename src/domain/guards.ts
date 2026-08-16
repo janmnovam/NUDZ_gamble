@@ -4,8 +4,8 @@
  * and the review flow. One implementation each, so a second slightly
  * different copy never creeps in at a second call site.
  */
-import type { ISODate, Review } from '@domain/model.ts'
-import type { WeekNo } from '@domain/clock.ts'
+import type { ISOCalendarTimestamp, ISODate, Review } from '@domain/model.ts'
+import { calendarDate, type WeekNo } from '@domain/clock.ts'
 import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
 import { isWithinCap, limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
 
@@ -19,17 +19,18 @@ export type CheckInEditability = 'allowed' | 'locked_week' | 'future_date'
  * `weekClosed` alone already enforces it.
  */
 export type CanEditCheckIn = (params: {
-  behaviorDate: ISODate
+  behaviorDate: ISOCalendarTimestamp
   today: ISODate
   weekClosed: boolean
 }) => CheckInEditability
 
 /**
  * Future/today first (a day that isn't over yet can't be checked in), then a
- * review-closed week, else editable. ISO dates compare lexicographically.
+ * review-closed week, else editable. Compare the timestamp's calendar date
+ * portion to `today`; the stored value itself is a canonical timestamp.
  */
 export const canEditCheckIn: CanEditCheckIn = ({ behaviorDate, today, weekClosed }) => {
-  if (behaviorDate >= today) return 'future_date'
+  if (calendarDate(behaviorDate) >= today) return 'future_date'
   if (weekClosed) return 'locked_week'
   return 'allowed'
 }

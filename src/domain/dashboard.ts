@@ -7,7 +7,7 @@ import { dayStateOf, type DayState } from '@domain/checkin.ts'
 import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
 import { resolvePendingAction, type PendingAction } from '@domain/guards.ts'
 import { classifyStatus, worseStatus } from '@domain/limits.ts'
-import type { CheckIn, ISODate, UserId } from '@domain/model.ts'
+import type { CheckIn, ISOCalendarTimestamp, ISODate, UserId } from '@domain/model.ts'
 import type { CheckInRepository, LimitRepository, ProfileRepository } from '@domain/ports.ts'
 
 export interface AxisView {
@@ -22,7 +22,7 @@ export interface AxisView {
 
 export interface DayCell {
   studyDay: StudyDay
-  date: ISODate
+  date: ISOCalendarTimestamp
   state: DayState
   /** Present for `completed` / `backfilled` cells only. */
   played?: boolean
@@ -40,7 +40,7 @@ export interface DashboardVM {
   /** Always 7 entries: the current week's days. */
   days: DayCell[]
   /** Only days ≤ `today - 1` — future days are "not yet due", never missing. */
-  missingDays: ISODate[]
+  missingDays: ISOCalendarTimestamp[]
   pendingAction: PendingAction
 }
 
@@ -53,7 +53,7 @@ export type BuildDashboardVM = () => DashboardVM
  */
 export function buildDayCell(params: {
   studyDay: StudyDay
-  date: ISODate
+  date: ISOCalendarTimestamp
   today: ISODate
   checkIn: CheckIn | undefined
 }): DayCell {

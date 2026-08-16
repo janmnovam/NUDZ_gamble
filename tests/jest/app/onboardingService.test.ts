@@ -51,7 +51,7 @@ describe('OnboardingServiceImpl.getStatus', () => {
     const profile: Profile = {
       userId: 'demo-user',
       onboardingCompletedAt: FIXED_NOW,
-      interventionStartDate: '2026-09-02',
+      interventionStartDate: '2026-09-02T00:00:00.000Z',
       referenceTimeMin: 600,
       referenceStakesCzk: 10_000,
     }
@@ -97,7 +97,7 @@ describe('OnboardingServiceImpl.complete', () => {
     expect(saved.profile).toMatchObject({
       referenceTimeMin: 600,
       referenceStakesCzk: 10_000,
-      interventionStartDate: '2026-09-02',
+      interventionStartDate: '2026-09-02T00:00:00.000Z',
     })
     expect(saved.limit).toMatchObject({
       weekNo: 1,
@@ -113,7 +113,7 @@ describe('OnboardingServiceImpl.complete', () => {
       reference: { timeMinutes: 600, stakesAmount: 10_000 },
       limits: { timeMinutes: 480, stakesAmount: 8_000 },
       coping: completeRequest.coping,
-      interventionStartDate: '2026-09-02',
+      interventionStartDate: '2026-09-02T00:00:00.000Z',
     })
   })
 

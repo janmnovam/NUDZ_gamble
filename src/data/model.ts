@@ -12,7 +12,7 @@ import type {
   CheckInEditAction,
   ContactCategory,
   CopingType,
-  ISODate,
+  ISOCalendarTimestamp,
   ISOTimestamp,
   UserId,
 } from '@domain/model.ts'
@@ -21,7 +21,7 @@ import type { UsageEventType } from '@domain/usageEventType.ts'
 export interface ProfileEntity {
   user_id: UserId
   onboarding_completed_at: ISOTimestamp
-  intervention_start_date: ISODate
+  intervention_start_date: ISOCalendarTimestamp
   reference_time_min: number
   reference_stakes_czk: number
 }
@@ -63,7 +63,7 @@ export interface LimitEntity {
 export interface CheckInEntity {
   check_in_id: string
   user_id: UserId
-  behavior_date: ISODate
+  behavior_date: ISOCalendarTimestamp
   /** 1..4 — links the day to its review week. */
   week_no: number
   played: boolean

@@ -8,7 +8,7 @@
 import type { DayState } from '@domain/checkin.ts'
 import type { Status } from '@domain/config.ts'
 import type { PendingAction } from '@domain/guards.ts'
-import type { ISODate } from '@domain/model.ts'
+import type { ISOCalendarTimestamp } from '@domain/model.ts'
 
 export interface AxisDto {
   used: number
@@ -22,7 +22,7 @@ export interface AxisDto {
 
 export interface DayCellDto {
   studyDay: number
-  date: ISODate
+  date: ISOCalendarTimestamp
   state: DayState
   /** Present only when `state` is `completed` or `backfilled`. */
   played?: boolean
@@ -38,6 +38,6 @@ export interface DashboardResponse {
   overallStatus: Status
   /** Always 7 entries: the current week's strip, study-day order. */
   days: DayCellDto[]
-  missingDays: ISODate[]
+  missingDays: ISOCalendarTimestamp[]
   pendingAction: PendingAction
 }

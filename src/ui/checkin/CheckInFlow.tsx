@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 
 import type { DashboardVM } from '@domain/dashboard.ts'
 import { dayStateOf, type CheckInDraft, type DayState } from '@domain/checkin.ts'
-import type { CheckIn, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
+import type { CheckIn, ISOCalendarTimestamp, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
 import { DetailsStep } from '@ui/checkin/steps/DetailsStep.tsx'
 import { PlayedStep } from '@ui/checkin/steps/PlayedStep.tsx'
 
@@ -18,7 +18,7 @@ export interface CheckInFlowResult {
 
 interface CheckInFlowProps {
   userId: UserId
-  behaviorDate: ISODate
+  behaviorDate: ISOCalendarTimestamp
   weekNo: number
   today: ISODate
   now: ISOTimestamp
@@ -32,7 +32,7 @@ interface CheckInFlowProps {
   onCancel?: () => void
 }
 
-function zeroDraft(behaviorDate: ISODate): CheckInDraft {
+function zeroDraft(behaviorDate: ISOCalendarTimestamp): CheckInDraft {
   return {
     behaviorDate,
     played: false,

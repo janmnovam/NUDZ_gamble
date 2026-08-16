@@ -41,7 +41,7 @@ describe('completeOnboarding', () => {
     expect(saved.profile).toMatchObject({
       userId: 'A001',
       onboardingCompletedAt: FIXED_NOW,
-      interventionStartDate: '2026-09-02',
+      interventionStartDate: '2026-09-02T00:00:00.000Z',
       referenceTimeMin: 600,
       referenceStakesCzk: 10_000,
     })
@@ -102,6 +102,6 @@ describe('completeOnboarding', () => {
     const { deps, saved } = fakeDeps()
     deps.time = '2026-09-02T00:30:00.000+02:00'
     await completeOnboarding(baseInput, deps)
-    expect(saved.profile?.interventionStartDate).toBe('2026-09-03')
+    expect(saved.profile?.interventionStartDate).toBe('2026-09-03T00:00:00.000Z')
   })
 })

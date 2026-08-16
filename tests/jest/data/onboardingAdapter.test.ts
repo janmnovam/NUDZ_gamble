@@ -7,7 +7,7 @@ const NOW = '2026-09-01T22:30:00.000Z'
 const profile: Profile = {
   userId: 'A001',
   onboardingCompletedAt: NOW,
-  interventionStartDate: '2026-09-02',
+  interventionStartDate: '2026-09-02T00:00:00.000Z',
   referenceTimeMin: 600,
   referenceStakesCzk: 10_000,
 }

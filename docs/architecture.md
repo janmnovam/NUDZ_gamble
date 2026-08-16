@@ -163,7 +163,7 @@ outbound sub-lists.
       "type": "default"
     }
   ],
-  "interventionStartDate": "2026-09-01"
+  "interventionStartDate": "2026-09-01T00:00:00.000Z"
 }
 ```
 
@@ -229,7 +229,7 @@ flowchart LR
 
 ```json
 {
-  "behaviorDate": "2026-09-03",
+  "behaviorDate": "2026-09-03T00:00:00.000Z",
   "played": true,
   "timeMinutes": 60,
   "stakesAmount": 500,
@@ -241,7 +241,7 @@ flowchart LR
 
 ```json
 {
-  "behaviorDate": "2026-09-03",
+  "behaviorDate": "2026-09-03T00:00:00.000Z",
   "status": "POZOR",
   "remainingTimeMinutes": 130,
   "remainingStakesAmount": 1500,
@@ -412,7 +412,7 @@ month/final-summary view, not just this 7-cell week strip. Carried by a real DTO
 ```json
 {
   "kind": "checkin_due",
-  "behaviorDate": "2026-09-02",
+  "behaviorDate": "2026-09-02T00:00:00.000Z",
   "message": "Doplňte prosím včerejší check-in."
 }
 ```
@@ -439,10 +439,10 @@ month/final-summary view, not just this 7-cell week strip. Carried by a real DTO
 ```json
 {
   "userId": "A001",
-  "interventionStartDate": "2026-09-01",
+  "interventionStartDate": "2026-09-01T00:00:00.000Z",
   "studyDay": 3,
   "weekNo": 1,
-  "behaviorDate": "2026-09-03",
+  "behaviorDate": "2026-09-03T00:00:00.000Z",
   "checkinStatus": "completed",
   "played": true,
   "timeMinutes": 60,
@@ -477,7 +477,7 @@ later, an HTTP adapter). The port signatures accept/return the **camelCase domai
 {
   "user_id": "A001",
   "onboarding_completed_at": "2026-08-31T21:30:00+02:00",
-  "intervention_start_date": "2026-09-01",
+  "intervention_start_date": "2026-09-01T00:00:00.000Z",
   "reference_time_min": 600,
   "reference_stakes_czk": 10000
 }
@@ -574,7 +574,7 @@ The port speaks the camelCase domain `CheckIn` (`src/domain/model.ts`); the row 
 {
   "check_in_id": "b7e0…",
   "user_id": "A001",
-  "behavior_date": "2026-09-03",
+  "behavior_date": "2026-09-03T00:00:00.000Z",
   "week_no": 1,
   "played": true,
   "time_min": 60,

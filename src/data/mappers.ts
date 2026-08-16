@@ -15,6 +15,7 @@ import type {
   ReviewEntity,
   UsageEventEntity,
 } from '@data/model.ts'
+import { canonicalCalendarTimestamp } from '@domain/clock.ts'
 import type {
   CheckIn,
   CheckInEdit,
@@ -30,7 +31,7 @@ import type {
 export const profileToEntity = (p: Profile): ProfileEntity => ({
   user_id: p.userId,
   onboarding_completed_at: p.onboardingCompletedAt,
-  intervention_start_date: p.interventionStartDate,
+  intervention_start_date: canonicalCalendarTimestamp(p.interventionStartDate),
   reference_time_min: p.referenceTimeMin,
   reference_stakes_czk: p.referenceStakesCzk,
 })
@@ -38,7 +39,7 @@ export const profileToEntity = (p: Profile): ProfileEntity => ({
 export const profileToDomain = (e: ProfileEntity): Profile => ({
   userId: e.user_id,
   onboardingCompletedAt: e.onboarding_completed_at,
-  interventionStartDate: e.intervention_start_date,
+  interventionStartDate: canonicalCalendarTimestamp(e.intervention_start_date),
   referenceTimeMin: e.reference_time_min,
   referenceStakesCzk: e.reference_stakes_czk,
 })
@@ -94,7 +95,7 @@ export const limitToDomain = (e: LimitEntity): Limit => ({
 export const checkInToEntity = (c: CheckIn): CheckInEntity => ({
   check_in_id: c.checkInId,
   user_id: c.userId,
-  behavior_date: c.behaviorDate,
+  behavior_date: canonicalCalendarTimestamp(c.behaviorDate),
   week_no: c.weekNo,
   played: c.played,
   time_min: c.timeMin,
@@ -107,7 +108,7 @@ export const checkInToEntity = (c: CheckIn): CheckInEntity => ({
 export const checkInToDomain = (e: CheckInEntity): CheckIn => ({
   checkInId: e.check_in_id,
   userId: e.user_id,
-  behaviorDate: e.behavior_date,
+  behaviorDate: canonicalCalendarTimestamp(e.behavior_date),
   weekNo: e.week_no,
   played: e.played,
   timeMin: e.time_min,

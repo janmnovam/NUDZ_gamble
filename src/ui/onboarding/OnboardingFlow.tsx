@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { type CopingSuggestionDto } from '@/app/dto/coping.ts'
 import { type SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
+import { clientNow } from '@ui/clock.ts'
 import { app } from '@ui/services.ts'
 import { CopingStep } from '@ui/onboarding/steps/CopingStep.tsx'
 import { DoneStep } from '@ui/onboarding/steps/DoneStep.tsx'
@@ -80,16 +81,21 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     const selected = copingSelected
       .map((id) => copingOptions.find((option) => option.id === id))
       .filter((option): option is CopingSuggestionDto => option !== undefined)
-      .map((option) => ({ label: option.label, type: 'default' as const }))
+      .map((option) => ({ id: option.id, label: option.label, type: 'default' as const }))
     const custom = customStrategy.trim()
-    const coping = custom ? [...selected, { label: custom, type: 'custom' as const }] : selected
+    const coping = custom
+      ? [...selected, { id: 'custom', label: custom, type: 'custom' as const }]
+      : selected
 
     try {
-      const { interventionStartDate: startDate } = await app.onboarding.complete({
-        reference: { timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk },
-        limits: { timeMinutes: resolvedTimeLimit, stakesAmount: resolvedStakesLimit },
-        coping,
-      })
+      const { interventionStartDate: startDate } = await app.onboarding.complete(
+        {
+          reference: { timeMinutes: refTimeMinutes, stakesAmount: refStakesCzk },
+          limits: { timeMinutes: resolvedTimeLimit, stakesAmount: resolvedStakesLimit },
+          coping,
+        },
+        clientNow(),
+      )
       setInterventionStartDate(new Date(startDate))
       goNext()
     } catch (error) {

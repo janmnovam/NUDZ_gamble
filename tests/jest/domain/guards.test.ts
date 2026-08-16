@@ -112,16 +112,32 @@ describe('canReview', () => {
 describe('canEditCheckIn', () => {
   it('flags a future/today date first, then a locked week, else allowed', () => {
     expect(
-      canEditCheckIn({ behaviorDate: '2026-09-10', today: '2026-09-03', weekClosed: false }),
+      canEditCheckIn({
+        behaviorDate: '2026-09-10T00:00:00.000Z',
+        today: '2026-09-03',
+        weekClosed: false,
+      }),
     ).toBe('future_date')
     expect(
-      canEditCheckIn({ behaviorDate: '2026-09-03', today: '2026-09-03', weekClosed: false }),
+      canEditCheckIn({
+        behaviorDate: '2026-09-03T00:00:00.000Z',
+        today: '2026-09-03',
+        weekClosed: false,
+      }),
     ).toBe('future_date')
     expect(
-      canEditCheckIn({ behaviorDate: '2026-09-02', today: '2026-09-03', weekClosed: true }),
+      canEditCheckIn({
+        behaviorDate: '2026-09-02T00:00:00.000Z',
+        today: '2026-09-03',
+        weekClosed: true,
+      }),
     ).toBe('locked_week')
     expect(
-      canEditCheckIn({ behaviorDate: '2026-09-02', today: '2026-09-03', weekClosed: false }),
+      canEditCheckIn({
+        behaviorDate: '2026-09-02T00:00:00.000Z',
+        today: '2026-09-03',
+        weekClosed: false,
+      }),
     ).toBe('allowed')
   })
 })

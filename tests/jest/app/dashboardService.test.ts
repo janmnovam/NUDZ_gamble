@@ -21,7 +21,7 @@ function checkIn(overrides: Partial<CheckIn>): CheckIn {
     updatedAt: null,
     timeMin: 0,
     stakesCzk: 0,
-    behaviorDate: '2026-09-01',
+    behaviorDate: '2026-09-01T00:00:00.000Z',
     ...overrides,
   }
 }
@@ -30,7 +30,7 @@ function makeService(params: { checkIns: CheckIn[]; today: string; noProfile?: b
   const profile: Profile = {
     userId: USER_ID,
     onboardingCompletedAt: '2026-08-31T21:30:00+02:00',
-    interventionStartDate: '2026-09-01',
+    interventionStartDate: '2026-09-01T00:00:00.000Z',
     referenceTimeMin: 600,
     referenceStakesCzk: 10_000,
   }
@@ -77,20 +77,20 @@ describe('DashboardServiceImpl.getDashboard', () => {
       today: '2026-09-05',
       checkIns: [
         checkIn({
-          behaviorDate: '2026-09-01',
+          behaviorDate: '2026-09-01T00:00:00.000Z',
           submittedAt: '2026-09-02T08:00:00+02:00',
           timeMin: 60,
           stakesCzk: 500,
         }),
         // 2026-09-02 deliberately has no record — the missing-record case.
         checkIn({
-          behaviorDate: '2026-09-03',
+          behaviorDate: '2026-09-03T00:00:00.000Z',
           submittedAt: '2026-09-04T08:00:00+02:00',
           timeMin: 150,
           stakesCzk: 3_000,
         }),
         checkIn({
-          behaviorDate: '2026-09-04',
+          behaviorDate: '2026-09-04T00:00:00.000Z',
           submittedAt: '2026-09-05T08:00:00+02:00',
           timeMin: 140,
           stakesCzk: 3_000,
@@ -103,7 +103,7 @@ describe('DashboardServiceImpl.getDashboard', () => {
     expect(res.studyDay).toBe(5)
     expect(res.weekNo).toBe(1)
     expect(res.days).toHaveLength(7)
-    expect(res.missingDays).toEqual(['2026-09-02'])
+    expect(res.missingDays).toEqual(['2026-09-02T00:00:00.000Z'])
     expect(res.time).toEqual({ used: 350, limit: 480, percent: 73, status: 'OK', remaining: 130 })
     expect(res.stakes).toEqual({
       used: 6_500,
@@ -117,13 +117,17 @@ describe('DashboardServiceImpl.getDashboard', () => {
 
     expect(res.days[0]).toEqual({
       studyDay: 1,
-      date: '2026-09-01',
+      date: '2026-09-01T00:00:00.000Z',
       state: 'completed',
       played: true,
       timeMinutes: 60,
       stakesAmount: 500,
     })
-    expect(res.days[1]).toEqual({ studyDay: 2, date: '2026-09-02', state: 'missing' })
+    expect(res.days[1]).toEqual({
+      studyDay: 2,
+      date: '2026-09-02T00:00:00.000Z',
+      state: 'missing',
+    })
   })
 
   it('rejects when no profile has been onboarded yet', async () => {

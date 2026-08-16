@@ -32,7 +32,7 @@ erDiagram
     PROFILE {
         uuid user_id PK
         timestamp onboarding_completed_at
-        date intervention_start_date "day 1 = day after"
+        timestamp intervention_start_date "canonical day-start timestamp"
         int reference_time_min
         int reference_stakes_czk
     }
@@ -57,7 +57,7 @@ erDiagram
     CHECK_IN {
         uuid check_in_id PK
         uuid user_id FK "UK (user_id, behavior_date)"
-        date behavior_date UK
+        timestamp behavior_date UK "canonical day-start timestamp"
         int week_no "1..4 → review.review_week_no"
         bool played
         int time_min "0 iff !played; ≥1 if played"
@@ -105,10 +105,11 @@ Dexie `&[…]` compound index now → server `UNIQUE` later; same shape.
 6. `winnings_czk` never enters a limit calc
 7. no record ≠ a zero record (two distinct states)
 8. ≥ 2 active `coping_strategy` per user (enforced at onboarding)
+9. `intervention_start_date` and `behavior_date` are ISO 8601 timestamps with timezone, canonicalized to UTC midnight (`YYYY-MM-DDT00:00:00.000Z`) so each still represents one calendar day.
 
 ## Not stored — computed on read
 Weekly used/totals, % vs limit, per-axis + overall status (worse of two),
-remaining, `net_loss`, `is_backfill` (`date(submitted_at) > behavior_date + 1d`),
+remaining, `net_loss`, `is_backfill` (`date(submitted_at) > date(behavior_date) + 1d`),
 missing-day set + `has_missing`, `usage_event` aggregates.
 (`check_in.week_no` is a stored classifier for the review join, not an aggregate.)
 
@@ -138,6 +139,9 @@ check_in_edits:  "check_in_edit_id, user_id, check_in_id, edited_at"
 
 ## Rules
 - Money/time = integers; % is float, display-time only, never persisted.
+- Timestamps = ISO 8601 strings with timezone. Day-valued timestamp fields
+  (`intervention_start_date`, `behavior_date`) are stored as canonical UTC
+  midnight timestamps, not arbitrary instants.
 - Value objects `Minutes` / `Czk`.
 - Normalized stores; wrap multi-row writes (week-close review) in one transaction.
 - Editing allowed only within `EDIT_WINDOW_DAYS` (7, `src/domain/config.ts`) of the

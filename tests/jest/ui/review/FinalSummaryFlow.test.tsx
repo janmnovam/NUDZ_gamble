@@ -26,10 +26,7 @@ const TEST_SUMMARY: FinalSummaryViewModel = {
   ],
 }
 
-function renderFinalSummary(
-  summary = TEST_SUMMARY,
-  onExport: jest.Mock = jest.fn(),
-) {
+function renderFinalSummary(summary = TEST_SUMMARY, onExport: jest.Mock = jest.fn()) {
   render(
     <I18nProvider>
       <FinalSummaryFlow summary={summary} onExport={onExport} />

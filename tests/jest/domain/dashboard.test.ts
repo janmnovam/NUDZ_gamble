@@ -15,7 +15,7 @@ function checkIn(overrides: Partial<CheckIn>): CheckIn {
     updatedAt: null,
     timeMin: 0,
     stakesCzk: 0,
-    behaviorDate: '2026-09-01',
+    behaviorDate: '2026-09-01T00:00:00.000Z',
     ...overrides,
   }
 }
@@ -24,7 +24,7 @@ function fakeDeps(params: { checkIns: CheckIn[]; today: string }): DashboardDeps
   const profile: Profile = {
     userId: USER_ID,
     onboardingCompletedAt: '2026-08-31T21:30:00+02:00',
-    interventionStartDate: '2026-09-01',
+    interventionStartDate: '2026-09-01T00:00:00.000Z',
     referenceTimeMin: 600,
     referenceStakesCzk: 10_000,
   }
@@ -61,16 +61,21 @@ function fakeDeps(params: { checkIns: CheckIn[]; today: string }): DashboardDeps
 describe('buildDayCell', () => {
   it('carries played/time/stakes only for completed or backfilled cells', () => {
     const record = checkIn({
-      behaviorDate: '2026-09-02',
+      behaviorDate: '2026-09-02T00:00:00.000Z',
       submittedAt: '2026-09-03T08:00:00+02:00',
       timeMin: 60,
       stakesCzk: 500,
     })
     expect(
-      buildDayCell({ studyDay: 2, date: '2026-09-02', today: '2026-09-04', checkIn: record }),
+      buildDayCell({
+        studyDay: 2,
+        date: '2026-09-02T00:00:00.000Z',
+        today: '2026-09-04',
+        checkIn: record,
+      }),
     ).toEqual({
       studyDay: 2,
-      date: '2026-09-02',
+      date: '2026-09-02T00:00:00.000Z',
       state: 'completed',
       played: true,
       timeMin: 60,
@@ -80,11 +85,21 @@ describe('buildDayCell', () => {
 
   it('is a bare cell (no usage fields) for missing and future days', () => {
     expect(
-      buildDayCell({ studyDay: 3, date: '2026-09-03', today: '2026-09-04', checkIn: undefined }),
-    ).toEqual({ studyDay: 3, date: '2026-09-03', state: 'missing' })
+      buildDayCell({
+        studyDay: 3,
+        date: '2026-09-03T00:00:00.000Z',
+        today: '2026-09-04',
+        checkIn: undefined,
+      }),
+    ).toEqual({ studyDay: 3, date: '2026-09-03T00:00:00.000Z', state: 'missing' })
     expect(
-      buildDayCell({ studyDay: 5, date: '2026-09-05', today: '2026-09-04', checkIn: undefined }),
-    ).toEqual({ studyDay: 5, date: '2026-09-05', state: 'future' })
+      buildDayCell({
+        studyDay: 5,
+        date: '2026-09-05T00:00:00.000Z',
+        today: '2026-09-04',
+        checkIn: undefined,
+      }),
+    ).toEqual({ studyDay: 5, date: '2026-09-05T00:00:00.000Z', state: 'future' })
   })
 })
 
@@ -94,20 +109,20 @@ describe('buildDashboardVM', () => {
       today: '2026-09-05',
       checkIns: [
         checkIn({
-          behaviorDate: '2026-09-01',
+          behaviorDate: '2026-09-01T00:00:00.000Z',
           submittedAt: '2026-09-02T08:00:00+02:00',
           timeMin: 60,
           stakesCzk: 500,
         }),
         // 2026-09-02 deliberately has no record — the missing-record case.
         checkIn({
-          behaviorDate: '2026-09-03',
+          behaviorDate: '2026-09-03T00:00:00.000Z',
           submittedAt: '2026-09-04T08:00:00+02:00',
           timeMin: 150,
           stakesCzk: 3_000,
         }),
         checkIn({
-          behaviorDate: '2026-09-04',
+          behaviorDate: '2026-09-04T00:00:00.000Z',
           submittedAt: '2026-09-05T08:00:00+02:00',
           timeMin: 140,
           stakesCzk: 3_000,
@@ -120,7 +135,7 @@ describe('buildDashboardVM', () => {
     expect(vm.studyDay).toBe(5)
     expect(vm.weekNo).toBe(1)
     expect(vm.days).toHaveLength(7)
-    expect(vm.missingDays).toEqual(['2026-09-02'])
+    expect(vm.missingDays).toEqual(['2026-09-02T00:00:00.000Z'])
     expect(vm.time).toEqual({ used: 350, limit: 480, pct: 73, status: 'OK', remaining: 130 })
     expect(vm.stakes).toEqual({
       used: 6_500,

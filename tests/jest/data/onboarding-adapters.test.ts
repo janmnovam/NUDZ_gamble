@@ -20,7 +20,7 @@ describe('onboarding adapters', () => {
   const profile: Profile = {
     userId: 'A001',
     onboardingCompletedAt: FIXED_NOW,
-    interventionStartDate: '2026-09-02',
+    interventionStartDate: '2026-09-02T00:00:00.000Z',
     referenceTimeMin: 600,
     referenceStakesCzk: 10_000,
   }

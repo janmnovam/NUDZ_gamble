@@ -4,7 +4,7 @@
  * validation (the domain use-case owns the rules).
  */
 import type { OnboardingProfileRequest, OnboardingProfileResponse } from '@/app/dto/onboarding.ts'
-import type { ISODate, UserId } from '@domain/model.ts'
+import type { ISOCalendarTimestamp, UserId } from '@domain/model.ts'
 import type { OnboardingInput } from '@domain/onboarding.ts'
 
 /** Map the UI-shaped request to the domain input, injecting the user id. */
@@ -22,7 +22,7 @@ export function toOnboardingInput(req: OnboardingProfileRequest, userId: UserId)
 /** Echo the request back with the derived first intervention day. */
 export function toOnboardingProfileResponse(
   req: OnboardingProfileRequest,
-  interventionStartDate: ISODate,
+  interventionStartDate: ISOCalendarTimestamp,
 ): OnboardingProfileResponse {
   return {
     reference: { ...req.reference },

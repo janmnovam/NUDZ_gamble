@@ -19,7 +19,7 @@
  * "ordering trap") — that check lives in guards.ts instead.
  */
 import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
-import type { ISODate, ISOTimestamp } from '@domain/model.ts'
+import type { ISOCalendarTimestamp, ISODate, ISOTimestamp } from '@domain/model.ts'
 
 /** Injected "today" source — real clock in production, fixed/offset clock in tests and the demo drawer. */
 export interface TodayClock {
@@ -38,11 +38,11 @@ export type WeekNo = number
 
 export interface StudyCalendar {
   /** `(date - interventionStartDate) + 1`, whole calendar days. */
-  studyDay(date: ISODate): StudyDay
+  studyDay(date: string): StudyDay
   /** `ceil(day / 7)`. Throws on `day <= 0` — there is no week 0; callers must guard before calling. */
   weekNo(day: StudyDay): WeekNo
-  /** Calendar date for a given study day. */
-  dateOf(day: StudyDay): ISODate
+  /** Canonical day-start timestamp for a given study day. */
+  dateOf(day: StudyDay): ISOCalendarTimestamp
   /** First study day of a week: `7*(week-1) + 1`. */
   firstDay(week: WeekNo): StudyDay
   /** Last study day of a week: `7*week`. */
@@ -82,6 +82,21 @@ function fromUtcMs(ms: number): ISODate {
   return `${year}-${month}-${day}`
 }
 
+/** Calendar date carried by either a `YYYY-MM-DD` date or an ISO timestamp. */
+export function calendarDate(value: string): ISODate {
+  return value.slice(0, 10)
+}
+
+/** Canonical timestamp for a calendar day stored as a timestamp-valued field. */
+export function calendarTimestamp(date: ISODate): ISOCalendarTimestamp {
+  return `${date}T00:00:00.000Z`
+}
+
+/** Canonical day-start timestamp for either an old date-only value or a timestamp. */
+export function canonicalCalendarTimestamp(value: string): ISOCalendarTimestamp {
+  return calendarTimestamp(calendarDate(value))
+}
+
 /**
  * The calendar date after `date` (DST-immune, same UTC-anchored arithmetic as
  * the rest of this module). Both inputs and outputs are bare `YYYY-MM-DD`, so
@@ -105,15 +120,15 @@ export function dateOf(timestamp: ISOTimestamp): ISODate {
 
 /** Pure implementation of `StudyCalendar` for one user's `interventionStartDate`. */
 export function createStudyCalendar(
-  interventionStartDate: ISODate,
+  interventionStartDate: ISOCalendarTimestamp,
   clock: TodayClock,
   config: DomainConfig = DEFAULT_CONFIG,
 ): StudyCalendar {
-  const startMs = toUtcMs(interventionStartDate)
+  const startMs = toUtcMs(calendarDate(interventionStartDate))
   const { WEEK_LENGTH_DAYS, PROGRAMME_DAYS } = config
 
-  const studyDay = (date: ISODate): StudyDay =>
-    Math.round((toUtcMs(date) - startMs) / MS_PER_DAY) + 1
+  const studyDay = (date: string): StudyDay =>
+    Math.round((toUtcMs(calendarDate(date)) - startMs) / MS_PER_DAY) + 1
 
   const weekNo = (day: StudyDay): WeekNo => {
     if (day <= 0) {
@@ -122,7 +137,8 @@ export function createStudyCalendar(
     return Math.ceil(day / WEEK_LENGTH_DAYS)
   }
 
-  const dateOf = (day: StudyDay): ISODate => fromUtcMs(startMs + (day - 1) * MS_PER_DAY)
+  const dateOf = (day: StudyDay): ISOCalendarTimestamp =>
+    calendarTimestamp(fromUtcMs(startMs + (day - 1) * MS_PER_DAY))
 
   const firstDay = (week: WeekNo): StudyDay => WEEK_LENGTH_DAYS * (week - 1) + 1
 

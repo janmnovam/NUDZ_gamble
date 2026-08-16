@@ -5,8 +5,7 @@
  * (`@/app/mappers/onboardingMapper.ts`) converts them to/from the snake_case
  * domain models so the camelCase surface never leaks into `src/domain`.
  */
-import type { CopingType, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
-
+import type { CopingType, ISOCalendarTimestamp, ISOTimestamp, UserId } from '@domain/model.ts'
 
 /** A time (minutes) / stakes (CZK) pair — the reference week and the chosen limits share this shape. */
 export interface TimeStakesDto {
@@ -47,7 +46,7 @@ export interface OnboardingProfileRequest {
 
 /** Echo of the completed profile plus the derived first intervention day. */
 export interface OnboardingProfileResponse extends OnboardingProfileRequest {
-  interventionStartDate: ISODate
+  interventionStartDate: ISOCalendarTimestamp
 }
 
 /** Whether the demo user has already completed onboarding — gates the UI's entry screen. */

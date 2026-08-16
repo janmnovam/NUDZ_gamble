@@ -15,6 +15,8 @@ export type UserId = string
 export type ISODate = string
 /** ISO 8601 timestamp with timezone. */
 export type ISOTimestamp = string
+/** ISO timestamp pinned to UTC midnight for fields that model a calendar day. */
+export type ISOCalendarTimestamp = ISOTimestamp
 
 /** Origin of a coping strategy row. */
 export type CopingType = 'default' | 'custom'
@@ -22,7 +24,7 @@ export type CopingType = 'default' | 'custom'
 export interface Profile {
   userId: UserId
   onboardingCompletedAt: ISOTimestamp
-  interventionStartDate: ISODate
+  interventionStartDate: ISOCalendarTimestamp
   referenceTimeMin: number
   referenceStakesCzk: number
 }
@@ -73,7 +75,7 @@ export interface Limit {
 export interface CheckIn {
   checkInId: string
   userId: UserId
-  behaviorDate: ISODate
+  behaviorDate: ISOCalendarTimestamp
   /** 1..4 — links the day to its review week. */
   weekNo: number
   played: boolean

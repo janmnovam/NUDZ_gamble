@@ -8,7 +8,7 @@ function renderFlow(onComplete: (result: CheckInFlowResult) => void) {
     <I18nProvider>
       <CheckInFlow
         userId="A001"
-        behaviorDate="2026-09-05"
+        behaviorDate="2026-09-05T00:00:00.000Z"
         behaviorDateLabel="sobotu 5. 9."
         weekNo={2}
         today="2026-09-06"
@@ -35,7 +35,7 @@ describe('CheckInFlow', () => {
         submittedAt: '2026-09-06T10:00:00+02:00',
         previousDayState: 'missing',
         draft: {
-          behaviorDate: '2026-09-05',
+          behaviorDate: '2026-09-05T00:00:00.000Z',
           played: false,
           timeMin: 0,
           stakesCzk: 0,
@@ -62,7 +62,7 @@ describe('CheckInFlow', () => {
 
     expect(completed).toHaveLength(1)
     expect(completed[0]?.draft).toEqual({
-      behaviorDate: '2026-09-05',
+      behaviorDate: '2026-09-05T00:00:00.000Z',
       played: true,
       timeMin: 60,
       stakesCzk: 2500,

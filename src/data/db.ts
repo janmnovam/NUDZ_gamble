@@ -1,4 +1,5 @@
 import Dexie, { type Table } from 'dexie'
+import { canonicalCalendarTimestamp } from '@domain/clock.ts'
 
 import {
   type CheckInEditEntity,
@@ -49,6 +50,23 @@ export class AppDatabase extends Dexie {
     // v3 adds the append-only check-in edit log.
     this.version(3).stores({
       check_in_edits: 'check_in_edit_id, user_id, check_in_id, edited_at',
+    })
+    // v4 stores intervention_start_date and behavior_date as canonical timestamps.
+    this.version(4).upgrade(async (tx) => {
+      await tx
+        .table<ProfileEntity, string>('profile')
+        .toCollection()
+        .modify((profile) => {
+          profile.intervention_start_date = canonicalCalendarTimestamp(
+            profile.intervention_start_date,
+          )
+        })
+      await tx
+        .table<CheckInEntity, string>('check_ins')
+        .toCollection()
+        .modify((checkIn) => {
+          checkIn.behavior_date = canonicalCalendarTimestamp(checkIn.behavior_date)
+        })
     })
   }
 }
