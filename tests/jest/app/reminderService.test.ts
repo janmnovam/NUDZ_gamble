@@ -1,6 +1,6 @@
 import { ReminderServiceImpl } from '@/app/services/reminderServiceImpl.ts'
-import type { CheckIn, Profile } from '@domain/model.ts'
-import type { CheckInRepository, ProfileRepository } from '@domain/ports.ts'
+import type { CheckIn, Profile, Review } from '@domain/model.ts'
+import type { CheckInRepository, ProfileRepository, ReviewRepository } from '@domain/ports.ts'
 
 const USER_ID = 'demo-user'
 
@@ -14,7 +14,7 @@ function profile(): Profile {
   }
 }
 
-function makeService(params: { profile?: Profile; checkIns: CheckIn[] }) {
+function makeService(params: { profile?: Profile; checkIns: CheckIn[]; reviews?: Review[] }) {
   const profiles: ProfileRepository = {
     get: (userId) => Promise.resolve(userId === USER_ID ? params.profile : undefined),
     getCurrent: () => Promise.resolve(params.profile),
@@ -25,7 +25,12 @@ function makeService(params: { profile?: Profile; checkIns: CheckIn[] }) {
     get: () => Promise.resolve(undefined),
     save: () => Promise.resolve(),
   }
-  return new ReminderServiceImpl({ profiles, checkIns })
+  const reviews: ReviewRepository = {
+    listByUser: () => Promise.resolve(params.reviews ?? []),
+    getByWeek: () => Promise.resolve(undefined),
+    save: () => Promise.resolve(),
+  }
+  return new ReminderServiceImpl({ profiles, checkIns, reviews })
 }
 
 describe('ReminderServiceImpl.getDueReminder', () => {

@@ -50,7 +50,11 @@ export interface App {
 }
 
 export function createApp(data: DataLayer = createDataLayer()): App {
-  const reminder = new ReminderServiceImpl({ checkIns: data.checkIns, profiles: data.profiles })
+  const reminder = new ReminderServiceImpl({
+    checkIns: data.checkIns,
+    profiles: data.profiles,
+    reviews: data.reviews,
+  })
 
   return {
     onboarding: new OnboardingServiceImpl({

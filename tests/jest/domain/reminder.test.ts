@@ -1,5 +1,5 @@
 import { getDueReminder, isReminderTimeDue } from '@domain/reminder.ts'
-import type { CheckIn, Profile } from '@domain/model.ts'
+import type { CheckIn, Profile, Review } from '@domain/model.ts'
 
 const USER_ID = 'A001'
 
@@ -30,17 +30,35 @@ function checkIn(overrides: Partial<CheckIn>): CheckIn {
   }
 }
 
+function review(overrides: Partial<Review>): Review {
+  return {
+    reviewId: `r-${String(overrides.reviewWeekNo ?? 0)}`,
+    userId: USER_ID,
+    reviewWeekNo: 1,
+    reviewCompletedAt: '2026-09-08T09:00:00+02:00',
+    limitChanged: false,
+    incomplete: false,
+    ...overrides,
+  }
+}
+
 describe('getDueReminder', () => {
   it('is null before day 1 has started', () => {
     expect(
-      getDueReminder({ profile: profile(), checkIns: [], time: '2026-08-31T08:00:00+02:00' }),
+      getDueReminder({
+        profile: profile(),
+        checkIns: [],
+        reviews: [],
+        time: '2026-08-31T08:00:00+02:00',
+      }),
     ).toBeNull()
   })
 
-  it('is null once the week has no missing days', () => {
+  it('is null once the week has no missing days and no review is open', () => {
     const result = getDueReminder({
       profile: profile(),
       checkIns: [checkIn({ behaviorDate: '2026-09-01T00:00:00.000Z' })],
+      reviews: [],
       time: '2026-09-02T08:00:00+02:00',
     })
     expect(result).toBeNull()
@@ -50,15 +68,63 @@ describe('getDueReminder', () => {
     const result = getDueReminder({
       profile: profile(),
       checkIns: [checkIn({ behaviorDate: '2026-09-02T00:00:00.000Z' })],
+      reviews: [],
       time: '2026-09-04T08:00:00+02:00',
     })
     expect(result).toEqual({ kind: 'checkin_due', behaviorDate: '2026-09-01T00:00:00.000Z' })
   })
 
-  it('is null once the programme is over (final summary applies instead)', () => {
+  it('reports week 1 review as due once week 1 has elapsed and no review exists yet', () => {
     const result = getDueReminder({
       profile: profile(),
       checkIns: [],
+      reviews: [],
+      time: '2026-09-08T08:00:00+02:00',
+    })
+    expect(result).toEqual({ kind: 'review_due', weekNo: 1 })
+  })
+
+  it('prefers review_due over checkin_due once the elapsed week also has missing days', () => {
+    const result = getDueReminder({
+      profile: profile(),
+      checkIns: [checkIn({ behaviorDate: '2026-09-01T00:00:00.000Z' })],
+      reviews: [],
+      time: '2026-09-08T08:00:00+02:00',
+    })
+    expect(result).toEqual({ kind: 'review_due', weekNo: 1 })
+  })
+
+  it('falls back to checkin_due for the new week once the prior review is completed', () => {
+    const result = getDueReminder({
+      profile: profile(),
+      checkIns: [checkIn({ behaviorDate: '2026-09-09T00:00:00.000Z' })],
+      reviews: [review({ reviewWeekNo: 1 })],
+      time: '2026-09-11T08:00:00+02:00',
+    })
+    expect(result).toEqual({ kind: 'checkin_due', behaviorDate: '2026-09-08T00:00:00.000Z' })
+  })
+
+  it('keeps reporting review_due past the final-summary boundary until it is completed', () => {
+    const result = getDueReminder({
+      profile: profile(),
+      checkIns: [],
+      reviews: [
+        review({ reviewWeekNo: 1 }),
+        review({ reviewWeekNo: 2, reviewId: 'r-2' }),
+        review({ reviewWeekNo: 3, reviewId: 'r-3' }),
+      ],
+      time: '2026-09-30T08:00:00+02:00',
+    })
+    expect(result).toEqual({ kind: 'review_due', weekNo: 4 })
+  })
+
+  it('is null once the programme is over and every week has been reviewed', () => {
+    const result = getDueReminder({
+      profile: profile(),
+      checkIns: [],
+      reviews: [1, 2, 3, 4].map((weekNo) =>
+        review({ reviewWeekNo: weekNo, reviewId: `r-${String(weekNo)}` }),
+      ),
       time: '2026-09-30T08:00:00+02:00',
     })
     expect(result).toBeNull()

@@ -434,7 +434,7 @@ would otherwise be computed against no data and read as a result.
 
 ### ReminderService
 
-**Status:** 📝 DRAFT — no `reminder.ts`; `PendingAction`/`ResolvePendingAction` type exists in `guards.ts` but is unimplemented
+**Status:** ✅ DONE — `src/domain/reminder.ts` implements `getDueReminder` (two reminder kinds, see below) and `isReminderTimeDue` (the wall-clock-slot gate); `ReminderServiceImpl` (`src/app/services/reminderServiceImpl.ts`) wraps it, `NotificationServiceImpl` (`src/app/services/notificationServiceImpl.ts`) composes the two, both wired via `createApp()`. The UI side (`src/ui/notifications/useReminderNotifications.ts`) polls `NotificationService.checkSchedule` every minute and pops a system notification — but today it only has copy/routing for `checkin_due`; it deliberately no-ops on `review_due` until that half of the UI is built (see the port's TODO note below).
 
 **Depends on**
 - Inbound
@@ -442,21 +442,25 @@ would otherwise be computed against no data and read as a result.
 - Outbound
   - CheckInRepository
   - ProfileRepository
-  - Clock
+  - ReviewRepository
 
 | Method | Accepts | Returns | Description |
 |---|---|---|---|
-| getDueReminder | `—` | `ReminderResponse?` | The one working reminder scenario, if due |
+| getDueReminder | `—` | `ReminderResponse?` | The one thing to prompt about right now, if anything |
 
-**ReminderResponse**
+**`ReminderResponse`** is `null` or one of two discriminated shapes, in priority order (matching `guards.ts`'s `resolvePendingAction`: review before check-in):
 
 ```json
-{
-  "kind": "checkin_due",
-  "behaviorDate": "2026-09-02T00:00:00.000Z",
-  "message": "Doplňte prosím včerejší check-in."
-}
+{ "kind": "review_due", "weekNo": 1 }
 ```
+
+```json
+{ "kind": "checkin_due", "behaviorDate": "2026-09-02T00:00:00.000Z" }
+```
+
+`review_due` is the earliest elapsed-but-unreviewed week (same `canReview`/`isWeekClosed` guards the review flow itself uses) and stays due past the final-summary boundary until the review is actually completed. `checkin_due` — the earliest missing day in the current study week — only surfaces once there's no open review left to nudge about. Neither the domain nor this port emits a `final_summary` reminder; that screen has no notification copy of its own today.
+
+**TODO — frontend not yet built for `review_due`:** `useReminderNotifications.ts` currently branches on `result.reminder?.kind !== 'checkin_due'` and returns early otherwise, so a due review never pops a notification yet — it's a placeholder, not a dead end. To wire it up: add `notification.reminder.review.title` / `.review.body` (with a `{weekNo}` placeholder) to both locale files (`src/ui/i18n/locales/cs.ts` / `en.ts`, kept as key-for-key mirrors per CLAUDE.md), branch on `result.reminder.kind` in the hook to pick title/body and pass `weekNo` instead of formatting `behaviorDate`, and have the notification's click-through route into the review flow (`ReviewFlow`/whatever the week-N review route is) instead of the check-in route — mirroring how `checkin_due` already routes to check-in today.
 
 ### ExportService
 
@@ -728,10 +732,10 @@ Two consequences worth knowing:
 Most of the domain is now built. What remains, in the order it blocks a
 "must work" jury flow:
 
-1. **ReminderService** (`reminder.ts`) — the only inbound port still a wiring
-   stub (`getDueReminder` rejects). One reminder scenario that clicks through to
-   the check-in is a graded requirement; `resolvePendingAction` (`guards.ts`)
-   already gives it the input it needs.
+1. **Review-reminder frontend** — `ReminderService`/`NotificationService` are
+   done and cover both reminder kinds (`checkin_due`, `review_due`), but
+   `useReminderNotifications.ts` only has copy/routing for `checkin_due` so
+   far; see the TODO note under §ReminderService for what's left.
 2. **Week 2–4 limits** — `buildDashboardVM` throws `no limit set for week N`
    once the programme rolls past week 1, because only onboarding writes a limit.
    `completeReview` sets the next week's limit, so the gap closes when the

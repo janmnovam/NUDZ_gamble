@@ -1,10 +1,10 @@
 /**
- * Reminder domain (doc 08's "one working reminder scenario") — two separate
- * pure questions, kept apart on purpose:
+ * Reminder domain (doc 08's "one working reminder scenario", now two) — two
+ * separate pure questions, kept apart on purpose:
  *
  *   1. `getDueReminder` — is there anything to prompt the user about right
- *      now (a missing check-in in the current study week)? Content only, no
- *      notion of clock time.
+ *      now: a pending weekly review, or else a missing check-in in the
+ *      current study week? Content only, no notion of clock time.
  *   2. `isReminderTimeDue` — has a configured wall-clock slot
  *      (`config.ts`'s `REMINDER_TIMES`) just been crossed, so it's time to
  *      check #1 and, if it says yes, pop a system notification?
@@ -13,17 +13,22 @@
  * storage. The app layer (`NotificationService`) composes them; the UI is
  * the one that actually shows a popup.
  */
-import { calendarDate, createStudyCalendar } from '@domain/clock.ts'
+import { calendarDate, createStudyCalendar, type WeekNo } from '@domain/clock.ts'
 import { dayStateOf } from '@domain/checkin.ts'
 import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
-import type { CheckIn, ISOCalendarTimestamp, ISOTimestamp, Profile } from '@domain/model.ts'
+import { canReview, isWeekClosed } from '@domain/guards.ts'
+import type { CheckIn, ISOCalendarTimestamp, ISOTimestamp, Profile, Review } from '@domain/model.ts'
 
-export type ReminderKind = 'checkin_due'
+export type ReminderKind = 'checkin_due' | 'review_due'
 
-export interface ReminderDue {
-  kind: ReminderKind
-  behaviorDate: ISOCalendarTimestamp
-}
+/**
+ * Discriminated on `kind`: `checkin_due` names the missing day, `review_due`
+ * names the week whose review is open. Two shapes rather than one loose bag
+ * so a caller can't read `weekNo` off a check-in reminder or vice versa.
+ */
+export type ReminderDue =
+  | { kind: 'checkin_due'; behaviorDate: ISOCalendarTimestamp }
+  | { kind: 'review_due'; weekNo: WeekNo }
 
 /** `null` when nothing is due. */
 export type ReminderResponse = ReminderDue | null
@@ -31,25 +36,49 @@ export type ReminderResponse = ReminderDue | null
 export interface GetDueReminderParams {
   profile: Profile
   checkIns: readonly CheckIn[]
+  /** Completed reviews for this user — decides which week (if any) is still open for review. */
+  reviews: readonly Review[]
   time: ISOTimestamp
   config?: DomainConfig
 }
 
 /**
- * The earliest still-missing day in the current study week, if any — the one
- * thing the reminder currently prompts for. `null` before day 1 has started
- * and once the programme is over (day 29's final summary has its own prompt,
- * resolved separately by `guards.ts`'s `resolvePendingAction`, not this).
+ * The one thing to prompt about right now, if anything — same priority order
+ * as `guards.ts`'s `resolvePendingAction` (review before check-in; this
+ * function doesn't surface `final_summary`, since that screen has no
+ * notification copy of its own today):
+ *
+ *   1. `review_due` — the earliest elapsed week that hasn't been reviewed
+ *      yet. Stays due across the final-summary boundary (day 29+) until the
+ *      user actually completes it — an open review doesn't expire.
+ *   2. `checkin_due` — the earliest still-missing day in the current study
+ *      week, once there's no open review left to nudge about.
+ *
+ * `null` before day 1 has started, once the programme is over with every
+ * week reviewed, and any time neither of the above applies.
  */
 export function getDueReminder({
   profile,
   checkIns,
+  reviews,
   time,
   config = DEFAULT_CONFIG,
 }: GetDueReminderParams): ReminderResponse {
   const calendar = createStudyCalendar(profile.interventionStartDate, time, config)
   const studyDay = calendar.currentDay()
-  if (studyDay <= 0 || calendar.isFinalSummary()) return null
+  if (studyDay <= 0) return null
+
+  const totalWeeks = config.PROGRAMME_DAYS / config.WEEK_LENGTH_DAYS
+  for (let week = 1; week <= totalWeeks; week += 1) {
+    const reviewDue = canReview({
+      weekNo: week,
+      weekElapsed: calendar.isWeekElapsed(week),
+      alreadyReviewed: isWeekClosed(week, reviews),
+    })
+    if (reviewDue) return { kind: 'review_due', weekNo: week }
+  }
+
+  if (calendar.isFinalSummary()) return null
 
   const today = calendarDate(time)
   const weekNo = calendar.weekNo(studyDay)

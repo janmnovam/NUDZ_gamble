@@ -41,7 +41,11 @@ export function useReminderNotifications(): void {
         time,
         lastFiredAt: gateway.getLastFiredAt(),
       })
-      if (isCancelled() || !result.due || !result.reminder) return
+      // TODO(reminder): `review_due` is a real, distinct reminder kind now
+      // (see @domain/reminder.ts) but this hook only has copy/routing for
+      // `checkin_due` so far — it deliberately no-ops on `review_due` rather
+      // than mislabeling it, until the review-reminder UI is built.
+      if (isCancelled() || !result.due || result.reminder?.kind !== 'checkin_due') return
 
       if (gateway.getPermission() === 'default') {
         await gateway.requestPermission()
