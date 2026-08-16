@@ -26,7 +26,7 @@ export default defineConfig(({ command }) => {
       ...(httpsInDev ? [mkcert()] : []),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+        includeAssets: ['app_icon.svg', 'apple-touch-icon.png'],
         manifest: {
           name: 'NUDZ Gamble — sebekontrola nad hazardním hraním',
           short_name: 'Sebekontrola',
@@ -38,6 +38,7 @@ export default defineConfig(({ command }) => {
           display: 'standalone',
           orientation: 'portrait',
           icons: [
+            { src: 'app_icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
             { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
             { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
             {
