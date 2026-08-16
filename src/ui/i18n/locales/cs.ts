@@ -10,19 +10,19 @@ export const cs = {
   'common.continue': 'Pokračovat',
   'common.loading': 'Načítám…',
   'common.error': 'Něco se nepovedlo.',
-  'error.type.validation': 'Zadané údaje nejdou uložit. Zkontroluj je prosím.',
+  'error.type.validation': 'Zadané údaje nejdou uložit. Zkontrolujte je prosím.',
   'error.type.notFound': 'Nenašli jsme potřebná data.',
   'error.type.conflict': 'Tenhle záznam už existuje.',
   'error.type.internal': 'Něco se nepovedlo. Zkus to prosím znovu.',
-  'error.onboarding.noCoping': 'Vyber aspoň jednu copingovou strategii.',
-  'error.onboarding.timeCap': 'Limit na čas může být nejvýš 90 % tvého referenčního týdne.',
-  'error.onboarding.stakesCap': 'Limit na sázky může být nejvýš 90 % tvého referenčního týdne.',
-  'error.review.timeCap': 'Limit na čas může být nejvýš 90 % tvého referenčního týdne.',
-  'error.review.stakesCap': 'Limit na sázky může být nejvýš 90 % tvého referenčního týdne.',
-  'error.review.noProfile': 'Nenašli jsme tvůj profil. Dokonči prosím nastavení.',
-  'error.dashboard.noProfile': 'Nenašli jsme tvůj profil. Dokonči prosím nastavení.',
+  'error.onboarding.noCoping': 'Vyberte aspoň jednu copingovou strategii.',
+  'error.onboarding.timeCap': 'Limit na čas může být nejvýš 90 % vašeho referenčního týdne.',
+  'error.onboarding.stakesCap': 'Limit na sázky může být nejvýš 90 % vašeho referenčního týdne.',
+  'error.review.timeCap': 'Limit na čas může být nejvýš 90 % vašeho referenčního týdne.',
+  'error.review.stakesCap': 'Limit na sázky může být nejvýš 90 % vašeho referenčního týdne.',
+  'error.review.noProfile': 'Nenašli jsme váš profil. Dokončete prosím nastavení.',
+  'error.dashboard.noProfile': 'Nenašli jsme váš profil. Dokončete prosím nastavení.',
   'error.dashboard.noLimit': 'Pro tento týden zatím nejsou nastavené limity.',
-  'error.coping.emptyLabel': 'Napiš prosím, co strategie znamená.',
+  'error.coping.emptyLabel': 'Napište prosím, co strategie znamená.',
   'error.checkin.outsideWindow':
     'Tento den už zpětně doplnit nejde – doplnit lze jen posledních 5 dní.',
   'error.checkin.weekClosed': 'Tento týden je už uzavřený a nedá se upravovat.',
@@ -40,7 +40,7 @@ export const cs = {
   'checkin.played.noShort': 'Ne',
   'checkin.played.yes': 'hrál jsem',
   'checkin.played.no': 'nehrál jsem',
-  'checkin.played.noHelp': 'Když nehrál/a, uložíme nuly jako platný záznam.',
+  'checkin.played.noHelp': 'Když jste nehrál/a, uložíme nuly jako platný záznam.',
   'checkin.played.noHelpTitle': 'Pokud zadáte „Ne“, uložíme nuly',
   'checkin.time.title': 'Kolik času jste hraní věnoval/a?',
   'checkin.time.cardLabel': 'Čas',
@@ -106,21 +106,21 @@ export const cs = {
   'review.programme.dayState.locked': 'před začátkem programu',
   'review.programme.dayState.outside': 'po skončení programu',
 
-  'onboarding.intro.title': 'Získej přehled\nnad svým hraním',
+  'onboarding.intro.title': 'Získejte přehled\nnad svým hraním',
   'onboarding.intro.lead':
-    '28 dní si budeš zapisovat, kolik času a peněz jsi hraní věnoval. Aplikace ti z toho spočítá týdenní limity a každý den ti řekne, jak na tom jsi.',
+    '28 dní si budete zapisovat, kolik času a peněz jste hraní věnoval/a. Aplikace vám z toho spočítá týdenní limity a každý den vám řekne, jak na tom jste.',
   'onboarding.intro.bullet.checkin': 'Denní check-in zabere 45 sekund',
-  'onboarding.intro.bullet.local': 'Data zůstávají v tvém telefonu',
-  'onboarding.intro.bullet.export': 'Kdykoli si je můžeš exportovat',
+  'onboarding.intro.bullet.local': 'Data zůstávají ve vašem telefonu',
+  'onboarding.intro.bullet.export': 'Kdykoli si je můžete exportovat',
   'onboarding.intro.disclaimer.title': 'Tohle není léčba',
   'onboarding.intro.disclaimer.body':
-    'Aplikace nenahrazuje odbornou léčbu ani krizovou pomoc. Když potřebuješ mluvit s někým hned, zavolej Linku první psychické pomoci 116 123 — nonstop a zdarma.',
+    'Aplikace nenahrazuje odbornou léčbu ani krizovou pomoc. Když potřebujete mluvit s někým hned, zavolejte Linku první psychické pomoci 116 123 — nonstop a zdarma.',
   'onboarding.intro.cta': 'Začít',
 
   'onboarding.refTime.overline': 'Referenční týden',
-  'onboarding.refTime.title': 'Kolik času obvykle věnuješ hraní za týden?',
+  'onboarding.refTime.title': 'Kolik času obvykle věnujete hraní za týden?',
   'onboarding.refTime.lead':
-    'Stačí odhad. Je to výchozí stav, se kterým aplikace porovnává tvé denní záznamy.',
+    'Stačí odhad. Je to výchozí stav, se kterým aplikace porovnává vaše denní záznamy.',
   'onboarding.refTime.hoursLabel': 'Hodiny',
   'onboarding.refTime.minutesLabel': 'Minuty',
   'onboarding.refTime.unitHour': 'h',
@@ -128,18 +128,18 @@ export const cs = {
   'onboarding.refTime.sum': '= {count} minut za týden',
 
   'onboarding.refStakes.overline': 'Referenční týden',
-  'onboarding.refStakes.title': 'Kolik obvykle vsadíš za týden?',
+  'onboarding.refStakes.title': 'Kolik obvykle vsadíte za týden?',
   'onboarding.refStakes.lead': 'Zajímá nás celková vsazená částka — ne výhry ani čistá ztráta.',
   'onboarding.refStakes.fieldLabel': 'Sázky za týden',
   'onboarding.refStakes.currency': 'Kč',
   'onboarding.refStakes.helper': 'Celé koruny, bez desetinných míst',
   'onboarding.refStakes.why.title': 'Proč sázky, a ne prohra?',
   'onboarding.refStakes.why.body':
-    'Výši sázek ovlivníš přímo, výsledek hry ne. Limit se proto váže na vsazenou částku. Výhry si zapisuješ jen kvůli výpočtu čisté ztráty.',
+    'Výši sázek ovlivníte přímo, výsledek hry ne. Limit se proto váže na vsazenou částku. Výhry si zapisujete jen kvůli výpočtu čisté ztráty.',
 
   'onboarding.limits.title': 'Návrh limitů na týden 1',
   'onboarding.limits.lead':
-    'Doporučujeme 80 % tvého běžného týdne. Limit můžeš snížit, nebo zvýšit — nejvýš ale na 90 % reference.',
+    'Doporučujeme 80 % vašeho běžného týdne. Limit můžete snížit, nebo zvýšit — nejvýš ale na 90 % reference.',
   'onboarding.limits.time.label': 'Čas',
   'onboarding.limits.time.sub': 'z {reference}',
   'onboarding.limits.time.note': '80 % z {reference} min · strop {cap} min ({capHours} h)',
@@ -155,9 +155,9 @@ export const cs = {
 
   'onboarding.coping.title': 'Co můžete udělat při nutkání hrát',
   'onboarding.coping.lead':
-    'Vyber aspoň jednu strategii. Připomeneme ti ji, když se přiblížíš limitu nebo ho překročíš.',
+    'Vyberte aspoň jednu strategii. Připomeneme vám ji, když se přiblížíte limitu nebo ho překročíte.',
   'onboarding.coping.custom.label': 'Vlastní strategie (nepovinné)',
-  'onboarding.coping.custom.placeholder': 'Napiš vlastní…',
+  'onboarding.coping.custom.placeholder': 'Napište vlastní…',
   'onboarding.coping.cta': 'Dokončit nastavení',
   'onboarding.coping.strategy.changeEnvironment.title': 'Na chvíli odejdu od hraní',
   'onboarding.coping.strategy.changeEnvironment.description':
@@ -186,7 +186,7 @@ export const cs = {
   'onboarding.done.row.limits': 'Limity na týden 1',
   'onboarding.done.row.coping': 'Copingové strategie',
   'onboarding.done.banner.title': 'Začínáme dnes, {date}',
-  'onboarding.done.banner.body': 'Dnešek je den 1. Zítra si ho přijdeš zapsat — a tak dál 28 dní.',
+  'onboarding.done.banner.body': 'Dnešek je den 1. Zítra si ho přijdete zapsat — a tak dál 28 dní.',
   'onboarding.done.cta': 'Rozumím',
 
   'dashboard.title': 'Den {day}',
@@ -227,10 +227,10 @@ export const cs = {
 
   'coping.title': 'Váš Coping',
   'coping.lead':
-    'Tvoje copingové strategie. Vypni tu, kterou zrovna nepoužíváš, nebo přidej vlastní.',
-  'coping.empty': 'Zatím nemáš žádnou strategii.',
+    'Vaše copingové strategie. Vypněte tu, kterou zrovna nepoužíváte, nebo přidejte vlastní.',
+  'coping.empty': 'Zatím nemáte žádnou strategii.',
   'coping.add.label': 'Přidat vlastní strategii',
-  'coping.add.placeholder': 'Napiš vlastní…',
+  'coping.add.placeholder': 'Napište vlastní…',
   'coping.add.cta': 'Přidat',
 
   'dashboard.timeMachine.exit': 'Opustit stroj času',
@@ -245,7 +245,7 @@ export const cs = {
   'review.overline': 'TÝDEN {week} SKONČIL',
   'review.title': 'Nové limity na další týden',
   'review.lead':
-    'Nastav si limity pro nadcházející týden. Výchozí jsou tvé předchozí limity — můžeš je snížit.',
+    'Nastavte si limity pro nadcházející týden. Výchozí jsou vaše předchozí limity — můžete je snížit.',
   'review.previous': 'Předchozí: {value}',
   'review.cta': 'Uložit limity',
 } as const

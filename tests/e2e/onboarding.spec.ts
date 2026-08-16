@@ -32,17 +32,19 @@ test('completes onboarding with 10 h / 10 000 CZK reference', async ({ page }) =
   await page.goto('/')
 
   // Step 1 — intro & disclaimer.
-  await expect(page.getByRole('heading', { name: 'Získej přehled nad svým hraním' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Získejte přehled nad svým hraním' }),
+  ).toBeVisible()
   await page.getByRole('button', { name: 'Začít' }).click()
 
   // Step 2 — reference weekly time: 10 h 0 min (= 600 min).
-  await expect(page.getByRole('heading', { name: /Kolik času obvykle věnuješ/ })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Kolik času obvykle věnujete/ })).toBeVisible()
   await stepWheel(page, 'Hodiny', 10)
   await expect(page.getByText('= 600 minut za týden')).toBeVisible()
   await page.getByRole('button', { name: 'Pokračovat' }).click()
 
   // Step 3 — reference weekly stakes: 10 000 CZK.
-  await expect(page.getByRole('heading', { name: 'Kolik obvykle vsadíš za týden?' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Kolik obvykle vsadíte za týden?' })).toBeVisible()
   await page.getByRole('textbox', { name: 'Sázky za týden' }).fill('10000')
   await page.getByRole('button', { name: 'Pokračovat' }).click()
 

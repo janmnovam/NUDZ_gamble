@@ -71,7 +71,9 @@ test('wipes data and returns to onboarding', async ({ page }) => {
   await page.getByRole('button', { name: 'Smazat data' }).click()
 
   // Reload lands back on the onboarding intro with an empty database.
-  await expect(page.getByRole('heading', { name: 'Získej přehled nad svým hraním' })).toBeVisible()
+  await expect(
+    page.getByRole('heading', { name: 'Získejte přehled nad svým hraním' }),
+  ).toBeVisible()
 })
 
 test('prompts for next-week limits when a new week has none set', async ({ page }) => {

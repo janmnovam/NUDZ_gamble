@@ -65,7 +65,7 @@ describe('DashboardFlow', () => {
 
     // "Something went wrong" tells the user nothing they can act on.
     expect(
-      await screen.findByText('Nenašli jsme tvůj profil. Dokonči prosím nastavení.'),
+      await screen.findByText('Nenašli jsme váš profil. Dokončete prosím nastavení.'),
     ).not.toBeNull()
     expect(logged).toHaveBeenCalled()
     logged.mockRestore()

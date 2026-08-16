@@ -47,7 +47,7 @@ describe('CopingStep', () => {
     ).not.toBeNull()
     expect(screen.getByText('Omezím si přístup ke hraní')).not.toBeNull()
     expect(screen.queryByText('Katalogový souhrn.')).toBeNull()
-    expect(screen.queryByText(/Vyber aspoň jednu strategii/)).toBeNull()
+    expect(screen.queryByText(/Vyberte aspoň jednu strategii/)).toBeNull()
 
     fireEvent.click(screen.getByRole('checkbox', { name: /Na chvíli odejdu od hraní/ }))
 
