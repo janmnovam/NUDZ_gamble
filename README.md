@@ -236,6 +236,7 @@ Not included in the hackathon version:
 - Counting gains during betting.
 - Logic of gains vs bets (net gain / loss).
 Nice-to-have features (possible next steps before pilot):
+- Filling new week's limit should not allow me to go over 90% of referential values of amount and time spent gambling.
 - Allowing user to submit notes / feedback (free text). 
 - Allowing user to edit already filled days (for both time and amount gambled).
 - Tracking what dates were edited and how.
