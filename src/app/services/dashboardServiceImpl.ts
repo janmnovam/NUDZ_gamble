@@ -1,10 +1,14 @@
 /**
- * DashboardService wiring stub. `buildDashboardVM` already exists in
- * `@domain/dashboard.ts`; this wrapper just needs to call it and map the VM to
- * the DTO — TODO. See docs/architecture.md §DashboardService.
+ * Concrete DashboardService. Wraps `buildDashboardVM` (`@domain/dashboard.ts`)
+ * and translates its `DashboardVM` to the `DashboardResponse` DTO at the
+ * boundary. See docs/architecture.md §DashboardService.
  */
 import type { DashboardResponse, DashboardService } from '@/app/ports/dashboardService.ts'
+import { DEMO_USER_ID } from '@/app/constants.ts'
+import { toDashboardResponse } from '@/app/mappers/dashboardMapper.ts'
+import { buildDashboardVM } from '@domain/dashboard.ts'
 import type { TodayClock } from '@domain/clock.ts'
+import type { UserId } from '@domain/model.ts'
 import type {
   CheckInRepository,
   LimitRepository,
@@ -16,18 +20,31 @@ export interface DashboardServiceDeps {
   profiles: ProfileRepository
   limits: LimitRepository
   checkIns: CheckInRepository
+  // Not yet read by `buildDashboardVM` — `reviewable_weeks` stays hardcoded
+  // empty until ReviewRepository/ReviewService are wired (architecture.md TODO #4/#7).
   reviews: ReviewRepository
   today: TodayClock
+  /** The single demo user these records belong to. */
+  userId?: UserId
 }
 
 export class DashboardServiceImpl implements DashboardService {
-  protected readonly deps: DashboardServiceDeps
+  private readonly deps: DashboardServiceDeps
+  private readonly userId: UserId
 
   constructor(deps: DashboardServiceDeps) {
     this.deps = deps
+    this.userId = deps.userId ?? DEMO_USER_ID
   }
 
-  getDashboard(): Promise<DashboardResponse> {
-    return Promise.reject(new Error('DashboardService.getDashboard: not implemented (wiring only)'))
+  async getDashboard(): Promise<DashboardResponse> {
+    const vm = await buildDashboardVM({
+      userId: this.userId,
+      profileRepo: this.deps.profiles,
+      limitRepo: this.deps.limits,
+      checkInRepo: this.deps.checkIns,
+      today: this.deps.today,
+    })
+    return toDashboardResponse(vm)
   }
 }

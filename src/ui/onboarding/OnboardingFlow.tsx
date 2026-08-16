@@ -10,7 +10,7 @@ import { RefLimitsStep } from '@ui/onboarding/steps/RefLimitsStep.tsx'
 import { RefStakesStep } from '@ui/onboarding/steps/RefStakesStep.tsx'
 import { RefTimeStep } from '@ui/onboarding/steps/RefTimeStep.tsx'
 
-const TOTAL_STEPS = 5
+const TOTAL_STEPS = 6
 
 interface OnboardingFlowProps {
   /** Called when the user acknowledges the final screen (seam to the dashboard). */

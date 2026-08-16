@@ -12,6 +12,7 @@ import type { OnboardingService } from '@/app/ports/onboardingService.ts'
 import type {
   OnboardingProfileRequest,
   OnboardingProfileResponse,
+  OnboardingStatusResponse,
   ReferenceWeekRequest,
   SuggestedLimitsResponse,
 } from '@/app/dto/onboarding.ts'
@@ -21,10 +22,12 @@ import { type TodayClock, nextDate } from '@domain/clock.ts'
 import { limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
 import type { UserId } from '@domain/model.ts'
 import { completeOnboarding } from '@domain/onboarding.ts'
-import type { Clock, OnboardingRepository } from '@domain/ports.ts'
+import type { Clock, OnboardingRepository, ProfileRepository } from '@domain/ports.ts'
 
 export interface OnboardingServiceDeps {
   repo: OnboardingRepository
+  /** Read-only lookup for `getStatus` — `OnboardingRepository` is a write-only atomic port. */
+  profiles: ProfileRepository
   /** UTC instant source — stamps the record `*_at` timestamps. */
   now: Clock
   /** Local calendar date source — anchors the intervention start date. */
@@ -41,6 +44,11 @@ export class OnboardingServiceImpl implements OnboardingService {
   constructor(deps: OnboardingServiceDeps) {
     this.deps = deps
     this.userId = deps.userId ?? DEMO_USER_ID
+  }
+
+  async getStatus(): Promise<OnboardingStatusResponse> {
+    const profile = await this.deps.profiles.get(this.userId)
+    return { completed: profile !== undefined }
   }
 
   getSuggestedLimits(req: ReferenceWeekRequest): Promise<SuggestedLimitsResponse> {

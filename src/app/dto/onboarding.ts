@@ -47,3 +47,8 @@ export interface OnboardingProfileRequest {
 export interface OnboardingProfileResponse extends OnboardingProfileRequest {
   interventionStartDate: ISODate
 }
+
+/** Whether the demo user has already completed onboarding — gates the UI's entry screen. */
+export interface OnboardingStatusResponse {
+  completed: boolean
+}

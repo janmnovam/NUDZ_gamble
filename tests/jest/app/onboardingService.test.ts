@@ -6,7 +6,7 @@ import type { CopingStrategy, Limit, Profile } from '@domain/model.ts'
 const FIXED_NOW = '2026-09-01T22:30:00.000Z'
 const FIXED_TODAY = '2026-09-01'
 
-function makeService() {
+function makeService(existingProfile?: Profile) {
   const saved: { profile?: Profile; limit?: Limit; coping?: CopingStrategy[] } = {}
   let counter = 0
   const deps: OnboardingServiceDeps = {
@@ -20,6 +20,10 @@ function makeService() {
         saved.coping = coping
         return Promise.resolve()
       },
+    },
+    profiles: {
+      get: () => Promise.resolve(saved.profile ?? existingProfile),
+      save: () => Promise.resolve(),
     },
   }
   return { service: new OnboardingServiceImpl(deps), saved }
@@ -35,6 +39,31 @@ const completeRequest: OnboardingProfileRequest = {
     { label: 'Zavolat bratrovi', type: 'custom' },
   ],
 }
+
+describe('OnboardingServiceImpl.getStatus', () => {
+  it('reports not completed when no profile is stored', async () => {
+    const { service } = makeService()
+    await expect(service.getStatus()).resolves.toEqual({ completed: false })
+  })
+
+  it('reports completed once a profile exists', async () => {
+    const profile: Profile = {
+      userId: 'demo-user',
+      onboardingCompletedAt: FIXED_NOW,
+      interventionStartDate: '2026-09-02',
+      referenceTimeMin: 600,
+      referenceStakesCzk: 10_000,
+    }
+    const { service } = makeService(profile)
+    await expect(service.getStatus()).resolves.toEqual({ completed: true })
+  })
+
+  it('reports completed right after complete() persists the profile', async () => {
+    const { service } = makeService()
+    await service.complete(completeRequest)
+    await expect(service.getStatus()).resolves.toEqual({ completed: true })
+  })
+})
 
 describe('OnboardingServiceImpl.getSuggestedLimits', () => {
   it('suggests 80% of the reference for time and money, with percentages', async () => {

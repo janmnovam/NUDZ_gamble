@@ -77,19 +77,29 @@ outbound sub-lists.
 
 ### OnboardingService
 
-**Status:** ✅ DONE — `getSuggestedLimits` + `complete` implemented as `OnboardingServiceImpl` (`src/app/services/onboardingServiceImpl.ts`), tested (`tests/jest/app/onboardingService.test.ts`), wired via `createApp()` and consumed by the UI onboarding flow (`src/ui/onboarding/OnboardingFlow.tsx`).
+**Status:** ✅ DONE — `getSuggestedLimits` + `complete` + `getStatus` implemented as `OnboardingServiceImpl` (`src/app/services/onboardingServiceImpl.ts`), tested (`tests/jest/app/onboardingService.test.ts`), wired via `createApp()` and consumed by the UI onboarding flow (`src/ui/onboarding/OnboardingFlow.tsx`). `getStatus` is what `src/ui/App.tsx` calls on mount to decide whether to show the onboarding wizard or skip straight to the dashboard — a returning demo user (or seeded data) never re-runs onboarding.
 
 **Depends on**
 - Inbound
   - (none)
 - Outbound
   - OnboardingRepository — the atomic profile + week-1 limit + coping write the built `completeOnboarding` use case relies on (stands in for the separate Profile/Limit/CopingStrategy repos)
+  - ProfileRepository — read-only lookup for `getStatus` (`OnboardingRepository` is write-only)
   - Clock (`now` + `TodayClock`, injected at the composition root)
 
 | Method             | Accepts                    | Returns                     | Description                                                  |
-|--------------------|----------------------------|-----------------------------|--------------------------------------------------------------|
+|--------------------|----------------------------|------------------------------|--------------------------------------------------------------|
+| getStatus          | `—`                         | `OnboardingStatusResponse`  | Whether the demo user has already completed onboarding       |
 | getSuggestedLimits | `ReferenceWeekRequest`     | `SuggestedLimitsResponse`   | 80% suggestion + 90% ceiling from the reference week         |
 | complete           | `OnboardingProfileRequest` | `OnboardingProfileResponse` | Finalize onboarding: persist profile + week-1 limit + coping |
+
+**OnboardingStatusResponse**
+
+```json
+{
+  "completed": true
+}
+```
 
 **ReferenceWeekRequest**
 
@@ -241,7 +251,7 @@ flowchart LR
 
 ### DashboardService
 
-**Status:** 🚧 IN PROGRESS — `buildDashboardVM()` builds the current week's 7-day `DashboardVM` (`src/domain/dashboard.ts`, tested in `tests/jest/domain/dashboard.test.ts`), built on a new `buildDayCell()` (one day → `DayCell`, reused for both the 7-cell week strip and, later, a 28-cell month/final-summary view), `dayStateOf`/`isBackfill` (`checkin.ts`), `classifyStatus`/`worseStatus` (`limits.ts`), and `resolvePendingAction` (`guards.ts`). Not yet wired: `reviewable_weeks` is hardcoded empty until `ReviewRepository`/`ReviewService` exist (TODO #4/#7 below), and there's no inbound-port/dispatcher wrapper yet — same style gap as `OnboardingService`.
+**Status:** ✅ DONE (dashboard read path) — `buildDashboardVM()` builds the current week's 7-day `DashboardVM` (`src/domain/dashboard.ts`, tested in `tests/jest/domain/dashboard.test.ts`), built on `buildDayCell()` (one day → `DayCell`, reused for both the 7-cell week strip and, later, a 28-cell month/final-summary view), `dayStateOf`/`isBackfill` (`checkin.ts`), `classifyStatus`/`worseStatus` (`limits.ts`), and `resolvePendingAction` (`guards.ts`). The inbound-port wrapper (`DashboardServiceImpl`, `src/app/services/dashboardServiceImpl.ts`) and its DTO mapper (`src/app/mappers/dashboardMapper.ts`) are built and tested (`tests/jest/app/dashboardService.test.ts`), wired via `createApp()`, and consumed by `src/ui/dashboard/Dashboard.tsx` — the screen the UI lands on once onboarding is complete. Not yet wired: `reviewable_weeks` is hardcoded empty until `ReviewRepository`/`ReviewService` exist (TODO #4/#7 below); `ReviewRepository` is injected into `DashboardServiceImpl` for that future wiring but unused today.
 
 **Depends on**
 - Inbound
@@ -305,9 +315,8 @@ the domain's `DayCell` (`src/domain/dashboard.ts`): `played`/`timeMinutes`/`stak
 are present only when `state` is `completed` or `backfilled`; `state` is one of
 `completed` · `backfilled` · `missing` · `future` (`DayState`, `src/domain/checkin.ts`).
 `buildDayCell()` builds one cell at a time so the same shape can later drive a 28-cell
-month/final-summary view, not just this 7-cell week strip. Not yet carried by a real DTO
-mapper — `src/app` doesn't exist yet, so this is the shape `getDashboard` should produce
-once it does, camelCase per this doc's DTO convention.
+month/final-summary view, not just this 7-cell week strip. Carried by a real DTO mapper —
+`src/app/mappers/dashboardMapper.ts` — camelCase per this doc's DTO convention.
 
 ### ReviewService
 
@@ -681,7 +690,7 @@ never called by the domain.
 Everything downstream of onboarding is still unimplemented in `src/domain`. In priority order (each blocks a "must work" jury flow):
 
 1. **CheckInService** (`checkin.ts`) — `dayStateOf`/`isBackfill` are now implemented (pulled forward as a `DashboardService` dependency); `validateCheckIn`/`submitCheckIn` still need implementing against the existing type signatures. Its outbound repos (`CheckInRepository`, `CheckInEditRepository`) are already built, so this is the next unblocked piece.
-2. **DashboardService** (`dashboard.ts`) — ✅ `buildDashboardVM` builds the current week's `DashboardVM` from check-ins + limit history (never stored, per CLAUDE.md). Remaining: wire `reviewable_weeks` once `ReviewRepository` exists (#4/#7), and give it an inbound-port/dispatcher wrapper.
+2. **DashboardService** (`dashboard.ts`) — ✅ `buildDashboardVM` builds the current week's `DashboardVM` from check-ins + limit history (never stored, per CLAUDE.md), and ✅ `DashboardServiceImpl` wraps it as the inbound port, consumed by `src/ui/dashboard/Dashboard.tsx`. Remaining: wire `reviewable_weeks` once `ReviewRepository` exists (#4/#7).
 3. **guards.ts implementations** — `evaluateLimitAdjustment` and `resolvePendingAction` are built. Still missing: `canEditCheckIn`, `isWeekClosed`, `canReview`. These block both `CheckInService` (edit window) and `ReviewService` (week-closing).
 4. **ReviewService** (new `review.ts`) — `getPendingReview`, `completeReview`, `getFinalSummary`; depends on guards #3 and a `ReviewRepository` adapter (currently 📝 DRAFT, no adapter yet).
 5. **ReminderService** (new `reminder.ts`) — `getDueReminder`; depends on `resolvePendingAction` from guards #3.

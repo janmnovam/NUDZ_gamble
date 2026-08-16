@@ -43,6 +43,7 @@ export function createApp(data: DataLayer = createDataLayer()): App {
   return {
     onboarding: new OnboardingServiceImpl({
       repo: data.onboarding,
+      profiles: data.profiles,
       now: data.now,
       today,
       newId,

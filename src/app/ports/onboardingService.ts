@@ -7,11 +7,19 @@
 import type {
   OnboardingProfileRequest,
   OnboardingProfileResponse,
+  OnboardingStatusResponse,
   ReferenceWeekRequest,
   SuggestedLimitsResponse,
 } from '@/app/dto/onboarding.ts'
 
 export interface OnboardingService {
+  /**
+   * Whether the demo user has already completed onboarding. The UI checks
+   * this before showing the onboarding wizard, so a returning user lands on
+   * the dashboard instead of going through onboarding again.
+   */
+  getStatus(): Promise<OnboardingStatusResponse>
+
   /**
    * Derive the auto-suggested weekly limits (80% of the reference) plus the
    * percentages, without persisting anything.

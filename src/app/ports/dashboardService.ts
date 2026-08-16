@@ -1,11 +1,11 @@
 /**
- * DashboardService — inbound (driving) port. Wiring stub: the contract follows
- * docs/architecture.md §DashboardService (`buildDashboardVM` already exists in
- * `@domain/dashboard.ts`), but the DTO shape is a placeholder until the service
- * wrapper is implemented.
+ * DashboardService — inbound (driving) port. Wraps `buildDashboardVM`
+ * (`@domain/dashboard.ts`, docs/architecture.md §DashboardService) and maps
+ * its `DashboardVM` onto the camelCase `DashboardResponse` DTO.
  */
-// TODO(app): replace with the documented shape when DashboardService is built.
-export type DashboardResponse = Record<string, unknown>
+import type { DashboardResponse } from '@/app/dto/dashboard.ts'
+
+export type { DashboardResponse }
 
 export interface DashboardService {
   /** Cumulative weekly evaluation vs both limits, missing days surfaced. */
