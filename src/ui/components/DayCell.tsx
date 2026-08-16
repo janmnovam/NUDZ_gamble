@@ -20,24 +20,32 @@ export type DayCellState =
 
 interface DayCellStyle {
   container: string
+  /**
+   * Border colour, kept separate from `container` so it is the *only*
+   * border-colour class on the cell: the `ring` highlight swaps it for
+   * `border-brand` outright. Appending `border-brand` alongside a
+   * `border-transparent` container instead would lose to it in the cascade
+   * (Tailwind emits `.border-transparent` after `.border-brand`), leaving the
+   * current-day ring invisible.
+   */
+  border: string
   weekday: string
   day: string
   dot: string
 }
 
-/**
- * Every state carries a border so the 2px ring on `today` doesn't make that
- * cell taller than its neighbours.
- */
+/** Every state carries a 2px border (added in the base) so `ring` never changes the cell's height. */
 const STATE_STYLES: Record<DayCellState, DayCellStyle> = {
   completed: {
-    container: 'bg-status-ok-subtle border-2 border-transparent',
+    container: 'bg-status-ok-subtle',
+    border: 'border-transparent',
     weekday: 'text-faint',
     day: 'text-ink',
     dot: 'bg-status-ok-fill',
   },
   missing: {
-    container: 'bg-status-caution-subtle border-status-caution-fill border-2',
+    container: 'bg-status-caution-subtle',
+    border: 'border-status-caution-fill',
     weekday: 'text-status-caution',
     day: 'text-status-caution',
     dot: 'bg-status-caution-fill',
@@ -46,25 +54,29 @@ const STATE_STYLES: Record<DayCellState, DayCellStyle> = {
   // — so it must not borrow the filled-in look. The ring marks where you are;
   // the neutral fill says there is nothing here yet.
   today: {
-    container: 'bg-sunken border-2 border-brand',
+    container: 'bg-sunken',
+    border: 'border-brand',
     weekday: 'text-brand',
     day: 'text-brand',
     dot: 'bg-line-strong',
   },
   locked: {
-    container: 'border-2 border-transparent',
+    container: '',
+    border: 'border-transparent',
     weekday: 'text-faint',
     day: 'text-faint',
     dot: '',
   },
   outside: {
-    container: 'bg-sunken border-2 border-transparent',
+    container: 'bg-sunken',
+    border: 'border-transparent',
     weekday: 'text-faint',
     day: 'text-faint',
     dot: '',
   },
   future: {
-    container: 'bg-sunken border-2 border-transparent',
+    container: 'bg-sunken',
+    border: 'border-transparent',
     weekday: 'text-disabled',
     day: 'text-faint',
     dot: 'bg-line-strong',
@@ -104,9 +116,11 @@ export function DayCell({ weekday, day, state, ring, ariaLabel, onClick }: DayCe
     </>
   )
   const shared = cn(
-    'flex h-[62px] flex-col items-center justify-center gap-0.5 rounded-md',
+    'flex h-[62px] flex-col items-center justify-center gap-0.5 rounded-md border-2',
     style.container,
-    ring && 'border-brand',
+    // Exactly one border-colour class, so the ring wins outright instead of
+    // fighting the container's border in the cascade.
+    ring ? 'border-brand' : style.border,
   )
 
   if (!onClick) {

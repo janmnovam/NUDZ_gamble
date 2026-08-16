@@ -216,7 +216,7 @@ export function DashboardScreen({
               <div
                 key={week[0]?.date ?? weekIndex}
                 className={cn(
-                  'grid grid-cols-7 gap-[5px] rounded-2xl border-2 p-1',
+                  'grid grid-cols-7 gap-[5px] rounded-2xl border-1 p-1',
                   isCurrentWeek ? 'border-brand' : 'border-transparent',
                 )}
               >
