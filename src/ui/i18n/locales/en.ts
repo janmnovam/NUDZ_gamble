@@ -33,7 +33,7 @@ export const en: Record<TranslationKey, string> = {
   'checkin.played.yes': 'I gambled',
   'checkin.played.no': 'I did not gamble',
   'checkin.played.noHelp': 'If you did not gamble, we save zeros as a valid record.',
-  'checkin.played.noHelpTitle': 'If you did not gamble, we save zeros',
+  'checkin.played.noHelpTitle': 'If you choose “No”, we save zeros',
   'checkin.time.title': 'How much time did you spend gambling?',
   'checkin.time.cardLabel': 'Time',
   'checkin.time.hoursLabel': 'Hours',

@@ -37,7 +37,7 @@ export const cs = {
   'checkin.played.yes': 'hrál jsem',
   'checkin.played.no': 'nehrál jsem',
   'checkin.played.noHelp': 'Když nehrál/a, uložíme nuly jako platný záznam.',
-  'checkin.played.noHelpTitle': 'Když nehrál, uložíme nuly',
+  'checkin.played.noHelpTitle': 'Pokud zadáte „Ne“, uložíme nuly',
   'checkin.time.title': 'Kolik času jste hraní věnoval/a?',
   'checkin.time.cardLabel': 'Čas',
   'checkin.time.hoursLabel': 'Hodiny',
