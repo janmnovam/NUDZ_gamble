@@ -98,13 +98,19 @@ export const validateCheckIn: ValidateCheckIn = (draft, { today, weekFirstDay })
 
   if (draft.played) {
     if (!Number.isInteger(draft.timeMin) || draft.timeMin < 0 || draft.timeMin > 1440) {
-      errors.push({ field: 'timeMin', message: 'Minutes must be a whole number between 0 and 1440.' })
+      errors.push({
+        field: 'timeMin',
+        message: 'Minutes must be a whole number between 0 and 1440.',
+      })
     }
     if (!Number.isInteger(draft.stakesCzk) || draft.stakesCzk < 0) {
       errors.push({ field: 'stakesCzk', message: 'Stakes must be a non-negative whole number.' })
     }
     if (!Number.isInteger(draft.winningsCzk) || draft.winningsCzk < 0) {
-      errors.push({ field: 'winningsCzk', message: 'Winnings must be a non-negative whole number.' })
+      errors.push({
+        field: 'winningsCzk',
+        message: 'Winnings must be a non-negative whole number.',
+      })
     }
   } else {
     if (draft.timeMin !== 0) {

@@ -196,7 +196,14 @@ describe('submitCheckIn', () => {
       submittedAt: '2026-09-03T20:00:00+02:00',
       updatedAt: null,
     }
-    const record = submitCheckIn('demo-user', draft({ timeMin: 120 }), 1, time, () => 'unused', existing)
+    const record = submitCheckIn(
+      'demo-user',
+      draft({ timeMin: 120 }),
+      1,
+      time,
+      () => 'unused',
+      existing,
+    )
     expect(record).toMatchObject({
       checkInId: 'existing-id',
       submittedAt: '2026-09-03T20:00:00+02:00',

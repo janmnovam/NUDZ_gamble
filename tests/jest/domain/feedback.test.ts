@@ -55,7 +55,9 @@ describe('buildCheckInFeedback', () => {
   it('reports both axes and no coping reminder when OK', () => {
     const fb = buildCheckInFeedback({
       weekNo: 1,
-      checkIns: [checkIn({ behaviorDate: '2026-09-01T00:00:00.000Z', timeMin: 100, stakesCzk: 1_000 })],
+      checkIns: [
+        checkIn({ behaviorDate: '2026-09-01T00:00:00.000Z', timeMin: 100, stakesCzk: 1_000 }),
+      ],
       limit: LIMIT,
       copingStrategies: [coping({})],
       weekDays: WEEK_DAYS,
@@ -70,7 +72,9 @@ describe('buildCheckInFeedback', () => {
   it('surfaces the top-priority active coping label at POZOR', () => {
     const fb = buildCheckInFeedback({
       weekNo: 1,
-      checkIns: [checkIn({ behaviorDate: '2026-09-01T00:00:00.000Z', timeMin: 100, stakesCzk: 6_600 })],
+      checkIns: [
+        checkIn({ behaviorDate: '2026-09-01T00:00:00.000Z', timeMin: 100, stakesCzk: 6_600 }),
+      ],
       limit: LIMIT,
       copingStrategies: [
         coping({ copingStrategyId: 's2', label: 'Call a friend', priority: 2 }),

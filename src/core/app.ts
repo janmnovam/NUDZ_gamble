@@ -48,13 +48,13 @@ export function createApp(data: DataLayer = createDataLayer()): App {
       newId,
     }),
     coping: new CopingStrategyServiceImpl({ repo: data.copingStrategies }),
-    // The services below are wired (dependencies injected) but not yet
-    // implemented — their methods throw until each is built.
     checkIn: new CheckInServiceImpl({
       checkIns: data.checkIns,
       checkInEdits: data.checkInEdits,
       limits: data.limits,
       profiles: data.profiles,
+      copingStrategies: data.copingStrategies,
+      newId,
     }),
     dashboard: new DashboardServiceImpl({
       profiles: data.profiles,
@@ -69,6 +69,7 @@ export function createApp(data: DataLayer = createDataLayer()): App {
       reviews: data.reviews,
       newId,
     }),
+    // Wired but not yet implemented — its methods throw until it's built.
     reminder: new ReminderServiceImpl({
       checkIns: data.checkIns,
       profiles: data.profiles,

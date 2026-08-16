@@ -11,7 +11,13 @@
 import { dayStateOf } from '@domain/checkin.ts'
 import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
 import { classifyStatus, worseStatus } from '@domain/limits.ts'
-import type { CheckIn, CopingStrategy, ISOCalendarTimestamp, ISODate, Limit } from '@domain/model.ts'
+import type {
+  CheckIn,
+  CopingStrategy,
+  ISOCalendarTimestamp,
+  ISODate,
+  Limit,
+} from '@domain/model.ts'
 
 export interface FeedbackAxis {
   used: number
@@ -70,7 +76,8 @@ export function buildCheckInFeedback(input: CheckInFeedbackInput): CheckInFeedba
 
   const byDate = new Map(input.checkIns.map((c) => [c.behaviorDate, c]))
   const incompleteWeek = input.weekDays.some(
-    (d) => dayStateOf({ behaviorDate: d, today: input.today, checkIn: byDate.get(d) }) === 'missing',
+    (d) =>
+      dayStateOf({ behaviorDate: d, today: input.today, checkIn: byDate.get(d) }) === 'missing',
   )
 
   const topActive = input.copingStrategies
