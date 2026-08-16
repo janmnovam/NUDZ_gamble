@@ -70,18 +70,25 @@ npm run dev               # http://localhost:5173 (also served on the LAN IP)
 
 ```
 src/
-  ui/        layer A — presentation (React)
-  domain/    layer B — intervention logic (pure; empty for now)
-  data/      layer C — persistence (Dexie/IndexedDB)
+  ui/        presentation (React); the only layer that reads a real clock
+  app/       application layer — inbound ports, service impls, DTOs, mappers
+  domain/    intervention logic (pure, no I/O) + the outbound port contracts
+  data/      persistence — Dexie adapters over IndexedDB
+  core/      composition root — createDataLayer() / createApp()
+  dev/       seeding helpers for the demo (dev builds only)
 tests/
   jest/      unit tests (own tsconfig + setup), mirror the src/ structure
   e2e/       Playwright specs (own tsconfig)
 public/      icons, favicon
 ```
 
+The layering is hexagonal (ports & adapters) — [docs/architecture.md](docs/architecture.md)
+is the authoritative description, including the per-port build status.
+
 Path aliases `@/`, `@ui/`, `@domain/`, `@data/` are configured in `tsconfig.app.json`,
 `vite.config.ts` and `jest.config.ts` (Jest does not read Vite's resolver, so the mapping
-is restated there).
+is restated there). `src/app/` and `src/core/` have no alias of their own — they are
+reached through `@/app/…` and `@/core/…`.
 
 ## CI / CD
 
@@ -152,11 +159,14 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Known gaps
 
-- `src/domain/` is empty — no intervention logic, limits, check-in or review flow yet.
-- `src/data/db.ts` opens a placeholder store (`_bootstrap`); the real schema is not modelled.
-- Seed/demo mode and the reminder scenario required by the brief are not built. CSV export
-  itself is built (`ExportService.exportDataZip`, see below) but has no UI trigger yet — no
-  button wires it to a browser download.
+- **Limits for weeks 2–4 exist only once the matching review is completed** — `completeReview`
+  is what writes the next week's limit, so a dashboard that runs past day 7 without a review
+  fails with `no limit set for week N` (`src/domain/dashboard.ts`).
+- **`reviewable_weeks` is hardcoded empty** in `buildDashboardVM`, so the dashboard can never
+  resolve `pendingAction` to `review_available` on its own. `ReviewService` exists — this is
+  wiring, not missing logic.
+- **Reminders fire on a single hardcoded slot** — `REMINDER_TIMES` is `['15:30']`, a demo
+  simplification standing in for a notification-time setting the user can change.
 - Playwright's `mobile-safari` project needs `npx playwright install webkit`; only
   Chromium was installed and exercised so far.
 
@@ -164,8 +174,9 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 - A hidden feature that lets QA/testing set a specific intervention date or delete all data.
 - This allows testing specific time periods without waiting for real time to pass.
-- It's hidden behind "Den 1" number shown on the Home screen.
-- QA/testing must tap the version number exactly 7 times to reveal the Debug mode GUI.
+- It's hidden behind the "Den 1" day heading shown on the Home screen.
+- QA/testing must tap that heading exactly 7 times, with no pause longer than 2 seconds
+  between taps, to reveal the Debug mode GUI (`useMultiTap` in `src/ui/admin/`).
 
 ## Exporting data from app
 
@@ -181,6 +192,7 @@ Icons in `public/` are generated for this repository and carry no third-party li
     - winnings_czk
     - submitted_at
     - updated_at
+    - is_backfill (derived at export time: submitted more than a calendar day after the day it covers)
   - .csv file nr 2 is export of LIMIT table containing fields:
     - limit_id
     - user_id

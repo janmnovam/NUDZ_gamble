@@ -48,8 +48,14 @@ gets.")
 jsou pro další zpracování univerzálnější než jeden předpočítaný pohled.
 
 **Důsledek:** Den bez check-inu **nemá řádek vůbec** — místo řádku s prázdnými hodnotami.
-Chybí také odvozené sloupce `study_day`, `checkin_status` a `is_backfill`. Kdo bude export
-porovnávat s Přílohou 2, ten rozdíl uvidí.
+Chybí také odvozené sloupce `study_day` a `checkin_status`. Kdo bude export porovnávat
+s Přílohou 2, ten rozdíl uvidí.
+
+**Jedna výjimka, dodaná později:** `is_backfill` v tabulce `check_in` je odvozený sloupec
+(počítá se při exportu přes `isBackfill` — odesláno víc než kalendářní den po dni, kterého
+se záznam týká). Bez něj by v surovém výpisu nešlo poznat, co uživatel doplňoval zpětně,
+což je pro vyhodnocení podstatné. „As raw as it gets" tím zůstává v platnosti jako pravidlo
+pro tvar exportu, ne jako zákaz jediného dopočítaného příznaku.
 
 **Co tím ale nepadá:** den bez hraní je pořád **skutečný záznam s nulami**
 (`played=false`, `time_min=0`, …), zatímco chybějící den prostě řádek nemá. Tyhle dvě
