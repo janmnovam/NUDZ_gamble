@@ -2,9 +2,12 @@ import { ArrowLeft } from 'lucide-react'
 
 import { Button } from '@ui/components/Button.tsx'
 import { Card } from '@ui/components/Card.tsx'
+import { DurationWheel } from '@ui/components/DurationWheel.tsx'
 import { MoneyField } from '@ui/components/MoneyField.tsx'
 import { Screen } from '@ui/components/Screen.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
+
+const MAX_DAILY_MINUTES = 24 * 60
 
 interface DetailsStepProps {
   minutes: number
@@ -16,10 +19,6 @@ interface DetailsStepProps {
   onStakesChange: (stakes: number) => void
   onBack: () => void
   onComplete: () => void
-}
-
-function splitMinutes(totalMinutes: number): { hours: number; minutes: number } {
-  return { hours: Math.floor(totalMinutes / 60), minutes: totalMinutes % 60 }
 }
 
 export function DetailsStep({
@@ -34,7 +33,6 @@ export function DetailsStep({
   onComplete,
 }: DetailsStepProps) {
   const { t } = useTranslation()
-  const split = splitMinutes(minutes)
 
   return (
     <Screen
@@ -70,48 +68,15 @@ export function DetailsStep({
 
       <Card className="flex flex-col gap-1.5" padding="px-4 pt-3 pb-4">
         <p className="type-label text-muted">{t('checkin.time.cardLabel')}</p>
-        <div className="flex items-center gap-3 py-1">
-          <label className="focus-within:ring-brand flex flex-1 flex-col items-center rounded-sm focus-within:ring-2">
-            <span className="sr-only">{t('checkin.time.hoursLabel')}</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              aria-label={t('checkin.time.hoursLabel')}
-              value={split.hours === 0 ? '' : String(split.hours)}
-              onChange={(event) => {
-                const hours = Math.min(Number(event.target.value.replace(/\D/g, '') || '0'), 99)
-                onMinutesChange(hours * 60 + split.minutes)
-              }}
-              className="font-display text-ink h-[38px] w-full bg-transparent text-center text-[32px] leading-[38px] font-semibold outline-none"
-              placeholder="0"
-            />
-            <span className="text-faint text-[13px] leading-[18px]">
-              {t('checkin.time.hoursUnitFull')}
-            </span>
-          </label>
-          <span className="bg-line h-[46px] w-px shrink-0" aria-hidden />
-          <label className="focus-within:ring-brand flex flex-1 flex-col items-center rounded-sm focus-within:ring-2">
-            <span className="sr-only">{t('checkin.time.minutesLabel')}</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              aria-label={t('checkin.time.minutesLabel')}
-              value={split.minutes === 0 ? '' : String(split.minutes)}
-              onChange={(event) => {
-                const nextMinutes = Math.min(
-                  Number(event.target.value.replace(/\D/g, '') || '0'),
-                  59,
-                )
-                onMinutesChange(split.hours * 60 + nextMinutes)
-              }}
-              className="font-display text-ink h-[38px] w-full bg-transparent text-center text-[32px] leading-[38px] font-semibold outline-none"
-              placeholder="0"
-            />
-            <span className="text-faint text-[13px] leading-[18px]">
-              {t('checkin.time.minutesUnitFull')}
-            </span>
-          </label>
-        </div>
+        <DurationWheel
+          minutes={minutes}
+          onChange={onMinutesChange}
+          hoursLabel={t('checkin.time.hoursLabel')}
+          minutesLabel={t('checkin.time.minutesLabel')}
+          hourUnit={t('checkin.time.unitHour')}
+          minuteUnit={t('checkin.time.unitMinute')}
+          maxMinutes={MAX_DAILY_MINUTES}
+        />
       </Card>
 
       <h2 className="type-h2 text-ink">{t('checkin.stakes.title')}</h2>

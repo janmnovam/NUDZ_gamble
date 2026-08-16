@@ -20,3 +20,7 @@ playwright-report
 test-results
 blob-report
 .playwright
+
+# Local UI demo harness
+ui-demo.dev.html
+src/ui/dev/

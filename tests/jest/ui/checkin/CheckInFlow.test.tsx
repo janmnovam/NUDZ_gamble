@@ -55,7 +55,7 @@ describe('CheckInFlow', () => {
     const continueButton = screen.getByRole('button', { name: 'Pokračovat' })
     expect(continueButton.hasAttribute('disabled')).toBe(true)
 
-    fireEvent.change(screen.getByLabelText('Hodiny'), { target: { value: '1' } })
+    fireEvent.keyDown(screen.getByRole('listbox', { name: 'Hodiny' }), { key: 'ArrowDown' })
 
     fireEvent.change(screen.getByLabelText('Sázky'), { target: { value: '2500' } })
     fireEvent.click(screen.getByRole('button', { name: 'Pokračovat' }))
