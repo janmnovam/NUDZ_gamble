@@ -92,11 +92,11 @@ describe('NotificationServiceImpl.checkSchedule', () => {
 })
 
 describe('NotificationServiceImpl.checkLastChance', () => {
-  it('is not due before the last-chance slot (21:00)', async () => {
+  it('is not due before the last-chance slot (16:30)', async () => {
     const service = makeService(null, true)
     const result = await service.checkLastChance({
       userId: USER_ID,
-      time: '2026-09-07T20:30:00+02:00',
+      time: '2026-09-07T16:00:00+02:00',
       lastFiredAt: null,
     })
     expect(result).toEqual({ due: false })
@@ -106,7 +106,7 @@ describe('NotificationServiceImpl.checkLastChance', () => {
     const service = makeService(null, true)
     const result = await service.checkLastChance({
       userId: USER_ID,
-      time: '2026-09-07T21:00:00+02:00',
+      time: '2026-09-07T16:30:00+02:00',
       lastFiredAt: null,
     })
     expect(result).toEqual({ due: true })
@@ -116,7 +116,7 @@ describe('NotificationServiceImpl.checkLastChance', () => {
     const service = makeService(null, false)
     const result = await service.checkLastChance({
       userId: USER_ID,
-      time: '2026-09-07T21:00:00+02:00',
+      time: '2026-09-07T16:30:00+02:00',
       lastFiredAt: null,
     })
     expect(result).toEqual({ due: false })
@@ -126,8 +126,8 @@ describe('NotificationServiceImpl.checkLastChance', () => {
     const service = makeService(null, true)
     const result = await service.checkLastChance({
       userId: USER_ID,
-      time: '2026-09-07T21:30:00+02:00',
-      lastFiredAt: '2026-09-07T21:00:00+02:00',
+      time: '2026-09-07T17:00:00+02:00',
+      lastFiredAt: '2026-09-07T16:30:00+02:00',
     })
     expect(result).toEqual({ due: false })
   })
