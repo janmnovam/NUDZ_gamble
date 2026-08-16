@@ -228,13 +228,15 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Technical debt
 
-TypeScript pinned to 6.x — dependency-driven, not a design choice. Revisit once typescript-eslint supports TS 7, since it blocks tooling/perf improvements.
+- TypeScript pinned to 6.x — dependency-driven, not a design choice. Revisit once typescript-eslint supports TS 7, since it blocks tooling/perf improvements.
 
 ## Suggested next steps
 
 Not included in the hackathon version:
 - Counting gains during betting.
 - Logic of gains vs bets (net gain / loss).
+Logical problems:
+- After setting new weekly limits the user is not able to backfill for previous week anymore.
 Nice-to-have features (possible next steps before pilot):
 - Filling new week's limit should not allow me to go over 90% of referential values of amount and time spent gambling.
 - Allowing user to submit notes / feedback (free text). 
