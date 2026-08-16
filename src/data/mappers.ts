@@ -76,6 +76,27 @@ export const copingDefaultToDomain = (e: CopingStrategyDefaultEntity): CopingStr
   priority: e.priority,
   // `exactOptionalPropertyTypes`: omit the key entirely rather than set it undefined.
   ...(e.reminder_text !== undefined ? { reminderText: e.reminder_text } : {}),
+  ...(e.title !== undefined ? { title: e.title } : {}),
+  ...(e.what_to_do !== undefined ? { whatToDo: e.what_to_do } : {}),
+  ...(e.why_it_can_help !== undefined ? { whyItCanHelp: e.why_it_can_help } : {}),
+  ...(e.how_to !== undefined ? { howTo: e.how_to } : {}),
+  ...(e.when_useful !== undefined ? { whenUseful: e.when_useful } : {}),
+  ...(e.note !== undefined ? { note: e.note } : {}),
+  ...(e.note_label !== undefined ? { noteLabel: e.note_label } : {}),
+  ...(e.restriction_options !== undefined
+    ? {
+        restrictionOptions: {
+          intro: e.restriction_options.intro,
+          items: e.restriction_options.items.map((item) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            linkLabel: item.link_label,
+            href: item.href,
+          })),
+        },
+      }
+    : {}),
 })
 
 export const limitToEntity = (l: Limit): LimitEntity => ({

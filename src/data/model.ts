@@ -43,15 +43,37 @@ export interface CopingStrategyEntity {
   updated_at: ISOTimestamp | null
 }
 
+export interface CopingStrategyRestrictionOptionEntity {
+  id: string
+  title: string
+  description: string
+  link_label: string
+  href: string
+}
+
+export interface CopingStrategyRestrictionOptionsEntity {
+  intro: string
+  items: readonly CopingStrategyRestrictionOptionEntity[]
+}
+
 /**
  * A predefined suggestion (Dr. Kazmer's list). Seed data, never persisted on
  * its own — adopting one writes a `CopingStrategy` row with `type: 'default'`.
+ * The detail fields back the read-only catalog strategy detail screen.
  */
 export interface CopingStrategyDefaultEntity {
   code: string
   label: string
   priority: number
   reminder_text?: string
+  title?: string
+  what_to_do?: string
+  why_it_can_help?: string
+  how_to?: string
+  when_useful?: string
+  note?: string
+  note_label?: string
+  restriction_options?: CopingStrategyRestrictionOptionsEntity
 }
 
 export interface LimitEntity {

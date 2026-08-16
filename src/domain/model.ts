@@ -66,15 +66,39 @@ export type CopingStrategyUpdate = Partial<
   Pick<CopingStrategy, 'label' | 'whenToUse' | 'howToStart'>
 >
 
+/** An official self-exclusion / restriction link shown on a catalog strategy's detail screen. */
+export interface CopingStrategyRestrictionOption {
+  id: string
+  title: string
+  description: string
+  linkLabel: string
+  href: string
+}
+
+export interface CopingStrategyRestrictionOptions {
+  intro: string
+  items: readonly CopingStrategyRestrictionOption[]
+}
+
 /**
  * A predefined suggestion (Dr. Kazmer's list). Seed data, never persisted on
  * its own — adopting one writes a `CopingStrategy` row with `type: 'default'`.
+ * The detail fields (`title`..`restrictionOptions`) back the read-only catalog
+ * strategy detail screen; optional so older/partial fixtures still type-check.
  */
 export interface CopingStrategyDefault {
   code: string
   label: string
   priority: number
   reminderText?: string
+  title?: string
+  whatToDo?: string
+  whyItCanHelp?: string
+  howTo?: string
+  whenUseful?: string
+  note?: string
+  noteLabel?: string
+  restrictionOptions?: CopingStrategyRestrictionOptions
 }
 
 export interface Limit {

@@ -201,7 +201,7 @@ flowchart LR
 
 ### CopingStrategyService
 
-**Status:** ✅ DONE — `getSuggestions` implemented as `CopingStrategyServiceImpl` (`src/app/services/copingStrategyServiceImpl.ts`), tested (`tests/jest/app/copingStrategyService.test.ts`), wired via `createApp()` and consumed by the onboarding coping picker (`src/ui/onboarding/steps/CopingStep.tsx`). Post-onboarding management (`list`/`create`/`toggle`/`update`/`remove`) is built the same way — a thin DTO/repo wrapper over the already-DONE `CopingStrategyRepository`, validation delegated to pure domain helpers (`normalizeCopingLabel`, `normalizeCopingDetail`, `nextCopingPriority` in `src/domain/coping.ts`, tested in `tests/jest/domain/coping.test.ts`) — and now has a screen: the bottom-nav "coping" tab (`nav.tabs.coping`) opens `CopingFlow`/`CopingScreen` (`src/ui/coping/`), a toggle/add/edit/delete list that re-fetches from `list()` after every `toggle()`/`create()`/`update()`/`remove()` rather than reconciling an optimistic copy. `CopingFlow.tsx` passes `createCustomStrategyFields="full"` and wires `onCreateCustomStrategy`/`onUpdateCustomStrategy`/`onDeleteStrategy` to `create`/`update`/`remove`, so a custom strategy's title, "Kdy ji chci použít?" and "Jak začnu?" are all editable from `CustomStrategyDetailScreen.tsx`, and it can be deleted (with the built-in `DeleteStrategyDialog` confirmation) from the library's action menu; catalog (`type: 'default'`) strategies remain unopenable and undeletable since `catalogStrategyDetails` isn't populated yet (`NO_CATALOG_DETAILS`) and `StrategyActionDialog` only ever offers "Smazat" for `kind: 'custom'`, matching the read-only-catalog rule. `onHideStrategy` is still unwired — out of scope for the edit/delete work.
+**Status:** ✅ DONE — `getSuggestions` implemented as `CopingStrategyServiceImpl` (`src/app/services/copingStrategyServiceImpl.ts`), tested (`tests/jest/app/copingStrategyService.test.ts`), wired via `createApp()` and consumed by the onboarding coping picker (`src/ui/onboarding/steps/CopingStep.tsx`). Post-onboarding management (`list`/`create`/`toggle`/`update`/`remove`) is built the same way — a thin DTO/repo wrapper over the already-DONE `CopingStrategyRepository`, validation delegated to pure domain helpers (`normalizeCopingLabel`, `normalizeCopingDetail`, `nextCopingPriority` in `src/domain/coping.ts`, tested in `tests/jest/domain/coping.test.ts`) — and now has a screen: the bottom-nav "coping" tab (`nav.tabs.coping`) opens `CopingFlow`/`CopingScreen` (`src/ui/coping/`), a toggle/add/edit/delete list that re-fetches from `list()` after every `toggle()`/`create()`/`update()`/`remove()` rather than reconciling an optimistic copy. `CopingFlow.tsx` passes `createCustomStrategyFields="full"` and wires `onCreateCustomStrategy`/`onUpdateCustomStrategy`/`onDeleteStrategy` to `create`/`update`/`remove`, so a custom strategy's title, "Kdy ji chci použít?" and "Jak začnu?" are all editable from `CustomStrategyDetailScreen.tsx`, and it can be deleted (with the built-in `DeleteStrategyDialog` confirmation) from the library's action menu; catalog (`type: 'default'`) strategies open a read-only overview (`CatalogStrategyDetailScreen.tsx`) whose copy is now sourced from `CopingStrategyDefault`/`CopingSuggestionDto` (ultimately the seed, not a hardcoded UI-layer map — see `buildCatalogStrategyDetails` in `src/ui/coping/catalogStrategyDetails.ts`), and remain undeletable — `StrategyActionDialog` only ever offers "Smazat" for `kind: 'custom'`, matching the read-only-catalog rule. `onHideStrategy` is still unwired — out of scope for the edit/delete work.
 
 **Depends on**
 - Inbound
@@ -743,9 +743,22 @@ can never be deleted, only hidden/deselected (not yet built).
   "code": "change_environment",
   "label": "Na chvíli změním prostředí",
   "priority": 1,
-  "reminder_text": "Vytvořím si krátký odstup od místa nebo zařízení spojeného s hraním."
+  "reminder_text": "Vytvořím si krátký odstup od místa nebo zařízení spojeného s hraním.",
+  "title": "Na chvíli odejdu od hraní",
+  "what_to_do": "Vytvořte si krátký odstup od místa nebo zařízení, kde můžete hrát.",
+  "why_it_can_help": "Změna prostředí může přerušit automatické pokračování a vytvořit čas před dalším rozhodnutím.",
+  "how_to": "Zavřete hru nebo sázkovou aplikaci. Odložte zařízení mimo dosah nebo se přesuňte jinam…",
+  "when_useful": "Když vás ke hraní přitahuje konkrétní místo, obrazovka nebo situace.",
+  "note_label": "DOSTUPNÁ ALTERNATIVA",
+  "note": "Pokud se nemůžete přesunout, změňte alespoň to, co máte před sebou…",
+  "restriction_options": { "intro": "…", "items": [{ "id": "pause-48-hours", "title": "…", "description": "…", "link_label": "…", "href": "https://…" }] }
 }
 ```
+
+`title`..`restriction_options` back the catalog strategy detail screen (`CatalogStrategyDetailScreen.tsx`) —
+optional on the domain type/DTO so a fixture that only supplies `code`/`label`/`priority` still
+type-checks, but every seeded default carries the full set. `restriction_options` is only populated
+on `reduce_access` today.
 
 ### OnboardingRepository
 

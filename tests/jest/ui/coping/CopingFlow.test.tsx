@@ -70,6 +70,15 @@ function createService() {
             label: 'Na chvíli odejdu od hraní',
             type: 'default',
             summary: 'Zavřu stránku nebo aplikaci, odložím zařízení nebo se přesunu jinam.',
+            title: 'Na chvíli odejdu od hraní',
+            whatToDo: 'Vytvořte si krátký odstup od místa nebo zařízení, kde můžete hrát.',
+            whyItCanHelp:
+              'Změna prostředí může přerušit automatické pokračování a vytvořit čas před dalším rozhodnutím.',
+            howTo:
+              'Zavřete hru nebo sázkovou aplikaci. Odložte zařízení mimo dosah nebo se přesuňte jinam.',
+            whenUseful: 'Když vás ke hraní přitahuje konkrétní místo, obrazovka nebo situace.',
+            noteLabel: 'DOSTUPNÁ ALTERNATIVA',
+            note: 'Pokud se nemůžete přesunout, změňte alespoň to, co máte před sebou.',
           },
         ]),
       ),

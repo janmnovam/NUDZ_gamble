@@ -1,4 +1,4 @@
-import type { CopingType } from '@domain/model.ts'
+import type { CopingStrategyRestrictionOptions, CopingType } from '@domain/model.ts'
 
 /**
  * Coping DTOs — the UI-shaped surface of the inbound `CopingStrategyService`.
@@ -13,6 +13,20 @@ export interface CopingSuggestionDto {
   type: CopingType
   /** Optional one-line summary used by the strategy library card. */
   summary?: string
+  /**
+   * Detail-screen copy for the catalog strategy detail overview
+   * (`CatalogStrategyDetailScreen`) — sourced from `CopingStrategyDefault`,
+   * ultimately `src/data/seeds/copingDefaults.ts`. Optional so a fixture that
+   * only supplies `id`/`label`/`type` still type-checks.
+   */
+  title?: string
+  whatToDo?: string
+  whyItCanHelp?: string
+  howTo?: string
+  whenUseful?: string
+  note?: string
+  noteLabel?: string
+  restrictionOptions?: CopingStrategyRestrictionOptions
 }
 
 /** A user's own coping strategy row, as returned by `list`/`create`/`update`. */

@@ -1,4 +1,7 @@
+import { toCopingSuggestionDto } from '@/app/mappers/copingMapper.ts'
 import type { CopingStrategyDto, CopingSuggestionDto } from '@/app/dto/coping.ts'
+import { copingDefaultToDomain } from '@data/mappers.ts'
+import { COPING_STRATEGY_DEFAULTS } from '@data/seeds/copingDefaults.ts'
 import {
   buildCatalogStrategyDetails,
   buildCatalogStrategyPresentation,
@@ -13,11 +16,11 @@ const CATALOG = [
   ['reduce_access', 'Omezím si přístup ke hraní'],
 ] as const
 
-const suggestions: CopingSuggestionDto[] = CATALOG.map(([id, label]) => ({
-  id,
-  label,
-  type: 'default',
-}))
+// Suggestions carry their detail content through the real seed → domain →
+// DTO pipeline, so this test exercises the actual DB-backed join, not a
+// hand-typed stand-in for it.
+const suggestions: CopingSuggestionDto[] =
+  COPING_STRATEGY_DEFAULTS.map(copingDefaultToDomain).map(toCopingSuggestionDto)
 
 const strategies: CopingStrategyDto[] = CATALOG.map(([, label], index) => ({
   id: `persisted-${String(index + 1)}`,
