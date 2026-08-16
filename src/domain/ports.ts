@@ -13,6 +13,7 @@ import type {
   CopingStrategy,
   CopingStrategyDefault,
   CopingStrategyInput,
+  CopingStrategyUpdate,
   ISOTimestamp,
   Limit,
   Profile,
@@ -36,6 +37,22 @@ export interface CopingStrategyRepository {
   create(input: CopingStrategyInput, time: ISOTimestamp): Promise<CopingStrategy>
   /** `time` (caller-supplied instant) stamps `updatedAt`. */
   setActive(copingStrategyId: string, active: boolean, time: ISOTimestamp): Promise<void>
+  /**
+   * Edit a custom strategy's label and/or optional detail fields. Rejects an
+   * unknown id and rejects a non-custom (`type: 'default'`) strategy — catalog
+   * strategies are read-only. `time` (caller-supplied instant) stamps `updatedAt`.
+   */
+  update(
+    copingStrategyId: string,
+    changes: CopingStrategyUpdate,
+    time: ISOTimestamp,
+  ): Promise<CopingStrategy>
+  /**
+   * Permanently delete a custom strategy. Rejects an unknown id and rejects a
+   * non-custom (`type: 'default'`) strategy — catalog strategies can never be
+   * deleted.
+   */
+  remove(copingStrategyId: string): Promise<void>
   listByUser(userId: UserId): Promise<CopingStrategy[]>
 }
 

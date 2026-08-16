@@ -187,7 +187,7 @@ flowchart LR
 
 ### CopingStrategyService
 
-**Status:** ✅ DONE — `getSuggestions` implemented as `CopingStrategyServiceImpl` (`src/app/services/copingStrategyServiceImpl.ts`), tested (`tests/jest/app/copingStrategyService.test.ts`), wired via `createApp()` and consumed by the onboarding coping picker (`src/ui/onboarding/steps/CopingStep.tsx`). Post-onboarding management (`list`/`create`/`toggle`) is built the same way — a thin DTO/repo wrapper over the already-DONE `CopingStrategyRepository`, validation delegated to pure domain helpers (`normalizeCopingLabel`, `nextCopingPriority` in `src/domain/coping.ts`, tested in `tests/jest/domain/coping.test.ts`) — and now has a screen: the bottom-nav "coping" tab (`nav.tabs.coping`) opens `CopingFlow`/`CopingScreen` (`src/ui/coping/`), a toggle list + add-strategy form that re-fetches from `list()` after every `toggle()`/`create()` rather than reconciling an optimistic copy.
+**Status:** ✅ DONE — `getSuggestions` implemented as `CopingStrategyServiceImpl` (`src/app/services/copingStrategyServiceImpl.ts`), tested (`tests/jest/app/copingStrategyService.test.ts`), wired via `createApp()` and consumed by the onboarding coping picker (`src/ui/onboarding/steps/CopingStep.tsx`). Post-onboarding management (`list`/`create`/`toggle`/`update`/`remove`) is built the same way — a thin DTO/repo wrapper over the already-DONE `CopingStrategyRepository`, validation delegated to pure domain helpers (`normalizeCopingLabel`, `normalizeCopingDetail`, `nextCopingPriority` in `src/domain/coping.ts`, tested in `tests/jest/domain/coping.test.ts`) — and now has a screen: the bottom-nav "coping" tab (`nav.tabs.coping`) opens `CopingFlow`/`CopingScreen` (`src/ui/coping/`), a toggle/add/edit/delete list that re-fetches from `list()` after every `toggle()`/`create()`/`update()`/`remove()` rather than reconciling an optimistic copy. `CopingFlow.tsx` passes `createCustomStrategyFields="full"` and wires `onCreateCustomStrategy`/`onUpdateCustomStrategy`/`onDeleteStrategy` to `create`/`update`/`remove`, so a custom strategy's title, "Kdy ji chci použít?" and "Jak začnu?" are all editable from `CustomStrategyDetailScreen.tsx`, and it can be deleted (with the built-in `DeleteStrategyDialog` confirmation) from the library's action menu; catalog (`type: 'default'`) strategies remain unopenable and undeletable since `catalogStrategyDetails` isn't populated yet (`NO_CATALOG_DETAILS`) and `StrategyActionDialog` only ever offers "Smazat" for `kind: 'custom'`, matching the read-only-catalog rule. `onHideStrategy` is still unwired — out of scope for the edit/delete work.
 
 **Depends on**
 - Inbound
@@ -199,12 +199,16 @@ flowchart LR
 |----------------|---------|------------------------|---------------------------------------------------------|
 | getSuggestions | `—`     | `CopingSuggestionDto[]` | Predefined coping suggestions for the onboarding picker |
 | list           | `—`     | `CopingStrategyDto[]`  | The user's own strategies (default + custom), by priority |
-| create         | `CreateCopingStrategyRequest` | `CopingStrategyDto` | Add a custom strategy, appended after the highest existing priority. Rejects an empty/whitespace-only label |
+| create         | `CreateCopingStrategyRequest` | `CopingStrategyDto` | Add a custom strategy, appended after the highest existing priority. Rejects an empty/whitespace-only or over-length label |
 | toggle         | `copingStrategyId`, `active` | `void` | Toggle a strategy active/inactive. Rejects an unknown id (propagated from the repo, not swallowed) |
+| update         | `copingStrategyId`, `UpdateCopingStrategyRequest` | `CopingStrategyDto` | Edit a custom strategy's label and/or optional detail fields (omitted keys untouched). Rejects an empty/unknown id, an over-length field, and any attempt to edit a non-custom (catalog) strategy (`COPING_NOT_EDITABLE`) |
+| remove         | `copingStrategyId` | `void` | Permanently delete a custom strategy. Rejects an empty/unknown id and any attempt to delete a non-custom (catalog) strategy (`COPING_NOT_DELETABLE`) |
 
-Every method also takes the caller-supplied `userId`/`time` (see `03c9355`) — omitted from
-the table above since that pair is implicit context on every inbound port, not
-method-specific input.
+Every method also takes the caller-supplied `userId` (see `03c9355`) — omitted from the
+table above since it's implicit context on every inbound port, not method-specific
+input. Exceptions: `getSuggestions` is user-agnostic (global list, no user yet at
+onboarding) and takes no `userId`; `remove` takes no `time` since nothing on a delete
+is stamped.
 
 **CopingSuggestionDto**
 
@@ -223,7 +227,9 @@ method-specific input.
   "label": "Na chvíli změním prostředí",
   "type": "default",
   "active": true,
-  "priority": 1
+  "priority": 1,
+  "whenToUse": null,
+  "howToStart": null
 }
 ```
 
@@ -231,9 +237,29 @@ method-specific input.
 
 ```json
 {
-  "label": "Zavolat bratrovi"
+  "label": "Zavolat bratrovi",
+  "whenToUse": "Když mám nutkání hrát",
+  "howToStart": "Otevřu kontakty a zavolám"
 }
 ```
+
+`whenToUse`/`howToStart` are optional on create (default to `null`) and capped
+at 240 characters each (`COPING_DETAIL_MAX_LENGTH`); `label` is capped at 80
+(`COPING_LABEL_MAX_LENGTH`) — both enforced by `normalizeCopingLabel`/
+`normalizeCopingDetail` (`src/domain/coping.ts`).
+
+**UpdateCopingStrategyRequest**
+
+```json
+{
+  "whenToUse": "Když mám nutkání hrát",
+  "howToStart": "Otevřu kontakty a zavolám"
+}
+```
+
+All fields optional; an omitted key is left untouched, `null`/empty clears it.
+Only `type: 'custom'` strategies accept an update — catalog strategies are
+read-only (per the `coping-strategie` product decisions).
 
 ### CheckInService
 
@@ -474,9 +500,9 @@ would otherwise be computed against no data and read as a result.
 |---|---|
 | `check_in.csv` | `check_in_id, user_id, behavior_date, played, time_min, stakes_czk, winnings_czk, submitted_at, updated_at` |
 | `limit.csv` | `limit_id, user_id, week_no, weekly_limit_time_min, weekly_limit_stakes_czk, limit_set_at` |
-| `coping_strategy.csv` | `coping_strategy_id, user_id, label, type, active, created_at, updated_at` |
+| `coping_strategy.csv` | `coping_strategy_id, user_id, label, type, when_to_use, how_to_start, active, created_at, updated_at` |
 
-`coping_strategy.csv`'s `type` is the domain model's field as-is (`default`/`custom`) — a direct column, not a renamed/derived one. Each table is sorted for stable output: check-ins by `behavior_date`, limits by `week_no`, coping strategies by `priority`.
+`coping_strategy.csv`'s `type` is the domain model's field as-is (`default`/`custom`) — a direct column, not a renamed/derived one. `when_to_use`/`how_to_start` are blank except for `custom` rows the user has filled in via the edit screen. Each table is sorted for stable output: check-ins by `behavior_date`, limits by `week_no`, coping strategies by `priority`.
 
 **Depends on**
 - Inbound
@@ -552,6 +578,8 @@ later, an HTTP adapter). The port signatures accept/return the **camelCase domai
 | loadDefaults | `—` | `CopingStrategyDefault[]` | Predefined suggestions for the onboarding picker |
 | create | `CopingStrategyInput` | `CopingStrategy` | Write a custom or adopted strategy |
 | setActive | `copingStrategyId, active` | `void` | Toggle a strategy active/inactive |
+| update | `copingStrategyId, CopingStrategyUpdate, time` | `CopingStrategy` | Edit a custom strategy's `label`/`whenToUse`/`howToStart` (omitted keys untouched). Throws on an unknown id or a non-custom (`type: 'default'`) strategy |
+| remove | `copingStrategyId` | `void` | Permanently delete a custom strategy. Throws on an unknown id or a non-custom (`type: 'default'`) strategy |
 | listByUser | `UserId` | `CopingStrategy[]` | The user's strategies, by priority |
 
 **CopingStrategyInput**
@@ -561,6 +589,8 @@ later, an HTTP adapter). The port signatures accept/return the **camelCase domai
   "user_id": "A001",
   "label": "Zavolat bratrovi",
   "type": "custom",
+  "when_to_use": null,
+  "how_to_start": null,
   "priority": 2,
   "active": true
 }
@@ -574,12 +604,30 @@ later, an HTTP adapter). The port signatures accept/return the **camelCase domai
   "user_id": "A001",
   "label": "Na chvíli změním prostředí",
   "type": "default",
+  "when_to_use": null,
+  "how_to_start": null,
   "priority": 1,
   "active": true,
   "created_at": "2026-08-31T21:30:00+02:00",
   "updated_at": null
 }
 ```
+
+**CopingStrategyUpdate**
+
+```json
+{
+  "when_to_use": "Když mám nutkání hrát",
+  "how_to_start": "Otevřu kontakty a zavolám"
+}
+```
+
+Partial — every key optional, an omitted key is left untouched. `CopingStrategyAdapter.update`
+rejects an unknown id (plain `Error`, not found) and rejects editing a `type: 'default'`
+row (`DomainError('validation', 'COPING_NOT_EDITABLE', …)`) — catalog strategies are read-only.
+`CopingStrategyAdapter.remove` applies the same two guards (`COPING_NOT_DELETABLE` in place
+of `COPING_NOT_EDITABLE`) before calling the generic `Repository.remove` — catalog strategies
+can never be deleted, only hidden/deselected (not yet built).
 
 **CopingStrategyDefault** (from the seed catalog, `src/data/seeds/copingDefaults.ts`)
 

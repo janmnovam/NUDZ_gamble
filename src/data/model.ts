@@ -32,6 +32,10 @@ export interface CopingStrategyEntity {
   /** Free text — shown to the user as the reminder. */
   label: string
   type: CopingType
+  /** Optional detail, editable only for `type: 'custom'` — "Kdy ji chci použít?" */
+  when_to_use: string | null
+  /** Optional detail, editable only for `type: 'custom'` — "Jak začnu?" */
+  how_to_start: string | null
   /** Ordering; lower sorts first. */
   priority: number
   active: boolean

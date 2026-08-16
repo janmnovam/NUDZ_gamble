@@ -7,6 +7,7 @@ import type {
   CopingStrategyDto,
   CopingSuggestionDto,
   CreateCopingStrategyRequest,
+  UpdateCopingStrategyRequest,
 } from '@/app/dto/coping.ts'
 import type { Result } from '@/app/result.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
@@ -42,4 +43,23 @@ export interface CopingStrategyService {
     userId: UserId,
     time: ISOTimestamp,
   ): Promise<Result<void>>
+
+  /**
+   * Edit a custom strategy's label and/or optional detail fields. Rejects an
+   * empty id, an unknown id, and an attempt to edit a non-custom (catalog)
+   * strategy. `time` is the caller-supplied instant that stamps `updatedAt`.
+   */
+  update(
+    copingStrategyId: string,
+    req: UpdateCopingStrategyRequest,
+    userId: UserId,
+    time: ISOTimestamp,
+  ): Promise<Result<CopingStrategyDto>>
+
+  /**
+   * Permanently delete a custom strategy. Rejects an empty id, an unknown id,
+   * and an attempt to delete a non-custom (catalog) strategy — those can
+   * never be deleted. No `time` is taken: nothing on a delete is stamped.
+   */
+  remove(copingStrategyId: string, userId: UserId): Promise<Result<void>>
 }

@@ -22,5 +22,7 @@ export function toCopingStrategyDto(s: CopingStrategy): CopingStrategyDto {
     type: s.type,
     active: s.active,
     priority: s.priority,
+    whenToUse: s.whenToUse,
+    howToStart: s.howToStart,
   }
 }

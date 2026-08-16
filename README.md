@@ -189,6 +189,15 @@ Icons in `public/` are generated for this repository and carry no third-party li
     - weekly_limit_stakes_czk
     - limit_set_at
   - .csv file nr 3 is export of COPING_STRATEGY table containing fields:
+    - coping_strategy_id
+    - user_id
+    - label
+    - type
+    - when_to_use
+    - how_to_start
+    - active
+    - created_at
+    - updated_at
   - .csv file nr 4 is export of PROFILE table containing fields:
     - user_id
     - onboarding_completed_at

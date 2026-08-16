@@ -15,16 +15,33 @@ export interface CopingSuggestionDto {
   summary?: string
 }
 
-/** A user's own coping strategy row, as returned by `list`/`create`. */
+/** A user's own coping strategy row, as returned by `list`/`create`/`update`. */
 export interface CopingStrategyDto {
   id: string
   label: string
   type: CopingType
   active: boolean
   priority: number
+  /** Optional detail, only ever set for `type: 'custom'` — "Kdy ji chci použít?" */
+  whenToUse: string | null
+  /** Optional detail, only ever set for `type: 'custom'` — "Jak začnu?" */
+  howToStart: string | null
 }
 
 /** Input for adding a custom coping strategy after onboarding. */
 export interface CreateCopingStrategyRequest {
   label: string
+  whenToUse?: string | null
+  howToStart?: string | null
+}
+
+/**
+ * Input for editing an existing **custom** strategy's label and/or optional
+ * detail fields. Omitted keys are left untouched; catalog strategies reject
+ * the edit.
+ */
+export interface UpdateCopingStrategyRequest {
+  label?: string
+  whenToUse?: string | null
+  howToStart?: string | null
 }

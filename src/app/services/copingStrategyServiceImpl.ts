@@ -10,13 +10,14 @@ import type {
   CopingStrategyDto,
   CopingSuggestionDto,
   CreateCopingStrategyRequest,
+  UpdateCopingStrategyRequest,
 } from '@/app/dto/coping.ts'
 import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
 import { toCopingStrategyDto, toCopingSuggestionDto } from '@/app/mappers/copingMapper.ts'
 import { type Result, run } from '@/app/result.ts'
-import { normalizeCopingLabel, nextCopingPriority } from '@domain/coping.ts'
+import { normalizeCopingDetail, normalizeCopingLabel, nextCopingPriority } from '@domain/coping.ts'
 import { DomainError } from '@domain/errors.ts'
-import type { ISOTimestamp, UserId } from '@domain/model.ts'
+import type { CopingStrategyUpdate, ISOTimestamp, UserId } from '@domain/model.ts'
 import type { CopingStrategyRepository } from '@domain/ports.ts'
 
 export interface CopingStrategyServiceDeps {
@@ -51,12 +52,16 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
   ): Promise<Result<CopingStrategyDto>> {
     return run(async () => {
       const label = normalizeCopingLabel(req.label)
+      const whenToUse = normalizeCopingDetail(req.whenToUse)
+      const howToStart = normalizeCopingDetail(req.howToStart)
       const existing = await this.deps.repo.listByUser(userId)
       const created = await this.deps.repo.create(
         {
           userId,
           label,
           type: 'custom',
+          whenToUse,
+          howToStart,
           priority: nextCopingPriority(existing),
         },
         time,
@@ -80,6 +85,45 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
         )
       }
       await this.deps.repo.setActive(copingStrategyId, active, time)
+    })
+  }
+
+  update(
+    copingStrategyId: string,
+    req: UpdateCopingStrategyRequest,
+    _userId: UserId,
+    time: ISOTimestamp,
+  ): Promise<Result<CopingStrategyDto>> {
+    return run(async () => {
+      if (copingStrategyId.trim().length === 0) {
+        throw new DomainError(
+          'validation',
+          'COPING_EMPTY_ID',
+          'coping: copingStrategyId must not be empty',
+        )
+      }
+      const changes: CopingStrategyUpdate = {
+        ...(req.label === undefined ? {} : { label: normalizeCopingLabel(req.label) }),
+        ...(req.whenToUse === undefined ? {} : { whenToUse: normalizeCopingDetail(req.whenToUse) }),
+        ...(req.howToStart === undefined
+          ? {}
+          : { howToStart: normalizeCopingDetail(req.howToStart) }),
+      }
+      const updated = await this.deps.repo.update(copingStrategyId, changes, time)
+      return toCopingStrategyDto(updated)
+    })
+  }
+
+  remove(copingStrategyId: string, _userId: UserId): Promise<Result<void>> {
+    return run(async () => {
+      if (copingStrategyId.trim().length === 0) {
+        throw new DomainError(
+          'validation',
+          'COPING_EMPTY_ID',
+          'coping: copingStrategyId must not be empty',
+        )
+      }
+      await this.deps.repo.remove(copingStrategyId)
     })
   }
 }

@@ -72,6 +72,8 @@ function makeService(opts: { checkIns?: CheckIn[]; coping?: CopingStrategy[] } =
     loadDefaults: () => Promise.resolve([]),
     create: () => Promise.reject(new Error('unused')),
     setActive: () => Promise.resolve(),
+    update: () => Promise.reject(new Error('unused')),
+    remove: () => Promise.reject(new Error('unused')),
     listByUser: () => Promise.resolve(opts.coping ?? []),
   }
 
@@ -187,6 +189,8 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
         userId: USER_ID,
         label: 'Go for a walk',
         type: 'custom',
+        whenToUse: null,
+        howToStart: null,
         priority: 0,
         active: true,
         createdAt: '2026-08-31T21:30:00+02:00',

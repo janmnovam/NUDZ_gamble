@@ -32,6 +32,8 @@ function coping(over: Partial<CopingStrategy>): CopingStrategy {
     userId: 'demo-user',
     label: 'Go outside for 15 minutes',
     type: 'custom',
+    whenToUse: null,
+    howToStart: null,
     priority: 0,
     active: true,
     createdAt: '2026-08-31T21:30:00+02:00',

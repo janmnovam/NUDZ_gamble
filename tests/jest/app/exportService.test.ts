@@ -36,6 +36,8 @@ function makeService(): ExportServiceImpl {
     userId: USER_ID,
     label: 'Jít na 15 minut ven',
     type: 'default',
+    whenToUse: null,
+    howToStart: null,
     priority: 1,
     active: true,
     createdAt: '2026-08-31T21:30:00+02:00',
@@ -56,12 +58,16 @@ function makeService(): ExportServiceImpl {
     create: (input) =>
       Promise.resolve({
         copingStrategyId: 'new',
+        whenToUse: null,
+        howToStart: null,
         active: true,
         createdAt: '',
         updatedAt: null,
         ...input,
       }),
     setActive: () => Promise.resolve(),
+    update: () => Promise.reject(new Error('unused')),
+    remove: () => Promise.reject(new Error('unused')),
   }
   const profiles: ProfileRepository = {
     get: () => Promise.resolve(undefined),

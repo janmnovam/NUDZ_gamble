@@ -35,6 +35,10 @@ export interface CopingStrategy {
   /** Free text — shown to the user as the reminder. */
   label: string
   type: CopingType
+  /** Optional detail, editable only for `type: 'custom'` — "Kdy ji chci použít?" */
+  whenToUse: string | null
+  /** Optional detail, editable only for `type: 'custom'` — "Jak začnu?" */
+  howToStart: string | null
   /** Ordering; lower sorts first. */
   priority: number
   active: boolean
@@ -44,12 +48,23 @@ export interface CopingStrategy {
 
 /**
  * Fields a caller supplies when creating a coping strategy. The adapter
- * generates `copingStrategyId`, defaults `active` to `true`, and stamps
- * `createdAt` / `updatedAt`.
+ * generates `copingStrategyId`, defaults `active` to `true`, defaults
+ * `whenToUse`/`howToStart` to `null`, and stamps `createdAt` / `updatedAt`.
  */
 export type CopingStrategyInput = Pick<CopingStrategy, 'userId' | 'label' | 'type' | 'priority'> & {
   active?: boolean
+  whenToUse?: string | null
+  howToStart?: string | null
 }
+
+/**
+ * Fields a caller may change on an existing **custom** strategy — catalog
+ * (`type: 'default'`) strategies are read-only. Omitted keys are left
+ * untouched; the repo rejects an unknown id or a non-custom strategy.
+ */
+export type CopingStrategyUpdate = Partial<
+  Pick<CopingStrategy, 'label' | 'whenToUse' | 'howToStart'>
+>
 
 /**
  * A predefined suggestion (Dr. Kazmer's list). Seed data, never persisted on

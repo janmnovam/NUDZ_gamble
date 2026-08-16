@@ -27,6 +27,8 @@ const coping: CopingStrategy[] = [
     userId: 'A001',
     label: 'Jít na 15 minut ven',
     type: 'default',
+    whenToUse: null,
+    howToStart: null,
     priority: 1,
     active: true,
     createdAt: NOW,

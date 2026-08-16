@@ -43,6 +43,8 @@ function coping(overrides: Partial<CopingStrategy>): CopingStrategy {
     userId: USER_ID,
     label: 'Jít na 15 minut ven',
     type: 'default',
+    whenToUse: null,
+    howToStart: null,
     priority: 1,
     active: true,
     createdAt: '2026-08-31T21:30:00+02:00',
@@ -72,12 +74,16 @@ function fakeDeps(params: {
     create: (input) =>
       Promise.resolve({
         copingStrategyId: 'new',
+        whenToUse: null,
+        howToStart: null,
         active: true,
         createdAt: '2026-08-31T21:30:00+02:00',
         updatedAt: null,
         ...input,
       }),
     setActive: () => Promise.resolve(),
+    update: () => Promise.reject(new Error('unused')),
+    remove: () => Promise.reject(new Error('unused')),
   }
   const profileRepo: ProfileRepository = {
     get: () => Promise.resolve(params.profile),

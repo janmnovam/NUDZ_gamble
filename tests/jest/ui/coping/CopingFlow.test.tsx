@@ -18,6 +18,8 @@ const STRATEGIES: CopingStrategyDto[] = [
     type: 'default',
     active: true,
     priority: 1,
+    whenToUse: null,
+    howToStart: null,
   },
   {
     id: 'custom-1',
@@ -25,6 +27,8 @@ const STRATEGIES: CopingStrategyDto[] = [
     type: 'custom',
     active: false,
     priority: 2,
+    whenToUse: null,
+    howToStart: null,
   },
 ]
 
@@ -38,9 +42,25 @@ function createService() {
         type: 'custom' as const,
         active: true,
         priority: 3,
+        whenToUse: null,
+        howToStart: null,
       }),
     ),
   )
+  const update = jest.fn(() =>
+    Promise.resolve(
+      ok({
+        id: 'custom-1',
+        label: 'Zavolám kamarádovi',
+        type: 'custom' as const,
+        active: false,
+        priority: 2,
+        whenToUse: null,
+        howToStart: null,
+      }),
+    ),
+  )
+  const remove = jest.fn(() => Promise.resolve(ok(undefined)))
   const service: CopingStrategyService = {
     getSuggestions: () =>
       Promise.resolve(
@@ -56,9 +76,11 @@ function createService() {
     list: () => Promise.resolve(ok(STRATEGIES)),
     create,
     toggle,
+    update,
+    remove,
   }
 
-  return { service, create, toggle }
+  return { service, create, toggle, update, remove }
 }
 
 function createContactService(): ContactService {
@@ -110,7 +132,16 @@ describe('CopingFlow strategy-library integration', () => {
     expect(within(selectedSection).getByText('Vytvořím si krátký odstup.')).not.toBeNull()
     expect(within(otherSection).getByText('Zavolám kamarádovi')).not.toBeNull()
     expect(screen.getByRole('tab', { name: 'Kontakty' })).not.toBeNull()
-    expect(screen.queryByRole('button', { name: /Otevřít detail strategie/ })).toBeNull()
+    // Catalog strategies have no detail loaded (`NO_CATALOG_DETAILS`), so they stay unopenable;
+    // custom strategies are openable now that `onUpdateCustomStrategy` is wired.
+    expect(
+      screen.queryByRole('button', {
+        name: 'Otevřít detail strategie „Na chvíli změním prostředí“',
+      }),
+    ).toBeNull()
+    expect(
+      screen.getByRole('button', { name: 'Otevřít detail strategie „Zavolám kamarádovi“' }),
+    ).not.toBeNull()
     expect(screen.getByRole('navigation', { name: 'Hlavní navigace' })).not.toBeNull()
 
     fireEvent.click(
@@ -121,7 +152,8 @@ describe('CopingFlow strategy-library integration', () => {
 
     expect(screen.getByRole('button', { name: 'Přidat do Vybraných' })).not.toBeNull()
     expect(screen.queryByRole('button', { name: 'Skrýt' })).toBeNull()
-    expect(screen.queryByRole('button', { name: 'Smazat' })).toBeNull()
+    // Custom strategies can be deleted now that `onDeleteStrategy` is wired.
+    expect(screen.getByRole('button', { name: 'Smazat' })).not.toBeNull()
 
     fireEvent.click(screen.getByRole('tab', { name: 'Kontakty' }))
     expect(await screen.findByText('Národní linka pro odvykání')).not.toBeNull()
@@ -157,22 +189,76 @@ describe('CopingFlow strategy-library integration', () => {
     })
   })
 
-  it('creates only the title supported by the existing service', async () => {
+  it('creates a custom strategy with the optional detail fields', async () => {
     const { service, create } = createService()
     renderFlow(service)
 
     await screen.findByRole('heading', { level: 1, name: 'Knihovna strategií' })
     fireEvent.click(screen.getByRole('button', { name: 'Přidat vlastní strategii' }))
 
-    expect(screen.queryByRole('textbox', { name: 'Kdy ji chci použít?' })).toBeNull()
-    expect(screen.queryByRole('textbox', { name: 'Jak začnu?' })).toBeNull()
     fireEvent.change(screen.getByRole('textbox', { name: 'Název' }), {
       target: { value: 'Projdu se' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Kdy ji chci použít?' }), {
+      target: { value: 'Když mám nutkání' },
+    })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Jak začnu?' }), {
+      target: { value: 'Obuju si boty' },
     })
     fireEvent.click(screen.getByRole('button', { name: 'Přidat strategii' }))
 
     await waitFor(() => {
-      expect(create).toHaveBeenCalledWith({ label: 'Projdu se' }, 'demo-user', expect.any(String))
+      expect(create).toHaveBeenCalledWith(
+        { label: 'Projdu se', whenToUse: 'Když mám nutkání', howToStart: 'Obuju si boty' },
+        'demo-user',
+        expect.any(String),
+      )
+    })
+  })
+
+  it('opens a custom strategy and saves an edit through the update service', async () => {
+    const { service, update } = createService()
+    renderFlow(service)
+
+    await screen.findByRole('heading', { level: 1, name: 'Knihovna strategií' })
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Otevřít detail strategie „Zavolám kamarádovi“' }),
+    )
+
+    const titleField = await screen.findByRole('textbox', { name: 'Název' })
+    fireEvent.change(titleField, { target: { value: 'Zavolám sestře' } })
+    fireEvent.change(screen.getByRole('textbox', { name: 'Kdy ji chci použít?' }), {
+      target: { value: 'Když mám nutkání' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Uložit změny' }))
+
+    await waitFor(() => {
+      expect(update).toHaveBeenCalledWith(
+        'custom-1',
+        { label: 'Zavolám sestře', whenToUse: 'Když mám nutkání', howToStart: '' },
+        'demo-user',
+        expect.any(String),
+      )
+    })
+  })
+
+  it('deletes a custom strategy after confirming the dialog', async () => {
+    const { service, remove } = createService()
+    renderFlow(service)
+
+    await screen.findByRole('heading', { level: 1, name: 'Knihovna strategií' })
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Další možnosti pro strategii „Zavolám kamarádovi“',
+      }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Smazat' }))
+    expect(screen.getByRole('dialog', { name: /Smazat vlastní strategii/ })).not.toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Smazat strategii' }))
+
+    await waitFor(() => {
+      expect(remove).toHaveBeenCalledWith('custom-1', 'demo-user')
     })
   })
 })

@@ -1,4 +1,10 @@
-import { nextCopingPriority, normalizeCopingLabel } from '@domain/coping.ts'
+import {
+  COPING_DETAIL_MAX_LENGTH,
+  COPING_LABEL_MAX_LENGTH,
+  nextCopingPriority,
+  normalizeCopingDetail,
+  normalizeCopingLabel,
+} from '@domain/coping.ts'
 
 describe('normalizeCopingLabel', () => {
   it('trims surrounding whitespace', () => {
@@ -11,6 +17,46 @@ describe('normalizeCopingLabel', () => {
 
   it('rejects a whitespace-only label', () => {
     expect(() => normalizeCopingLabel('   ')).toThrow('coping: label must not be empty')
+  })
+
+  it('accepts a label at exactly the max length', () => {
+    const label = 'a'.repeat(COPING_LABEL_MAX_LENGTH)
+    expect(normalizeCopingLabel(label)).toBe(label)
+  })
+
+  it('rejects a label over the max length', () => {
+    const label = 'a'.repeat(COPING_LABEL_MAX_LENGTH + 1)
+    expect(() => normalizeCopingLabel(label)).toThrow(
+      `coping: label must be at most ${String(COPING_LABEL_MAX_LENGTH)} characters`,
+    )
+  })
+})
+
+describe('normalizeCopingDetail', () => {
+  it('trims surrounding whitespace', () => {
+    expect(normalizeCopingDetail('  Když mám nutkání  ')).toBe('Když mám nutkání')
+  })
+
+  it('turns an empty or whitespace-only value into null', () => {
+    expect(normalizeCopingDetail('')).toBeNull()
+    expect(normalizeCopingDetail('   ')).toBeNull()
+  })
+
+  it('turns null/undefined into null', () => {
+    expect(normalizeCopingDetail(null)).toBeNull()
+    expect(normalizeCopingDetail(undefined)).toBeNull()
+  })
+
+  it('accepts a value at exactly the max length', () => {
+    const value = 'a'.repeat(COPING_DETAIL_MAX_LENGTH)
+    expect(normalizeCopingDetail(value)).toBe(value)
+  })
+
+  it('rejects a value over the max length', () => {
+    const value = 'a'.repeat(COPING_DETAIL_MAX_LENGTH + 1)
+    expect(() => normalizeCopingDetail(value)).toThrow(
+      `coping: detail must be at most ${String(COPING_DETAIL_MAX_LENGTH)} characters`,
+    )
   })
 })
 

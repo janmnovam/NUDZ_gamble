@@ -68,6 +68,8 @@ describe('CopingStrategyServiceImpl.list', () => {
         userId: 'demo-user',
         label: 'Na chvíli změním prostředí',
         type: 'default',
+        whenToUse: null,
+        howToStart: null,
         priority: 1,
         active: true,
         createdAt: TIME,
@@ -87,6 +89,8 @@ describe('CopingStrategyServiceImpl.list', () => {
           type: 'default',
           active: true,
           priority: 1,
+          whenToUse: null,
+          howToStart: null,
         },
       ]),
     )
@@ -101,6 +105,8 @@ describe('CopingStrategyServiceImpl.create', () => {
         userId: 'demo-user',
         label: 'Existing',
         type: 'default',
+        whenToUse: null,
+        howToStart: null,
         priority: 2,
         active: true,
         createdAt: TIME,
@@ -108,12 +114,24 @@ describe('CopingStrategyServiceImpl.create', () => {
       },
     ]
     const create = jest.fn(
-      (input: { userId: UserId; label: string; type: string; priority: number }, time: string) =>
+      (
+        input: {
+          userId: UserId
+          label: string
+          type: string
+          priority: number
+          whenToUse: string | null
+          howToStart: string | null
+        },
+        time: string,
+      ) =>
         Promise.resolve({
           copingStrategyId: 'new-id',
           userId: input.userId,
           label: input.label,
           type: input.type,
+          whenToUse: input.whenToUse,
+          howToStart: input.howToStart,
           priority: input.priority,
           active: true,
           createdAt: time,
@@ -129,7 +147,14 @@ describe('CopingStrategyServiceImpl.create', () => {
     const result = unwrap(await service.create({ label: '  Zavolat bratrovi  ' }, USER_ID, TIME))
 
     expect(create).toHaveBeenCalledWith(
-      { userId: 'demo-user', label: 'Zavolat bratrovi', type: 'custom', priority: 3 },
+      {
+        userId: 'demo-user',
+        label: 'Zavolat bratrovi',
+        type: 'custom',
+        whenToUse: null,
+        howToStart: null,
+        priority: 3,
+      },
       TIME,
     )
     expect(result).toEqual({
@@ -138,7 +163,57 @@ describe('CopingStrategyServiceImpl.create', () => {
       type: 'custom',
       active: true,
       priority: 3,
+      whenToUse: null,
+      howToStart: null,
     })
+  })
+
+  it('trims and stores the optional whenToUse/howToStart detail fields', async () => {
+    const create = jest.fn(
+      (
+        input: {
+          userId: string
+          label: string
+          type: string
+          priority: number
+          whenToUse: string | null
+          howToStart: string | null
+        },
+        time: string,
+      ) =>
+        Promise.resolve({
+          copingStrategyId: 'new-id',
+          userId: input.userId,
+          label: input.label,
+          type: input.type,
+          whenToUse: input.whenToUse,
+          howToStart: input.howToStart,
+          priority: input.priority,
+          active: true,
+          createdAt: time,
+          updatedAt: null,
+        } as CopingStrategy),
+    )
+    const repo = {
+      listByUser: () => Promise.resolve([]),
+      create,
+    } as unknown as CopingStrategyRepository
+    const service = new CopingStrategyServiceImpl({ repo })
+
+    const result = unwrap(
+      await service.create(
+        { label: 'Zavolat bratrovi', whenToUse: '  Když mám nutkání  ', howToStart: '   ' },
+        USER_ID,
+        TIME,
+      ),
+    )
+
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ whenToUse: 'Když mám nutkání', howToStart: null }),
+      TIME,
+    )
+    expect(result.whenToUse).toBe('Když mám nutkání')
+    expect(result.howToStart).toBeNull()
   })
 
   it('rejects an empty label without touching the repo', async () => {
@@ -201,6 +276,214 @@ describe('CopingStrategyServiceImpl.toggle', () => {
     const res = await service.toggle('does-not-exist', false, USER_ID, TIME)
     expect(res.data).toBeNull()
     // A repo throw (unknown id) is surfaced as an envelope, not silently swallowed.
+    expect(res.error).not.toBeNull()
+
+    db.close()
+    await db.delete()
+  })
+})
+
+describe('CopingStrategyServiceImpl.update', () => {
+  it('normalizes and delegates only the supplied fields to repo.update', async () => {
+    const update = jest.fn((id: string, _changes: unknown, time: string) =>
+      Promise.resolve({
+        copingStrategyId: id,
+        userId: 'demo-user',
+        label: 'Zavolat bratrovi',
+        type: 'custom',
+        whenToUse: 'Když mám nutkání',
+        howToStart: null,
+        priority: 1,
+        active: true,
+        createdAt: TIME,
+        updatedAt: time,
+      } as CopingStrategy),
+    )
+    const repo = { update } as unknown as CopingStrategyRepository
+    const service = new CopingStrategyServiceImpl({ repo })
+
+    const result = unwrap(
+      await service.update(
+        'c1',
+        { label: '  Zavolat bratrovi  ', whenToUse: '  Když mám nutkání  ' },
+        USER_ID,
+        TIME,
+      ),
+    )
+
+    expect(update).toHaveBeenCalledWith(
+      'c1',
+      { label: 'Zavolat bratrovi', whenToUse: 'Když mám nutkání' },
+      TIME,
+    )
+    expect(result).toEqual({
+      id: 'c1',
+      label: 'Zavolat bratrovi',
+      type: 'custom',
+      active: true,
+      priority: 1,
+      whenToUse: 'Když mám nutkání',
+      howToStart: null,
+    })
+  })
+
+  it('rejects an empty id without touching the repo', async () => {
+    const update = jest.fn()
+    const repo = { update } as unknown as CopingStrategyRepository
+    const service = new CopingStrategyServiceImpl({ repo })
+
+    const res = await service.update('  ', { label: 'x' }, USER_ID, TIME)
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('COPING_EMPTY_ID')
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('rejects an empty label', async () => {
+    const update = jest.fn()
+    const repo = { update } as unknown as CopingStrategyRepository
+    const service = new CopingStrategyServiceImpl({ repo })
+
+    const res = await service.update('c1', { label: '   ' }, USER_ID, TIME)
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('COPING_EMPTY_LABEL')
+    expect(update).not.toHaveBeenCalled()
+  })
+
+  it('wires up through createDataLayer: edits a custom strategy end to end', async () => {
+    const db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
+    const data: DataLayer = createDataLayer(db)
+    const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
+
+    const created = unwrap(await service.create({ label: 'Jít na procházku' }, USER_ID, TIME))
+    const updated = unwrap(
+      await service.update(
+        created.id,
+        { whenToUse: 'Když mám nutkání', howToStart: 'Obuju si boty' },
+        USER_ID,
+        TIME,
+      ),
+    )
+
+    expect(updated).toEqual({
+      ...created,
+      whenToUse: 'Když mám nutkání',
+      howToStart: 'Obuju si boty',
+    })
+    const listed = unwrap(await service.list(USER_ID, TIME))
+    expect(listed).toContainEqual(updated)
+
+    db.close()
+    await db.delete()
+  })
+
+  it('rejects editing a catalog (default) strategy through createDataLayer', async () => {
+    const db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
+    const data: DataLayer = createDataLayer(db)
+    const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
+
+    const suggestions = unwrap(await service.getSuggestions(TIME))
+    const defaultSuggestion = suggestions[0]
+    if (defaultSuggestion === undefined) throw new Error('expected at least one default suggestion')
+    const adopted = await data.copingStrategies.create(
+      { userId: USER_ID, label: defaultSuggestion.label, type: 'default', priority: 1 },
+      TIME,
+    )
+
+    const res = await service.update(
+      adopted.copingStrategyId,
+      { label: 'Nový název' },
+      USER_ID,
+      TIME,
+    )
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('COPING_NOT_EDITABLE')
+
+    db.close()
+    await db.delete()
+  })
+
+  it('propagates the repo error for an unknown id (no silent swallowing)', async () => {
+    const db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
+    const data: DataLayer = createDataLayer(db)
+    const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
+
+    const res = await service.update('does-not-exist', { label: 'x' }, USER_ID, TIME)
+    expect(res.data).toBeNull()
+    expect(res.error).not.toBeNull()
+
+    db.close()
+    await db.delete()
+  })
+})
+
+describe('CopingStrategyServiceImpl.remove', () => {
+  it('delegates to repo.remove', async () => {
+    const remove = jest.fn(() => Promise.resolve())
+    const repo = { remove } as unknown as CopingStrategyRepository
+    const service = new CopingStrategyServiceImpl({ repo })
+
+    await service.remove('c1', USER_ID)
+
+    expect(remove).toHaveBeenCalledWith('c1')
+  })
+
+  it('rejects an empty id without touching the repo', async () => {
+    const remove = jest.fn()
+    const repo = { remove } as unknown as CopingStrategyRepository
+    const service = new CopingStrategyServiceImpl({ repo })
+
+    const res = await service.remove('  ', USER_ID)
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('COPING_EMPTY_ID')
+    expect(remove).not.toHaveBeenCalled()
+  })
+
+  it('wires up through createDataLayer: deletes a custom strategy end to end', async () => {
+    const db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
+    const data: DataLayer = createDataLayer(db)
+    const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
+
+    const created = unwrap(await service.create({ label: 'Jít na procházku' }, USER_ID, TIME))
+    const res = await service.remove(created.id, USER_ID)
+    expect(res.error).toBeNull()
+
+    const listed = unwrap(await service.list(USER_ID, TIME))
+    expect(listed).not.toContainEqual(created)
+
+    db.close()
+    await db.delete()
+  })
+
+  it('rejects deleting a catalog (default) strategy through createDataLayer', async () => {
+    const db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
+    const data: DataLayer = createDataLayer(db)
+    const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
+
+    const suggestions = unwrap(await service.getSuggestions(TIME))
+    const defaultSuggestion = suggestions[0]
+    if (defaultSuggestion === undefined) throw new Error('expected at least one default suggestion')
+    const adopted = await data.copingStrategies.create(
+      { userId: USER_ID, label: defaultSuggestion.label, type: 'default', priority: 1 },
+      TIME,
+    )
+
+    const res = await service.remove(adopted.copingStrategyId, USER_ID)
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('COPING_NOT_DELETABLE')
+
+    db.close()
+    await db.delete()
+  })
+
+  it('propagates the repo error for an unknown id (no silent swallowing)', async () => {
+    const db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
+    const data: DataLayer = createDataLayer(db)
+    const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
+
+    const res = await service.remove('does-not-exist', USER_ID)
+    expect(res.data).toBeNull()
     expect(res.error).not.toBeNull()
 
     db.close()

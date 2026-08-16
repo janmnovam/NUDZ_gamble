@@ -94,6 +94,8 @@ export async function completeOnboarding(
     userId: input.userId,
     label: c.label,
     type: c.type,
+    whenToUse: null,
+    howToStart: null,
     priority: i + 1,
     active: true,
     createdAt: at,

@@ -5,6 +5,7 @@ import type { CopingStrategyDto, CopingSuggestionDto } from '@/app/dto/coping.ts
 import { Screen } from '@ui/components/Screen.tsx'
 import { TabBar } from '@ui/components/TabBar.tsx'
 import { type StrategyContactItem } from '@ui/coping/components/ContactCard.tsx'
+import { type CustomStrategyChanges } from '@ui/coping/CustomStrategyDetailScreen.tsx'
 import { type StrategyLibraryItem } from '@ui/coping/StrategyLibraryScreen.tsx'
 import { StrategySection } from '@ui/coping/StrategySection.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
@@ -32,7 +33,13 @@ function toLibraryItem(
         title: strategy.label,
         sub: summariesByLabel.get(strategy.label) ?? '',
       }
-    : { id: strategy.id, kind: 'custom', title: strategy.label }
+    : {
+        id: strategy.id,
+        kind: 'custom',
+        title: strategy.label,
+        ...(strategy.howToStart === null ? {} : { sub: strategy.howToStart }),
+        ...(strategy.whenToUse === null ? {} : { whenToUse: strategy.whenToUse }),
+      }
 }
 
 function formatPhone(phone: string): string {
@@ -133,10 +140,39 @@ export function CopingFlow() {
     })
   }
 
-  const handleAdd = (label: string) => {
+  const handleAdd = (changes: CustomStrategyChanges) => {
     if (userId === null) return
-    void copingService.create({ label }, userId, clientNow()).then((res) => {
-      if (res.error) console.error('[coping] create failed', res.error)
+    void copingService
+      .create(
+        { label: changes.title, whenToUse: changes.whenToUse, howToStart: changes.howToStart },
+        userId,
+        clientNow(),
+      )
+      .then((res) => {
+        if (res.error) console.error('[coping] create failed', res.error)
+        else reload()
+      })
+  }
+
+  const handleUpdate = (copingStrategyId: string, changes: CustomStrategyChanges) => {
+    if (userId === null) return
+    void copingService
+      .update(
+        copingStrategyId,
+        { label: changes.title, whenToUse: changes.whenToUse, howToStart: changes.howToStart },
+        userId,
+        clientNow(),
+      )
+      .then((res) => {
+        if (res.error) console.error('[coping] update failed', res.error)
+        else reload()
+      })
+  }
+
+  const handleDelete = (copingStrategyId: string) => {
+    if (userId === null) return
+    void copingService.remove(copingStrategyId, userId).then((res) => {
+      if (res.error) console.error('[coping] delete failed', res.error)
       else reload()
     })
   }
@@ -178,7 +214,7 @@ export function CopingFlow() {
       hiddenStrategies={NO_HIDDEN_STRATEGIES}
       nav={<TabBar active="coping" />}
       showContactsTab={contacts.some((contact) => contact.category === 'counselling')}
-      createCustomStrategyFields="title-only"
+      createCustomStrategyFields="full"
       onOpenStrategy={() => undefined}
       onMoreStrategy={() => undefined}
       onRestoreStrategy={() => undefined}
@@ -188,9 +224,9 @@ export function CopingFlow() {
           handleToggle(id, !strategy.active)
         }
       }}
-      onCreateCustomStrategy={(changes) => {
-        handleAdd(changes.title)
-      }}
+      onCreateCustomStrategy={handleAdd}
+      onUpdateCustomStrategy={handleUpdate}
+      onDeleteStrategy={handleDelete}
     />
   )
 }

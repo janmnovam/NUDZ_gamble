@@ -100,6 +100,8 @@ describe('toCopingStrategyCsv', () => {
       userId: 'A001',
       label: 'Jít na 15 minut ven',
       type: 'default',
+      whenToUse: null,
+      howToStart: null,
       priority: 1,
       active: true,
       createdAt: '2026-08-31T21:30:00+02:00',
@@ -107,16 +109,20 @@ describe('toCopingStrategyCsv', () => {
     }
     const csv = toCopingStrategyCsv([strategy])
     const lines = csv.trim().split('\r\n')
-    expect(lines[0]).toBe('coping_strategy_id,user_id,label,type,active,created_at,updated_at')
-    expect(lines[1]).toBe('cs1,A001,Jít na 15 minut ven,default,true,2026-08-31T21:30:00+02:00,')
+    expect(lines[0]).toBe(
+      'coping_strategy_id,user_id,label,type,when_to_use,how_to_start,active,created_at,updated_at',
+    )
+    expect(lines[1]).toBe('cs1,A001,Jít na 15 minut ven,default,,,true,2026-08-31T21:30:00+02:00,')
   })
 
-  it('quotes a label containing a comma', () => {
+  it('quotes a label containing a comma, and includes the optional custom-strategy detail fields', () => {
     const strategy: CopingStrategy = {
       copingStrategyId: 'cs2',
       userId: 'A001',
       label: 'Zavolat kamarádovi, jít ven',
       type: 'custom',
+      whenToUse: 'Když mám nutkání hrát',
+      howToStart: 'Otevřu kontakty a zavolám',
       priority: 2,
       active: true,
       createdAt: '2026-08-31T21:30:00+02:00',
@@ -124,5 +130,6 @@ describe('toCopingStrategyCsv', () => {
     }
     const csv = toCopingStrategyCsv([strategy])
     expect(csv).toContain('"Zavolat kamarádovi, jít ven"')
+    expect(csv).toContain('Když mám nutkání hrát,Otevřu kontakty a zavolám')
   })
 })

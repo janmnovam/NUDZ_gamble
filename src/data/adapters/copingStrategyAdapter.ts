@@ -1,9 +1,11 @@
 import { type CopingStrategyEntity } from '@data/model.ts'
 import { copingDefaultToDomain, copingToDomain, copingToEntity } from '@data/mappers.ts'
+import { DomainError } from '@domain/errors.ts'
 import type {
   CopingStrategy,
   CopingStrategyDefault,
   CopingStrategyInput,
+  CopingStrategyUpdate,
   ISOTimestamp,
   UserId,
 } from '@domain/model.ts'
@@ -36,6 +38,8 @@ export class CopingStrategyAdapter implements CopingStrategyRepository {
       userId: input.userId,
       label: input.label,
       type: input.type,
+      whenToUse: input.whenToUse ?? null,
+      howToStart: input.howToStart ?? null,
       priority: input.priority,
       active: input.active ?? true,
       createdAt: time,
@@ -51,6 +55,48 @@ export class CopingStrategyAdapter implements CopingStrategyRepository {
       throw new Error(`coping_strategy not found: ${copingStrategyId}`)
     }
     await this.repo.put({ ...existing, active, updated_at: time })
+  }
+
+  async update(
+    copingStrategyId: string,
+    changes: CopingStrategyUpdate,
+    time: ISOTimestamp,
+  ): Promise<CopingStrategy> {
+    const existing = await this.repo.get(copingStrategyId)
+    if (!existing) {
+      throw new Error(`coping_strategy not found: ${copingStrategyId}`)
+    }
+    if (existing.type !== 'custom') {
+      throw new DomainError(
+        'validation',
+        'COPING_NOT_EDITABLE',
+        'coping: only custom strategies can be edited',
+      )
+    }
+    const updated: CopingStrategyEntity = {
+      ...existing,
+      ...(changes.label === undefined ? {} : { label: changes.label }),
+      ...(changes.whenToUse === undefined ? {} : { when_to_use: changes.whenToUse }),
+      ...(changes.howToStart === undefined ? {} : { how_to_start: changes.howToStart }),
+      updated_at: time,
+    }
+    await this.repo.put(updated)
+    return copingToDomain(updated)
+  }
+
+  async remove(copingStrategyId: string): Promise<void> {
+    const existing = await this.repo.get(copingStrategyId)
+    if (!existing) {
+      throw new Error(`coping_strategy not found: ${copingStrategyId}`)
+    }
+    if (existing.type !== 'custom') {
+      throw new DomainError(
+        'validation',
+        'COPING_NOT_DELETABLE',
+        'coping: only custom strategies can be deleted',
+      )
+    }
+    await this.repo.remove(copingStrategyId)
   }
 
   async listByUser(userId: UserId): Promise<CopingStrategy[]> {
