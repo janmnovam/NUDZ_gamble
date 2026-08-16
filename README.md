@@ -165,7 +165,7 @@ Icons in `public/` are generated for this repository and carry no third-party li
 ## Exporting data from app
 
 - The user can export data at any point during the intervention, via a dedicated button at the bottom of the Dashboard screen or during the weekly review.
-- 3 .csv files are exported (and zipped together so that user doesn't have to select separate files).
+- 4 .csv files are exported (and zipped together so that user doesn't have to select separate files).
   - .csv file nr.1 is export of CHECK_IN table containing fields:
     - check_in_id
     - user_id
@@ -184,13 +184,12 @@ Icons in `public/` are generated for this repository and carry no third-party li
     - weekly_limit_stakes_czk
     - limit_set_at
   - .csv file nr 3 is export of COPING_STRATEGY table containing fields:
-    - coping_strategy_id
+  - .csv file nr 4 is export of PROFILE table containing fields:
     - user_id
-    - label
-    - type
-    - active
-    - created_at
-    - updated_at
+    - onboarding_completed_at
+    - intervention_start_date
+    - reference_time_min
+    - reference_stakes_czk
 - Format:
   - UTF-8
   - date YYYY-MM-DD
