@@ -200,6 +200,9 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Suggested next steps
 
+What was not included in the first version of the app (hackaton version)
+- Counting gains during betting.
+- Logic of gains vs bets (net gain / loss).
 Nice-to-have features (possible next steps before pilot):
 - Allowing user to edit already filled days (for both time and amount gambled).
 - Tracking what dates were edited and how.
