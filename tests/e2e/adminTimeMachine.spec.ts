@@ -1,98 +1,60 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
+
+import { DashboardPage } from './pom/DashboardPage'
+import { OnboardingPage } from './pom/OnboardingPage'
+import { ReviewPage } from './pom/ReviewPage'
+import { TimeMachine } from './pom/TimeMachine'
 
 /**
  * Hidden admin console ("Stroj času"): open it with the 7-tap gesture on the day
  * heading, jump to a simulated intervention day, exit back to the real day, and
- * wipe all data to return to onboarding. Reuses the happy-path onboarding
- * walkthrough to reach the dashboard first.
+ * wipe all data to return to onboarding. Reuses the shared page objects so the
+ * onboarding walkthrough and the console gestures live in one place.
  */
 
-const DB_NAME = 'nudz-gamble'
+let onboarding: OnboardingPage
+let dashboard: DashboardPage
+let review: ReviewPage
+let timeMachine: TimeMachine
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript((name) => {
-    indexedDB.deleteDatabase(name)
-  }, DB_NAME)
-  // Suppress the first-run install prompt so it can't overlay these flows.
-  await page.addInitScript(() => {
-    localStorage.setItem('nudz.installPromptSeen', '1')
-  })
+  onboarding = new OnboardingPage(page)
+  dashboard = new DashboardPage(page)
+  review = new ReviewPage(page)
+  timeMachine = new TimeMachine(page)
+
+  await onboarding.resetStorage()
+  await onboarding.open()
+  await onboarding.completeWithDefaults()
+  await dashboard.expectVisible()
 })
 
-async function stepWheel(page: Page, drumLabel: string, steps: number): Promise<void> {
-  const drum = page.getByRole('listbox', { name: drumLabel })
-  await drum.focus()
-  for (let i = 0; i < steps; i++) {
-    await drum.press('ArrowDown')
-  }
-}
-
-async function completeOnboarding(page: Page): Promise<void> {
-  await page.goto('/')
-  await page.getByRole('button', { name: 'Začít' }).click()
-  await stepWheel(page, 'Hodiny', 10)
-  await page.getByRole('button', { name: 'Pokračovat' }).click()
-  await page.getByRole('textbox', { name: 'Sázky za týden' }).fill('10000')
-  await page.getByRole('button', { name: 'Pokračovat' }).click()
-  await page.getByRole('button', { name: 'Pokračovat' }).click()
-  await page.getByRole('checkbox', { name: /^Na chvíli odejdu od hraní/ }).click()
-  await page.getByRole('button', { name: 'Dokončit nastavení' }).click()
-  await page.getByRole('button', { name: 'Rozumím' }).click()
-}
-
-async function openTimeMachine(page: Page): Promise<void> {
-  const heading = page.getByRole('heading', { name: 'Den 1' })
-  await expect(heading).toBeVisible()
-  for (let i = 0; i < 7; i++) {
-    await heading.click()
-  }
-  await expect(page.getByRole('dialog', { name: 'Stroj času' })).toBeVisible()
-}
-
 test('jumps to a simulated day and exits back', async ({ page }) => {
-  await completeOnboarding(page)
+  await timeMachine.jumpToDay(5)
 
-  await openTimeMachine(page)
-  await page.getByRole('textbox', { name: 'Přejít na den intervence:' }).fill('5')
-  await page.getByRole('button', { name: 'Potvrdit' }).click()
-
-  // The dashboard now reflects the simulated day (week 1 has a limit) and
-  // shows the exit pill.
-  await expect(page.getByRole('heading', { name: 'Den 5' })).toBeVisible()
+  // The dashboard now reflects the simulated day (week 1 has a limit).
   await expect(page.getByText('Týden 1/4')).toBeVisible()
 
-  await page.getByRole('button', { name: 'Opustit stroj času' }).click()
+  await timeMachine.exit()
   await expect(page.getByRole('heading', { name: 'Den 1' })).toBeVisible()
 })
 
-test('wipes data and returns to onboarding', async ({ page }) => {
-  await completeOnboarding(page)
+test('wipes data and returns to onboarding', async () => {
+  await timeMachine.wipeData()
 
-  await openTimeMachine(page)
-  page.once('dialog', (dialog) => {
-    void dialog.accept()
-  })
-  await page.getByRole('button', { name: 'Smazat data' }).click()
-
-  // Reload lands back on the onboarding intro with an empty database.
-  await expect(
-    page.getByRole('heading', { name: 'Získejte přehled nad svým hraním' }),
-  ).toBeVisible()
+  // The wipe returns the app to the onboarding intro with an empty database.
+  await expect(onboarding.introHeading).toBeVisible()
 })
 
 test('prompts for next-week limits when a new week has none set', async ({ page }) => {
-  await completeOnboarding(page)
-
   // Jump into week 2, whose limits are not set yet (only week 1 was, at onboarding).
-  await openTimeMachine(page)
-  await page.getByRole('textbox', { name: 'Přejít na den intervence:' }).fill('8')
-  await page.getByRole('button', { name: 'Potvrdit' }).click()
+  await timeMachine.confirm(8)
 
   // Instead of a broken dashboard, the user is prompted for the new week's limits.
-  await expect(page.getByRole('heading', { name: 'Nové limity na další týden' })).toBeVisible()
+  await expect(review.title).toBeVisible()
 
   // Accept the pre-filled previous limits.
-  await page.getByRole('button', { name: 'Uložit limity' }).click()
+  await review.save()
 
   // The dashboard now renders the new week with its freshly set limits.
   await expect(page.getByRole('heading', { name: 'Den 8' })).toBeVisible()

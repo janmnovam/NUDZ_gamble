@@ -11,7 +11,7 @@ test('onboarding renders the intro screen', async ({ page }) => {
   await page.goto('/')
 
   await expect(
-    page.getByRole('heading', { name: 'Získejte přehled nad svým hraním' }),
+    page.getByRole('heading', { name: /Získejte přehled\s+nad svým hraním/ }),
   ).toBeVisible()
 })
 
