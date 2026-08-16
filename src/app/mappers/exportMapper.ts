@@ -1,12 +1,12 @@
 /**
- * Maps an `ExportBundle` (`@domain/export.ts`) onto three CSV texts — one
+ * Maps an `ExportBundle` (`@domain/export.ts`) onto four CSV texts — one
  * per table, stable snake_case column names per README's "Exporting data
  * from app". Bundling them into a single downloadable ZIP is
  * `src/app/lib/zip.ts`; turning that byte array into a browser download
  * (Blob + object URL) is a UI concern, out of scope here.
  */
 import { calendarDate } from '@domain/clock.ts'
-import type { CheckIn, CopingStrategy, Limit } from '@domain/model.ts'
+import type { CheckIn, CopingStrategy, Limit, Profile } from '@domain/model.ts'
 
 /** RFC 4180 field quoting — only when the value actually needs it. */
 function csvField(value: string): string {
@@ -16,6 +16,37 @@ function csvField(value: string): string {
 function toCsv(columns: readonly string[], rows: readonly string[][]): string {
   const lines = [columns.join(','), ...rows.map((row) => row.map(csvField).join(','))]
   return lines.join('\r\n') + '\r\n'
+}
+
+const PROFILE_COLUMNS = [
+  'user_id',
+  'onboarding_completed_at',
+  'intervention_start_date',
+  'reference_time_min',
+  'reference_stakes_czk',
+] as const
+
+/**
+ * One row, or headers only before onboarding has been completed.
+ * `intervention_start_date` is truncated for the same reason `behavior_date`
+ * is: it models a calendar day, and is stored as a canonical UTC-midnight
+ * timestamp.
+ */
+export function toProfileCsv(profile: Profile | undefined): string {
+  return toCsv(
+    PROFILE_COLUMNS,
+    profile === undefined
+      ? []
+      : [
+          [
+            profile.userId,
+            profile.onboardingCompletedAt,
+            calendarDate(profile.interventionStartDate),
+            String(profile.referenceTimeMin),
+            String(profile.referenceStakesCzk),
+          ],
+        ],
+  )
 }
 
 const CHECK_IN_COLUMNS = [

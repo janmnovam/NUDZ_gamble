@@ -1,6 +1,11 @@
 import { buildExportBundle, type ExportDeps } from '@domain/export.ts'
-import type { CheckIn, CopingStrategy, Limit } from '@domain/model.ts'
-import type { CheckInRepository, CopingStrategyRepository, LimitRepository } from '@domain/ports.ts'
+import type { CheckIn, CopingStrategy, Limit, Profile } from '@domain/model.ts'
+import type {
+  CheckInRepository,
+  CopingStrategyRepository,
+  LimitRepository,
+  ProfileRepository,
+} from '@domain/ports.ts'
 
 const USER_ID = 'A001'
 
@@ -50,6 +55,7 @@ function fakeDeps(params: {
   checkIns: CheckIn[]
   limits: Limit[]
   copingStrategies: CopingStrategy[]
+  profile?: Profile
 }): ExportDeps {
   const checkInRepo: CheckInRepository = {
     listByUser: () => Promise.resolve(params.checkIns),
@@ -73,7 +79,11 @@ function fakeDeps(params: {
       }),
     setActive: () => Promise.resolve(),
   }
-  return { userId: USER_ID, checkInRepo, limitRepo, copingStrategyRepo }
+  const profileRepo: ProfileRepository = {
+    get: () => Promise.resolve(params.profile),
+    save: () => Promise.resolve(),
+  }
+  return { userId: USER_ID, profileRepo, checkInRepo, limitRepo, copingStrategyRepo }
 }
 
 describe('buildExportBundle', () => {

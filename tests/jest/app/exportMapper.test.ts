@@ -1,5 +1,37 @@
-import { toCheckInCsv, toCopingStrategyCsv, toLimitCsv } from '@/app/mappers/exportMapper.ts'
-import type { CheckIn, CopingStrategy, Limit } from '@domain/model.ts'
+import {
+  toCheckInCsv,
+  toCopingStrategyCsv,
+  toLimitCsv,
+  toProfileCsv,
+} from '@/app/mappers/exportMapper.ts'
+import type { CheckIn, CopingStrategy, Limit, Profile } from '@domain/model.ts'
+
+const PROFILE: Profile = {
+  userId: 'A001',
+  onboardingCompletedAt: '2026-08-31T19:30:00.000Z',
+  interventionStartDate: '2026-09-01T00:00:00.000Z',
+  referenceTimeMin: 600,
+  referenceStakesCzk: 10_000,
+}
+
+describe('toProfileCsv', () => {
+  it('emits the stable header and the single profile row', () => {
+    expect(toProfileCsv(PROFILE)).toBe(
+      'user_id,onboarding_completed_at,intervention_start_date,reference_time_min,reference_stakes_czk\r\n' +
+        'A001,2026-08-31T19:30:00.000Z,2026-09-01,600,10000\r\n',
+    )
+  })
+
+  it('truncates intervention_start_date to a calendar day', () => {
+    expect(toProfileCsv(PROFILE)).toContain(',2026-09-01,')
+  })
+
+  it('emits headers only before onboarding has been completed', () => {
+    expect(toProfileCsv(undefined)).toBe(
+      'user_id,onboarding_completed_at,intervention_start_date,reference_time_min,reference_stakes_czk\r\n',
+    )
+  })
+})
 
 describe('toCheckInCsv', () => {
   it('emits the stable header and one row per check-in', () => {

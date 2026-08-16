@@ -1,7 +1,12 @@
 import { ExportServiceImpl } from '@/app/services/exportServiceImpl.ts'
 import type { ExportServiceDeps } from '@/app/services/exportServiceImpl.ts'
 import type { CheckIn, CopingStrategy, Limit } from '@domain/model.ts'
-import type { CheckInRepository, CopingStrategyRepository, LimitRepository } from '@domain/ports.ts'
+import type {
+  CheckInRepository,
+  CopingStrategyRepository,
+  LimitRepository,
+  ProfileRepository,
+} from '@domain/ports.ts'
 
 const USER_ID = 'A001'
 
@@ -58,19 +63,23 @@ function makeService(): ExportServiceImpl {
       }),
     setActive: () => Promise.resolve(),
   }
-  const deps: ExportServiceDeps = { checkIns, limits, copingStrategies }
+  const profiles: ProfileRepository = {
+    get: () => Promise.resolve(undefined),
+    save: () => Promise.resolve(),
+  }
+  const deps: ExportServiceDeps = { profiles, checkIns, limits, copingStrategies }
   return new ExportServiceImpl(deps)
 }
 
 describe('ExportServiceImpl.exportDataZip', () => {
-  it('bundles check_in.csv, limit.csv and coping_strategy.csv into one ZIP archive', async () => {
+  it('bundles profile.csv, check_in.csv, limit.csv and coping_strategy.csv into one ZIP archive', async () => {
     const zip = await makeService().exportDataZip(USER_ID, '2026-09-01T12:00:00.000Z')
 
     const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength)
     expect(view.getUint32(0, true)).toBe(0x04034b50) // first local file header
 
     const names = extractEntryNames(zip)
-    expect(names).toEqual(['check_in.csv', 'limit.csv', 'coping_strategy.csv'])
+    expect(names).toEqual(['profile.csv', 'check_in.csv', 'limit.csv', 'coping_strategy.csv'])
   })
 })
 
