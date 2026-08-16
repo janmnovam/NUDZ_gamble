@@ -14,6 +14,7 @@ import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { errorMessageKey } from '@ui/errors/errorMessage.ts'
+import * as notificationGateway from '@ui/notifications/notificationGateway.ts'
 
 const TOTAL_STEPS = 6
 
@@ -114,6 +115,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       setSubmitError(null)
       setInterventionStartDate(new Date(res.data.interventionStartDate))
       rememberInterventionStart(res.data.interventionStartDate)
+      if (
+        notificationGateway.isNotificationSupported() &&
+        notificationGateway.getPermission() === 'default'
+      ) {
+        await notificationGateway.requestPermission()
+      }
       goNext()
     } catch (error) {
       submittingRef.current = false

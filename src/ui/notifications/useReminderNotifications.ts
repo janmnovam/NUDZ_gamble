@@ -53,10 +53,6 @@ export function useReminderNotifications(): void {
         lastFiredAt: gateway.getLastFiredAt(),
       })
       if (isCancelled() || !result.due || result.reminder === null) return
-
-      if (gateway.getPermission() === 'default') {
-        await gateway.requestPermission()
-      }
       if (isCancelled() || gateway.getPermission() !== 'granted') return
 
       const reminder = result.reminder
