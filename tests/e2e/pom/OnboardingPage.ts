@@ -60,7 +60,7 @@ export class OnboardingPage {
 
   /** Tolerant of the `whitespace-pre-line` line break in the title. */
   get introHeading(): Locator {
-    return this.page.getByRole('heading', { name: /Získejte přehled\s+nad svým hraním/ })
+    return this.page.getByRole('heading', { name: /Získejte přehled o svém hraní/ })
   }
 
   async start(): Promise<void> {
@@ -70,7 +70,7 @@ export class OnboardingPage {
   // --- step 1: reference time ---------------------------------------------
 
   get refTimeHeading(): Locator {
-    return this.page.getByRole('heading', { name: /Kolik času obvykle věnujete/ })
+    return this.page.getByRole('heading', { name: /Kolik času věnujete hraní/ })
   }
 
   /**
@@ -86,14 +86,16 @@ export class OnboardingPage {
       (minutes - (await this.drumValue(MINUTES_DRUM))) / MINUTE_STEP,
     )
     await expect(
-      this.page.getByText(`= ${String(hours * 60 + minutes)} minut za týden`),
-    ).toBeVisible()
+      this.page.getByRole('listbox', { name: HOURS_DRUM }).getByRole('option', { selected: true }),
+    ).toHaveText(`${String(hours)} h`)
   }
 
   // --- step 2: reference stakes -------------------------------------------
 
   get refStakesHeading(): Locator {
-    return this.page.getByRole('heading', { name: 'Kolik obvykle vsadíte za týden?' })
+    return this.page.getByRole('heading', {
+      name: 'Kolik peněz celkem během jednoho týdne vsadíte?',
+    })
   }
 
   async setReferenceStakes(czk: number): Promise<void> {
@@ -103,12 +105,13 @@ export class OnboardingPage {
   // --- step 3: limits ------------------------------------------------------
 
   get limitsHeading(): Locator {
-    return this.page.getByRole('heading', { name: 'Návrh limitů na týden 1' })
+    return this.page.getByRole('heading', { name: 'Nastavení limitů na týden 1' })
   }
 
-  /** The limit-stakes MoneyField (aria "Sázky") — distinct from the reference field ("Sázky za týden"). */
+  /** The limit-stakes MoneyField. Same aria ("Sázky za týden") as the reference
+   * field, but only one step renders at a time so there is no collision. */
   get limitStakesField(): Locator {
-    return this.page.getByRole('textbox', { name: 'Sázky', exact: true })
+    return this.page.getByRole('textbox', { name: 'Sázky za týden' })
   }
 
   /**
@@ -139,7 +142,7 @@ export class OnboardingPage {
   // --- step 4: coping ------------------------------------------------------
 
   get copingHeading(): Locator {
-    return this.page.getByRole('heading', { name: 'Co můžete udělat při nutkání hrát' })
+    return this.page.getByRole('heading', { name: 'Co uděláte, když budete chtít hrát?' })
   }
 
   get finishButton(): Locator {

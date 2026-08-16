@@ -7,7 +7,7 @@ import { expect, test, type Page } from '@playwright/test'
  * triggers it — and that desktop is never nudged.
  */
 
-const INTRO_HEADING = 'Získejte přehled nad svým hraním'
+const INTRO_HEADING = 'Získejte přehled o svém hraní'
 const INSTALL_DIALOG = 'Nainstalovat aplikaci'
 
 async function fireBeforeInstallPrompt(page: Page): Promise<void> {

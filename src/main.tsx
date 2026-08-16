@@ -4,8 +4,8 @@ import { createRoot } from 'react-dom/client'
 import { App } from '@ui/App.tsx'
 import { I18nProvider } from '@ui/i18n/index.ts'
 
-import '@fontsource-variable/inter'
-import '@fontsource-variable/fraunces'
+import '@fontsource-variable/atkinson-hyperlegible-next'
+import '@fontsource-variable/podkova'
 import './index.css'
 
 if (import.meta.env.DEV) {

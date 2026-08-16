@@ -46,9 +46,9 @@ export function RefStakesStep({ stakes, onStakesChange, onNext, onBack }: RefSta
         </div>
       </Card>
 
-      <Card tone="info" className="flex flex-col gap-1.5">
+      <Card tone="sunken" className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
-          <Info className="text-info size-[18px] shrink-0" aria-hidden />
+          <Info className="text-ink size-[18px] shrink-0" aria-hidden />
           <span className="type-body-emphasis text-ink">{t('onboarding.refStakes.why.title')}</span>
         </div>
         <p className="type-body-sm text-muted">{t('onboarding.refStakes.why.body')}</p>

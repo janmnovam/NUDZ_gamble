@@ -2,6 +2,7 @@ import { ArrowRight, CircleCheck, Info } from 'lucide-react'
 
 import { type AxisDto, type DayCellDto, type DashboardResponse } from '@/app/dto/dashboard.ts'
 import { Banner } from '@ui/components/Banner.tsx'
+import { cn } from '@ui/lib/cn.ts'
 import { Button } from '@ui/components/Button.tsx'
 import { Card } from '@ui/components/Card.tsx'
 import { DayCell, type DayCellState } from '@ui/components/DayCell.tsx'
@@ -206,43 +207,57 @@ export function DashboardScreen({
       <Card className="flex flex-col gap-2">
         <p className="type-overline text-faint">{t('dashboard.week.overline')}</p>
         <div className="flex flex-col gap-2">
-          {(programme?.weeks ?? [dashboard.days]).map((week, weekIndex) => (
-            <div key={week[0]?.date ?? weekIndex} className="grid grid-cols-7 gap-[5px]">
-              {week.map((day) => {
-                const isProgrammeDay = 'dayOfMonth' in day
-                const weekday = isProgrammeDay ? day.weekday : weekdayAbbrev(day.date, locale)
-                const dayNumber = isProgrammeDay ? day.dayOfMonth : dayOfMonth(day.date)
-                const cellState = isProgrammeDay ? day.state : toCellState(day, dashboard.studyDay)
-                const backfillable = isProgrammeDay ? day.backfillable : day.backfillable
-                const backfill = backfillable && onBackfillDay ? onBackfillDay : undefined
-                const stateLabel = isProgrammeDay
-                  ? t(`review.programme.dayState.${cellState}` as TranslationKey)
-                  : t(DAY_STATE_KEYS[cellState as WeekStripState])
+          {(programme?.weeks ?? [dashboard.days]).map((week, weekIndex) => {
+            // Ring the whole current week; a strip fallback (no programme) is
+            // itself the current week.
+            const isCurrentWeek =
+              programme === undefined || week.some((day) => 'today' in day && day.today)
+            return (
+              <div
+                key={week[0]?.date ?? weekIndex}
+                className={cn(
+                  'grid grid-cols-7 gap-[5px] rounded-2xl border-2 p-1',
+                  isCurrentWeek ? 'border-brand' : 'border-transparent',
+                )}
+              >
+                {week.map((day) => {
+                  const isProgrammeDay = 'dayOfMonth' in day
+                  const weekday = isProgrammeDay ? day.weekday : weekdayAbbrev(day.date, locale)
+                  const dayNumber = isProgrammeDay ? day.dayOfMonth : dayOfMonth(day.date)
+                  const cellState = isProgrammeDay
+                    ? day.state
+                    : toCellState(day, dashboard.studyDay)
+                  const backfillable = isProgrammeDay ? day.backfillable : day.backfillable
+                  const backfill = backfillable && onBackfillDay ? onBackfillDay : undefined
+                  const stateLabel = isProgrammeDay
+                    ? t(`review.programme.dayState.${cellState}` as TranslationKey)
+                    : t(DAY_STATE_KEYS[cellState as WeekStripState])
 
-                return (
-                  <DayCell
-                    key={day.date}
-                    weekday={weekday}
-                    day={dayNumber}
-                    state={cellState}
-                    {...(isProgrammeDay ? { ring: day.today } : {})}
-                    ariaLabel={t('dashboard.day.aria', {
-                      weekday,
-                      day: dayNumber,
-                      state: stateLabel,
-                    })}
-                    {...(backfill === undefined
-                      ? {}
-                      : {
-                          onClick: () => {
-                            backfill(day.date)
-                          },
-                        })}
-                  />
-                )
-              })}
-            </div>
-          ))}
+                  return (
+                    <DayCell
+                      key={day.date}
+                      weekday={weekday}
+                      day={dayNumber}
+                      state={cellState}
+                      {...(isProgrammeDay ? { ring: day.today } : {})}
+                      ariaLabel={t('dashboard.day.aria', {
+                        weekday,
+                        day: dayNumber,
+                        state: stateLabel,
+                      })}
+                      {...(backfill === undefined
+                        ? {}
+                        : {
+                            onClick: () => {
+                              backfill(day.date)
+                            },
+                          })}
+                    />
+                  )
+                })}
+              </div>
+            )
+          })}
         </div>
 
         {firstBackfillableDay === undefined ? null : (

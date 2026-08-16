@@ -15,8 +15,6 @@ interface DetailsStepProps {
   programDayLabel?: string | undefined
   weekLabel?: string | undefined
   behaviorDateLabel?: string | undefined
-  /** Pre-built "did you gamble …?" heading; falls back to the yesterday phrasing. */
-  playedQuestion?: string | undefined
   onMinutesChange: (minutes: number) => void
   onStakesChange: (stakes: number) => void
   onBack: () => void
@@ -29,7 +27,6 @@ export function DetailsStep({
   programDayLabel,
   weekLabel,
   behaviorDateLabel,
-  playedQuestion,
   onMinutesChange,
   onStakesChange,
   onBack,
@@ -66,7 +63,7 @@ export function DetailsStep({
             date: behaviorDateLabel ?? t('checkin.shared.yesterday'),
           })}
         </p>
-        <h1 className="type-h2 text-ink">{playedQuestion ?? t('checkin.played.question')}</h1>
+        <h1 className="type-h2 text-ink">{t('checkin.time.title')}</h1>
       </div>
 
       <Card className="flex flex-col gap-1.5" padding="px-4 pt-3 pb-4">

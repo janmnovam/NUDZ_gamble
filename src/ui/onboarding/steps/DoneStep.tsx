@@ -75,8 +75,8 @@ export function DoneStep({
         ))}
       </Card>
 
-      <Card tone="brand" className="flex flex-col gap-1">
-        <p className="type-title-card text-brand">
+      <Card tone="sunken" className="flex flex-col gap-1">
+        <p className="type-title-card text-ink">
           {t('onboarding.done.banner.title', { date: startDateLabel })}
         </p>
         <p className="type-body-sm text-muted">{t('onboarding.done.banner.body')}</p>

@@ -89,13 +89,13 @@ export function CheckInFlow({
     programDayLabel,
     weekLabel,
     behaviorDateLabel,
-    playedQuestion,
   }
 
   if (step === 'played') {
     return (
       <PlayedStep
         {...commonLabels}
+        playedQuestion={playedQuestion}
         previousDayState={previousDayState}
         onBack={goBack}
         onPlayed={() => {

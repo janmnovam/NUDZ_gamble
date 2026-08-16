@@ -162,7 +162,11 @@ test.describe('D · navigation', () => {
     await expect(onboarding.refTimeHeading).toBeVisible()
 
     // The 600-minute reference is still shown, not reset to 0.
-    await expect(onboarding.page.getByText('= 600 minut za týden')).toBeVisible()
+    await expect(
+      onboarding.page
+        .getByRole('listbox', { name: 'Hodiny' })
+        .getByRole('option', { selected: true }),
+    ).toHaveText('10 h')
   })
 
   test('D2 · a custom limit is kept (not re-derived) after the reference changes [characterization]', async () => {

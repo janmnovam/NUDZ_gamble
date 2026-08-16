@@ -32,7 +32,7 @@ export class ReviewPage {
   }
 
   get stakesField(): Locator {
-    return this.page.getByRole('textbox', { name: 'Sázky', exact: true })
+    return this.page.getByRole('textbox', { name: 'Sázky za týden', exact: true })
   }
 
   get saveButton(): Locator {

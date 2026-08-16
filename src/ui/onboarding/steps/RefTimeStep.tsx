@@ -31,7 +31,10 @@ export function RefTimeStep({ minutes, onMinutesChange, onNext, onBack }: RefTim
       <h2 className="type-h2 text-ink">{t('onboarding.refTime.title')}</h2>
       <p className="text-muted text-sm leading-5">{t('onboarding.refTime.lead')}</p>
 
-      <Card padding="px-3 py-2">
+      <Card padding="p-4">
+        <div className="flex items-center justify-between gap-2">
+          <span className="type-body-emphasis text-ink">{t('onboarding.refTime.time.label')}</span>
+        </div>
         <DurationWheel
           minutes={minutes}
           onChange={onMinutesChange}
@@ -42,10 +45,8 @@ export function RefTimeStep({ minutes, onMinutesChange, onNext, onBack }: RefTim
         />
       </Card>
 
-      <Card tone="brand" className="flex flex-col gap-0.5">
-        <p className="type-body-emphasis text-brand">
-          {t('onboarding.refTime.sum', { count: minutes })}
-        </p>
+      <Card tone="sunken" className="flex flex-col gap-1">
+        <p className="type-body-sm text-muted">{t('onboarding.refTime.disclaimer.body')}</p>
       </Card>
     </Screen>
   )

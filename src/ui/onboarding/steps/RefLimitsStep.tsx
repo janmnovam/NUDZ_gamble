@@ -1,5 +1,3 @@
-import { Lock } from 'lucide-react'
-
 import { Button } from '@ui/components/Button.tsx'
 import { Card } from '@ui/components/Card.tsx'
 import { DurationWheel } from '@ui/components/DurationWheel.tsx'
@@ -103,13 +101,7 @@ export function RefLimitsStep({
         />
       </Card>
 
-      <Card tone="warning" className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2">
-          <Lock className="text-warning size-4.5 shrink-0" aria-hidden />
-          <span className="type-body-emphasis text-ink">{t('onboarding.limits.cap.title')}</span>
-        </div>
-        <p className="type-body-sm text-muted">{t('onboarding.limits.cap.body')}</p>
-      </Card>
+      <p className="type-body-sm text-muted">{t('onboarding.limits.footnote')}</p>
     </Screen>
   )
 }

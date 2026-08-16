@@ -63,7 +63,7 @@ export function CopingStep({
   onFinish,
   onBack,
 }: CopingStepProps) {
-  const { t } = useTranslation()
+  const { t, t_plural } = useTranslation()
 
   const hasCustomCoping = (customCoping?.label.trim().length ?? 0) > 0
   const count = selected.length + (hasCustomCoping ? 1 : 0)
@@ -87,6 +87,11 @@ export function CopingStep({
               {error}
             </p>
           )}
+          {count > 0 ? (
+            <p className="type-body-sm text-muted text-center">
+              {t_plural('onboarding.coping.selectedNote', count)}
+            </p>
+          ) : null}
           <Button size="md" fullWidth onClick={onFinish} disabled={count === 0}>
             {t('onboarding.coping.cta')}
           </Button>

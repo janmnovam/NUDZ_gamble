@@ -39,7 +39,7 @@ describe('CopingStep', () => {
     )
 
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Co můžete udělat při nutkání hrát' }),
+      screen.getByRole('heading', { level: 2, name: 'Co uděláte, když budete chtít hrát?' }),
     ).not.toBeNull()
     expect(screen.getByText('Na chvíli odejdu od hraní')).not.toBeNull()
     expect(

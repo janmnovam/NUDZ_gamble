@@ -10,9 +10,7 @@ test.beforeEach(async ({ page }) => {
 test('onboarding renders the intro screen', async ({ page }) => {
   await page.goto('/')
 
-  await expect(
-    page.getByRole('heading', { name: /Získejte přehled\s+nad svým hraním/ }),
-  ).toBeVisible()
+  await expect(page.getByRole('heading', { name: /Získejte přehled o svém hraní/ })).toBeVisible()
 })
 
 test('serves a PWA manifest', async ({ page }) => {

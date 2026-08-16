@@ -46,6 +46,7 @@ export function WeekReviewScreen({
 
   return (
     <Screen
+      background="bg-selected-surface"
       contentClassName="gap-3"
       header={
         <div className="flex flex-col gap-0.5 px-4 pt-2 pb-4">
@@ -105,6 +106,11 @@ export function WeekReviewScreen({
           ariaLabel={t('onboarding.limits.stakes.label')}
           currencySuffix={currency}
         />
+      </Card>
+
+      <Card tone="sunken" className="flex flex-col gap-1">
+        <span className="type-title-card text-ink">{t('review.cap.title')}</span>
+        <p className="type-body-sm text-muted">{t('review.cap.body')}</p>
       </Card>
     </Screen>
   )

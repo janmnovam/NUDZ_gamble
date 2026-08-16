@@ -13,6 +13,8 @@ interface ScreenProps {
   nav?: ReactNode
   /** Extra classes for the scrolling content wrapper. Defaults to `gap-5`. */
   contentClassName?: string
+  /** Shell background utility class. Defaults to the warm canvas. */
+  background?: string
 }
 
 /** Breathing room kept between the focused field and the top of the keyboard. */
@@ -26,7 +28,14 @@ const KEYBOARD_GAP = 100
  * Whichever element is bottom-most owns the bottom safe-area inset: with a `nav`
  * the footer falls back to plain spacing, so the two don't both pad for the notch.
  */
-export function Screen({ children, header, footer, nav, contentClassName }: ScreenProps) {
+export function Screen({
+  children,
+  header,
+  footer,
+  nav,
+  contentClassName,
+  background,
+}: ScreenProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const keyboardInset = useKeyboardInset()
 
@@ -55,7 +64,8 @@ export function Screen({ children, header, footer, nav, contentClassName }: Scre
   return (
     <div
       className={cn(
-        'pt-safe bg-canvas mx-auto flex w-full max-w-md flex-col',
+        'pt-safe mx-auto flex w-full max-w-md flex-col',
+        background ?? 'bg-canvas',
         // With a nav to pin, the shell needs a definite height so the content
         // can shrink and scroll inside it. Without one, keep `min-h-dvh` so the
         // window stays the scroller for the keyboard handling above.

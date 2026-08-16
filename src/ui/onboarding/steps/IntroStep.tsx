@@ -1,4 +1,4 @@
-import { CircleCheck, Phone } from 'lucide-react'
+import { CircleCheck, Info } from 'lucide-react'
 
 import { Button } from '@ui/components/Button.tsx'
 import { Card } from '@ui/components/Card.tsx'
@@ -28,7 +28,7 @@ export function IntroStep({ onNext }: IntroStepProps) {
         </Button>
       }
     >
-      <h1 className="type-h1 text-ink whitespace-pre-line">{t('onboarding.intro.title')}</h1>
+      <h1 className="type-h1-display text-ink">{t('onboarding.intro.title')}</h1>
 
       <p className="type-body text-muted">{t('onboarding.intro.lead')}</p>
 
@@ -43,7 +43,7 @@ export function IntroStep({ onNext }: IntroStepProps) {
 
       <Card tone="sunken" className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
-          <Phone className="text-ink size-4.5 shrink-0" aria-hidden />
+          <Info className="text-ink size-4.5 shrink-0" aria-hidden />
           <span className="type-body-emphasis text-ink">
             {t('onboarding.intro.disclaimer.title')}
           </span>
