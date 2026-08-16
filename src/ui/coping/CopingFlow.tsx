@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import type { ContactDto } from '@/app/dto/contact.ts'
-import type { CopingStrategyDto, CopingSuggestionDto } from '@/app/dto/coping.ts'
+import { type ContactDto } from '@/app/dto/contact.ts'
+import { type CopingStrategyDto, type CopingSuggestionDto } from '@/app/dto/coping.ts'
 import { Screen } from '@ui/components/Screen.tsx'
 import { TabBar } from '@ui/components/TabBar.tsx'
 import { type StrategyContactItem } from '@ui/coping/components/ContactCard.tsx'

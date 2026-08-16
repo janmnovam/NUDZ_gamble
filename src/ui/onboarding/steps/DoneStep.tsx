@@ -28,7 +28,7 @@ export function DoneStep({
   startDate,
   onDone,
 }: DoneStepProps) {
-  const { t, t_plural } = useTranslation()
+  const { t, tPlural } = useTranslation()
 
   const hourUnit = t('onboarding.limits.unitHour')
   const minuteUnit = t('onboarding.limits.unitMinute')
@@ -42,7 +42,7 @@ export function DoneStep({
     { label: t('onboarding.done.row.limits'), value: limitValue },
     {
       label: t('onboarding.done.row.coping'),
-      value: t_plural('onboarding.coping.count', copingCount),
+      value: tPlural('onboarding.coping.count', copingCount),
     },
   ]
 

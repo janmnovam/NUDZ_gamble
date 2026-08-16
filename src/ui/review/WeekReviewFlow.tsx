@@ -34,7 +34,7 @@ export function WeekReviewFlow() {
 
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [timeMinutes, setTimeMinutes] = useState(0)
-  const [stakesCzk, setStakesCzk] = useState(0)
+  const [stakesAmount, setStakesAmount] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<TranslationKey | null>(null)
 
@@ -56,7 +56,7 @@ export function WeekReviewFlow() {
         return
       }
       setTimeMinutes(res.data.suggestedNextLimits.timeMinutes)
-      setStakesCzk(res.data.suggestedNextLimits.stakesAmount)
+      setStakesAmount(res.data.suggestedNextLimits.stakesAmount)
       setState({ status: 'ready', review: res.data })
     })
 
@@ -75,7 +75,7 @@ export function WeekReviewFlow() {
       .completeReview(
         {
           reviewWeekNo: state.review.weekNo,
-          nextLimits: { timeMinutes, stakesAmount: stakesCzk },
+          nextLimits: { timeMinutes, stakesAmount },
           incomplete: state.review.missingDays.length > 0,
         },
         userId,
@@ -106,9 +106,9 @@ export function WeekReviewFlow() {
     <WeekReviewScreen
       review={state.review}
       timeMinutes={timeMinutes}
-      stakesCzk={stakesCzk}
+      stakesCzk={stakesAmount}
       onTimeChange={setTimeMinutes}
-      onStakesChange={setStakesCzk}
+      onStakesChange={setStakesAmount}
       onConfirm={submit}
       submitting={submitting}
       errorMessage={errorMessage ? t(errorMessage) : null}

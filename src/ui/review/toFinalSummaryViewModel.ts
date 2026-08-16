@@ -1,9 +1,9 @@
-import type { FinalSummaryResponse, FinalSummaryWeekDto } from '@/app/dto/review.ts'
-import type {
-  FinalSummaryViewModel,
-  FinalSummaryWeek,
-  ReviewStatus,
-  WeekState,
+import { type FinalSummaryResponse, type FinalSummaryWeekDto } from '@/app/dto/review.ts'
+import {
+  type FinalSummaryViewModel,
+  type FinalSummaryWeek,
+  type ReviewStatus,
+  type WeekState,
 } from '@ui/review/types.ts'
 import { weekdayAbbrev } from '@ui/lib/date.ts'
 import { formatDurationCompact } from '@ui/lib/duration.ts'

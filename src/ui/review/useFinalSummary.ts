@@ -10,7 +10,7 @@ import { type TranslationKey } from '@ui/i18n/types.ts'
 import { toFinalSummaryViewModel } from '@ui/review/toFinalSummaryViewModel.ts'
 import { toProgrammeSummary, type ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
 import { weekdayAbbrev } from '@ui/lib/date.ts'
-import type { FinalSummaryViewModel } from '@ui/review/types.ts'
+import { type FinalSummaryViewModel } from '@ui/review/types.ts'
 
 export type FinalSummaryState =
   | { status: 'loading' }

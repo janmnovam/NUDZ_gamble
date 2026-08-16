@@ -4,13 +4,13 @@ import { useTranslation } from '@ui/i18n/context.ts'
 import { cn } from '@ui/lib/cn.ts'
 import { useAppView, type AppView } from '@ui/app/appView.ts'
 
-const tabs = [
+const TABS = [
   { key: 'home', icon: Home, labelKey: 'nav.tabs.home' },
   { key: 'coping', icon: LifeBuoy, labelKey: 'nav.tabs.coping' },
   { key: 'reports', icon: ChartNoAxesCombined, labelKey: 'nav.tabs.reports' },
 ] as const
 
-export type TabKey = (typeof tabs)[number]['key']
+export type TabKey = (typeof TABS)[number]['key']
 
 /** Which app view each tab opens. Absent = no screen built yet. */
 const TAB_VIEWS: Partial<Record<TabKey, AppView>> = {
@@ -31,14 +31,14 @@ interface TabBarProps {
  */
 export function TabBar({ active: activeKey = 'reports' }: TabBarProps = {}) {
   const { t } = useTranslation()
-  const navigate = useAppView((state) => state.navigate)
+  const navigate = useAppView((s) => s.navigate)
 
   return (
     <nav
       aria-label={t('nav.tabs.aria')}
       className="border-line bg-surface grid h-16 grid-cols-3 border-t"
     >
-      {tabs.map((tab) => {
+      {TABS.map((tab) => {
         const active = tab.key === activeKey
         const Icon = tab.icon
         // A tab is only a control when there is somewhere to go — a future

@@ -23,7 +23,7 @@ export function I18nProvider({ children, initialLocale = 'cs' }: I18nProviderPro
       locale,
       setLocale,
       t: (key, vars) => interpolate(TRANSLATIONS[locale][key], vars),
-      t_plural: (base, count, vars) =>
+      tPlural: (base, count, vars) =>
         interpolate(TRANSLATIONS[locale][pluralKey(base, locale, count)], { count, ...vars }),
     }),
     [locale],

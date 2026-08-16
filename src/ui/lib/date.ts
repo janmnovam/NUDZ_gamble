@@ -1,4 +1,4 @@
-import type { ISOCalendarTimestamp } from '@domain/model.ts'
+import { type ISOCalendarTimestamp } from '@domain/model.ts'
 
 /**
  * Calendar helpers for `ISOCalendarTimestamp` — an ISO timestamp pinned to UTC

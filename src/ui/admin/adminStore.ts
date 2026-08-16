@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import type { ISOTimestamp } from '@domain/model.ts'
+import { type ISOTimestamp } from '@domain/model.ts'
 import { isoForDay } from '@ui/clock.ts'
 
 /**

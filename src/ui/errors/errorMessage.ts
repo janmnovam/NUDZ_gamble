@@ -1,7 +1,7 @@
-import type { ErrorEnvelope } from '@/app/result.ts'
+import { type ErrorEnvelope } from '@/app/result.ts'
 import { ERROR_CODES } from '@domain/errorCodes.ts'
-import type { ErrorType } from '@domain/errors.ts'
-import type { TranslationKey } from '@ui/i18n/types.ts'
+import { type ErrorType } from '@domain/errors.ts'
+import { type TranslationKey } from '@ui/i18n/types.ts'
 
 /**
  * Domain error codes the user can actually do something about — a limit over

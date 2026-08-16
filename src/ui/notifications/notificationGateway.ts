@@ -4,7 +4,7 @@
  * hook so the polling logic in `useReminderNotifications.ts` stays testable
  * without a DOM `Notification` global.
  */
-import type { ISOTimestamp } from '@domain/model.ts'
+import { type ISOTimestamp } from '@domain/model.ts'
 
 const LAST_FIRED_KEY = 'nudz.reminder.lastFiredAt'
 

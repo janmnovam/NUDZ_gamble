@@ -1,4 +1,4 @@
-import type { Status } from '@domain/config.ts'
+import { type Status } from '@domain/config.ts'
 
 export type ReviewStatus = Status | 'NEUPLNE'
 export type DayReviewState = 'completed' | 'missing' | 'future'

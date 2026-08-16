@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import type { DashboardResponse, DayCellDto } from '@/app/dto/dashboard.ts'
+import { type DashboardResponse, type DayCellDto } from '@/app/dto/dashboard.ts'
 import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { CheckInFlow, type CheckInFlowResult } from '@ui/checkin/CheckInFlow.tsx'
 import { Button } from '@ui/components/Button.tsx'
@@ -12,7 +12,7 @@ import { errorMessageKey } from '@ui/errors/errorMessage.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { type TranslationKey } from '@ui/i18n/types.ts'
 import { dayInWords, dayOfMonth } from '@ui/lib/date.ts'
-import type { ISOTimestamp } from '@domain/model.ts'
+import { type ISOTimestamp } from '@domain/model.ts'
 
 type LoadState =
   | { status: 'loading' }

@@ -63,7 +63,7 @@ export function StrategyActionDialog(props: StrategyActionDialogProps) {
 
   return (
     <>
-      <div className="bg-ink/55 fixed inset-0 z-40" aria-hidden="true" onPointerDown={onClose} />
+      <div className="bg-ink/60 fixed inset-0 z-40" aria-hidden="true" onPointerDown={onClose} />
 
       <div
         ref={dialogRef}

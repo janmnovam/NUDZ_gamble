@@ -8,6 +8,9 @@ import { StrategyActionDialog } from '@ui/coping/components/StrategyActionDialog
 import { StrategyCard } from '@ui/coping/components/StrategyCard.tsx'
 import { StrategyTabs } from '@ui/coping/components/StrategyTabs.tsx'
 
+/** Cap on user-authored strategies, matching the brief's onboarding limit. */
+const MAX_CUSTOM_STRATEGIES = 5
+
 export type StrategyLibraryItem = { id: string; title: string } & (
   { kind: 'catalog'; sub: string } | { kind: 'custom'; sub?: string; whenToUse?: string }
 )
@@ -312,7 +315,7 @@ export function StrategyLibraryScreen({
           variant="secondary"
           fullWidth
           onClick={() => {
-            if (customStrategyCount >= 5) {
+            if (customStrategyCount >= MAX_CUSTOM_STRATEGIES) {
               setShowCustomStrategyLimit(true)
             } else {
               onAddCustomStrategy()
@@ -322,7 +325,7 @@ export function StrategyLibraryScreen({
           Přidat vlastní strategii
         </Button>
         <p className="type-body-sm text-faint text-center">
-          {customStrategyCount} z 5 vlastních strategií
+          {customStrategyCount} z {MAX_CUSTOM_STRATEGIES} vlastních strategií
         </p>
       </div>
 

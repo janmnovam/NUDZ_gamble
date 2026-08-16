@@ -8,8 +8,8 @@ import { IntroStep } from '@ui/onboarding/steps/IntroStep.tsx'
 import { RefLimitsStep } from '@ui/onboarding/steps/RefLimitsStep.tsx'
 import { RefStakesStep } from '@ui/onboarding/steps/RefStakesStep.tsx'
 import { RefTimeStep } from '@ui/onboarding/steps/RefTimeStep.tsx'
-import type { CopingDto, SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
-import type { CopingSuggestionDto } from '@/app/dto/coping.ts'
+import { type CopingDto, type SuggestedLimitsResponse } from '@/app/dto/onboarding.ts'
+import { type CopingSuggestionDto } from '@/app/dto/coping.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
@@ -45,7 +45,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState(0)
   const [refTimeMinutes, setRefTimeMinutes] = useState(0)
   const [refStakesCzk, setRefStakesCzk] = useState(0)
-  const [timeLimitMin, setTimeLimitMin] = useState<number | null>(null)
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number | null>(null)
   const [stakesLimitCzk, setStakesLimitCzk] = useState<number | null>(null)
   const [suggestedLimits, setSuggestedLimits] = useState<SuggestedLimitsResponse | null>(null)
   const [copingStrategies, setCopingStrategies] = useState<CopingSuggestionDto[]>([])
@@ -85,7 +85,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setStep((current) => Math.max(current - 1, 0))
   }
 
-  const resolvedTimeLimit = timeLimitMin ?? suggestedLimits?.timeMinutes ?? 0
+  const resolvedTimeLimit = timeLimitMinutes ?? suggestedLimits?.timeMinutes ?? 0
   const resolvedStakesLimit = stakesLimitCzk ?? suggestedLimits?.stakesAmount ?? 0
   const normalizedCustomCoping = normalizeCustomCoping(customCoping)
   const copingCount = copingSelected.length + (normalizedCustomCoping ? 1 : 0)
@@ -105,7 +105,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       )
       if (res.error || !res.data) {
         submittingRef.current = false
-        console.error('Onboarding completion failed', res.error)
+        console.error('[onboarding] completion failed', res.error)
         setSubmitError(t(errorMessageKey(res.error)))
         return
       }
@@ -124,7 +124,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       goNext()
     } catch (error) {
       submittingRef.current = false
-      console.error('Onboarding completion failed', error)
+      console.error('[onboarding] completion failed', error)
       setSubmitError(t(errorMessageKey(null)))
     }
   }
@@ -158,9 +158,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           suggestedStakesCzk={suggestedLimits?.stakesAmount ?? 0}
           timeCapMinutes={suggestedLimits?.timeCapMinutes ?? 0}
           stakesCapCzk={suggestedLimits?.stakesCapAmount ?? 0}
-          timeLimit={timeLimitMin}
+          timeLimit={timeLimitMinutes}
           stakesLimit={stakesLimitCzk}
-          onTimeLimitChange={setTimeLimitMin}
+          onTimeLimitChange={setTimeLimitMinutes}
           onStakesLimitChange={setStakesLimitCzk}
           onNext={goNext}
           onBack={goBack}
@@ -190,9 +190,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           stakesLimitCzk={resolvedStakesLimit}
           copingCount={copingCount}
           startDate={interventionStartDate}
-          onDone={() => {
-            onComplete()
-          }}
+          onDone={onComplete}
         />
       )
   }

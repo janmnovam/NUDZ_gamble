@@ -9,7 +9,7 @@
  * must carry the local offset or the day drifts near midnight (doc 02's timezone
  * warning; see `dateOf` in `@domain/clock.ts`).
  */
-import type { ISOTimestamp } from '@domain/model.ts'
+import { type ISOTimestamp } from '@domain/model.ts'
 
 /** Format a `Date` as an offset-bearing ISO 8601 timestamp (local `+hh:mm`). */
 function formatOffsetIso(d: Date): ISOTimestamp {

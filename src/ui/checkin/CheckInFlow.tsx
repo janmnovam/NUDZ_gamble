@@ -1,8 +1,13 @@
 import { useMemo, useState } from 'react'
 
-import type { DashboardVM } from '@domain/dashboard.ts'
 import { dayStateOf, type CheckInDraft, type DayState } from '@domain/checkin.ts'
-import type { CheckIn, ISOCalendarTimestamp, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
+import {
+  type CheckIn,
+  type ISOCalendarTimestamp,
+  type ISODate,
+  type ISOTimestamp,
+  type UserId,
+} from '@domain/model.ts'
 import { DetailsStep } from '@ui/checkin/steps/DetailsStep.tsx'
 import { PlayedStep } from '@ui/checkin/steps/PlayedStep.tsx'
 
@@ -23,8 +28,6 @@ interface CheckInFlowProps {
   today: ISODate
   time: ISOTimestamp
   existingCheckIn?: CheckIn | undefined
-  /** Reserved for the dashboard handoff; the two-page check-in itself does not render charts. */
-  dashboard?: DashboardVM | undefined
   programDayLabel?: string | undefined
   weekLabel?: string | undefined
   behaviorDateLabel?: string | undefined

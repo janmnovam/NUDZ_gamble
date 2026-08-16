@@ -1,6 +1,6 @@
 import { ArrowLeft } from 'lucide-react'
 
-import type { DayState } from '@domain/checkin.ts'
+import { type DayState } from '@domain/checkin.ts'
 import { Card } from '@ui/components/Card.tsx'
 import { Screen } from '@ui/components/Screen.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'

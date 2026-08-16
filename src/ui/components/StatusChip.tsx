@@ -6,10 +6,6 @@ import { type TranslationKey } from '@ui/i18n/types.ts'
 import { cn } from '@ui/lib/cn.ts'
 
 /**
- * The three limit states plus `NEUPLNE`, which reports a missing check-in in
- * the week rather than a limit outcome (Figma "StatusChip").
- */
-/**
  * Limit verdicts plus two week-lifecycle states. They share the pill because
  * they occupy the same slot in a week row — but only one of them is ever a
  * verdict, so a running week never reads as a result.

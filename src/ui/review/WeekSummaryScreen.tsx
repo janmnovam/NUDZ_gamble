@@ -5,9 +5,9 @@ import { DayCell } from '@ui/components/DayCell.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { StatusChip } from '@ui/components/StatusChip.tsx'
 import { ReviewShell } from '@ui/review/components/ReviewShell.tsx'
-import type { DayReviewState, FinalSummaryWeek } from '@ui/review/types.ts'
+import { SummaryRow } from '@ui/review/components/SummaryRow.tsx'
+import { type DayReviewState, type FinalSummaryWeek } from '@ui/review/types.ts'
 import { type TranslationKey } from '@ui/i18n/types.ts'
-import { cn } from '@ui/lib/cn.ts'
 
 const DAY_STATE_KEYS = {
   completed: 'dashboard.dayState.completed',
@@ -19,17 +19,6 @@ interface WeekSummaryScreenProps {
   week: FinalSummaryWeek
   onBack: () => void
   onExport: () => void
-}
-
-function SummaryRow({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted text-[14px] leading-5">{label}</span>
-      <span className={cn('type-label text-right', danger ? 'text-status-exceeded' : 'text-ink')}>
-        {value}
-      </span>
-    </div>
-  )
 }
 
 export function WeekSummaryScreen({ week, onBack, onExport }: WeekSummaryScreenProps) {

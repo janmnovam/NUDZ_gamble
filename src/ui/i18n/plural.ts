@@ -22,7 +22,7 @@ type ExtractPluralBase<K> = K extends `${infer B}.one`
     : never
   : never
 
-/** Translation keys that expose all of `.one`/`.few`/`.other`, usable with `tp`. */
+/** Translation keys that expose all of `.one`/`.few`/`.other`, usable with `tPlural`. */
 export type PluralBaseKey = ExtractPluralBase<TranslationKey>
 
 /** Resolve the `.one`/`.few`/`.other` variant key for a base + count. */

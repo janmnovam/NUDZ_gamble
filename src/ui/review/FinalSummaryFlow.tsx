@@ -1,9 +1,9 @@
 import { useState } from 'react'
 
-import type { FinalSummaryViewModel, FinalSummaryWeek } from '@ui/review/types.ts'
+import { type FinalSummaryViewModel, type FinalSummaryWeek } from '@ui/review/types.ts'
 import { FinalSummaryScreen } from '@ui/review/FinalSummaryScreen.tsx'
 import { ProgrammeSummaryScreen } from '@ui/review/ProgrammeSummaryScreen.tsx'
-import type { ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
+import { type ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
 import { WeekSummaryScreen } from '@ui/review/WeekSummaryScreen.tsx'
 
 interface FinalSummaryFlowProps {

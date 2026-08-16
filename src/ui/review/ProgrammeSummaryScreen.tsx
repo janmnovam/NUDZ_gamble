@@ -5,10 +5,10 @@ import { DayCell, type DayCellState } from '@ui/components/DayCell.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { type TranslationKey } from '@ui/i18n/types.ts'
 import { ReviewShell } from '@ui/review/components/ReviewShell.tsx'
-import type { ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
+import { SummaryRow } from '@ui/review/components/SummaryRow.tsx'
+import { type ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
 import { formatDurationCompact } from '@ui/lib/duration.ts'
 import { groupThousands } from '@ui/lib/money.ts'
-import { cn } from '@ui/lib/cn.ts'
 
 /** Static map, so a typo is a compile error rather than a raw key on screen. */
 const DAY_STATE_KEYS = {
@@ -24,17 +24,6 @@ interface ProgrammeSummaryScreenProps {
   summary: ProgrammeSummary
   onBack: () => void
   onExport: () => void
-}
-
-function SummaryRow({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-muted text-[14px] leading-5">{label}</span>
-      <span className={cn('type-label text-right', danger ? 'text-status-exceeded' : 'text-ink')}>
-        {value}
-      </span>
-    </div>
-  )
 }
 
 /** The whole programme at a glance: totals across all four weeks, then a month grid. */

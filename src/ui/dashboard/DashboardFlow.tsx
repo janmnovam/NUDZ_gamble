@@ -21,10 +21,13 @@ type LoadState =
   | { status: 'ready'; dashboard: DashboardResponse }
   | { status: 'failed'; message: TranslationKey }
 
+/** Taps on the header that open the hidden demo time machine. */
+const SECRET_TAP_COUNT = 7
+
 interface DashboardFlowProps {
   onCheckIn?: () => void
   /** Opens a backfill check-in for a specific missing day, by ISO calendar date. */
-  onBackfill?: (date: string) => void
+  onBackfillDay?: (date: string) => void
 }
 
 /**
@@ -33,7 +36,7 @@ interface DashboardFlowProps {
  * those two it has no steps: it loads the read model through `DashboardService`
  * and hands it to the (pure) screen, which is the only place that renders.
  */
-export function DashboardFlow({ onCheckIn, onBackfill }: DashboardFlowProps = {}) {
+export function DashboardFlow({ onCheckIn, onBackfillDay }: DashboardFlowProps = {}) {
   const { t } = useTranslation()
   // Injected by <AppProvider>, which is also how tests supply a fake.
   const dashboardService = useDashboardService()
@@ -49,7 +52,7 @@ export function DashboardFlow({ onCheckIn, onBackfill }: DashboardFlowProps = {}
   const simulatedTime = useAdminStore((s) => s.simulatedTime)
   const openPanel = useAdminStore((s) => s.openPanel)
   const exitTimeMachine = useAdminStore((s) => s.exitTimeMachine)
-  const onSecretTap = useMultiTap(7, openPanel)
+  const onSecretTap = useMultiTap(SECRET_TAP_COUNT, openPanel)
 
   useEffect(() => {
     if (userId === null) return
@@ -96,7 +99,7 @@ export function DashboardFlow({ onCheckIn, onBackfill }: DashboardFlowProps = {}
         dashboard={state.dashboard}
         {...(programmeState.status === 'ready' ? { programme: programmeState.programme } : {})}
         {...(onCheckIn ? { onCheckIn } : {})}
-        {...(onBackfill ? { onBackfillDay: onBackfill } : {})}
+        {...(onBackfillDay ? { onBackfillDay } : {})}
         onSecretTap={onSecretTap}
         timeMachineActive={simulatedTime !== null}
         onExitTimeMachine={exitTimeMachine}

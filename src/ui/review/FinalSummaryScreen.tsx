@@ -3,7 +3,7 @@ import { ChevronRight, Lock } from 'lucide-react'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { StatusChip, type ChipStatus } from '@ui/components/StatusChip.tsx'
 import { ReviewShell } from '@ui/review/components/ReviewShell.tsx'
-import type { FinalSummaryViewModel, FinalSummaryWeek } from '@ui/review/types.ts'
+import { type FinalSummaryViewModel, type FinalSummaryWeek } from '@ui/review/types.ts'
 
 interface FinalSummaryScreenProps {
   summary: FinalSummaryViewModel

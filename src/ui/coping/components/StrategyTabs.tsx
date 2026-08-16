@@ -1,3 +1,5 @@
+import { cn } from '@ui/lib/cn.ts'
+
 type StrategyTab = 'library' | 'contacts'
 
 interface StrategyTabsProps {
@@ -26,9 +28,10 @@ export function StrategyTabs({ activeTab, onChange }: StrategyTabsProps) {
             type="button"
             role="tab"
             aria-selected={isActive}
-            className={`type-label-lg min-w-0 flex-1 rounded-full px-4 py-2 ${
-              isActive ? 'bg-surface text-ink' : 'text-muted'
-            }`}
+            className={cn(
+              'type-label-lg min-w-0 flex-1 rounded-full px-4 py-2',
+              isActive ? 'bg-surface text-ink' : 'text-muted',
+            )}
             onClick={() => {
               onChange(tab.id)
             }}

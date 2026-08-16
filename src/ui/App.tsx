@@ -36,7 +36,7 @@ export function App() {
  */
 function ReportsSection() {
   const { t } = useTranslation()
-  const navigate = useAppView((state) => state.navigate)
+  const navigate = useAppView((s) => s.navigate)
   const { exportData } = useExportDownload()
   const summary = useFinalSummary()
 
@@ -68,10 +68,10 @@ function ReportsSection() {
  */
 function AppRoutes() {
   const onboarding = useOnboardingService()
-  const adoptCurrentUser = useCurrentUser((state) => state.setUserId)
-  const view = useAppView((state) => state.view)
-  const navigate = useAppView((state) => state.navigate)
-  const checkinBehaviorDate = useAppView((state) => state.checkinBehaviorDate)
+  const adoptCurrentUser = useCurrentUser((s) => s.setUserId)
+  const view = useAppView((s) => s.view)
+  const navigate = useAppView((s) => s.navigate)
+  const checkinBehaviorDate = useAppView((s) => s.checkinBehaviorDate)
 
   useReminderNotifications()
 
@@ -111,7 +111,7 @@ function AppRoutes() {
           onCheckIn={() => {
             navigate('checkin')
           }}
-          onBackfill={(date) => {
+          onBackfillDay={(date) => {
             navigate('checkin', { behaviorDate: date })
           }}
         />

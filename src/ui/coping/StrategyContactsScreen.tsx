@@ -17,9 +17,7 @@ export function StrategyContactsScreen({
 }: StrategyContactsScreenProps) {
   return (
     <Screen contentClassName="gap-4 pb-6" nav={nav}>
-      <h1 className="font-sans text-[2rem] leading-[2.375rem] font-semibold tracking-[-0.5px]">
-        Kontakty
-      </h1>
+      <h1 className="type-display">Kontakty</h1>
 
       <p className="text-muted text-[0.9375rem] leading-[1.375rem]">
         Můžete se nezávazně obrátit na odbornou službu. Je na vás, zda a kdy kontakt využijete.

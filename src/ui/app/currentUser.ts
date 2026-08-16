@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-import type { UserId } from '@domain/model.ts'
+import { type UserId } from '@domain/model.ts'
 
 /**
  * The current user's id, held in memory for the session. It is **not** persisted

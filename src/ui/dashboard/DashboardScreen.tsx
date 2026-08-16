@@ -15,7 +15,7 @@ import { type TranslationKey } from '@ui/i18n/types.ts'
 import { dayOfMonth, weekdayAbbrev } from '@ui/lib/date.ts'
 import { formatDurationCompact } from '@ui/lib/duration.ts'
 import { groupThousands } from '@ui/lib/money.ts'
-import type { ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
+import { type ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
 
 /** Programme length in weeks — the "/4" in "Týden 1/4". */
 const TOTAL_WEEKS = 4
@@ -76,7 +76,7 @@ export function DashboardScreen({
   timeMachineActive = false,
   onExitTimeMachine,
 }: DashboardScreenProps) {
-  const { t, t_plural, locale } = useTranslation()
+  const { t, tPlural, locale } = useTranslation()
 
   const hourUnit = t('dashboard.unitHour')
   const minuteUnit = t('dashboard.unitMinute')
@@ -128,7 +128,7 @@ export function DashboardScreen({
         ? t('dashboard.banner.missing.one', {
             day: `${weekdayAbbrev(firstBackfillableDay, locale)} ${String(dayOfMonth(firstBackfillableDay))}`,
           })
-        : t_plural('dashboard.banner.missing', backfillableDays.length, {
+        : tPlural('dashboard.banner.missing', backfillableDays.length, {
             count: backfillableDays.length,
           })
 
@@ -227,7 +227,7 @@ export function DashboardScreen({
                   const cellState = isProgrammeDay
                     ? day.state
                     : toCellState(day, dashboard.studyDay)
-                  const backfillable = isProgrammeDay ? day.backfillable : day.backfillable
+                  const backfillable = day.backfillable
                   const backfill = backfillable && onBackfillDay ? onBackfillDay : undefined
                   const stateLabel = isProgrammeDay
                     ? t(`review.programme.dayState.${cellState}` as TranslationKey)

@@ -25,6 +25,7 @@ const SIZE_CLASSES: Record<ButtonSize, string> = {
   lg: 'h-12 px-6',
 }
 
+/** Pill button (Figma "Button"). `variant` selects the tint; `size` the height. */
 export function Button({
   children,
   variant = 'primary',

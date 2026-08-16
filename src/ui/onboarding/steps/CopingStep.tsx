@@ -4,9 +4,9 @@ import { Screen } from '@ui/components/Screen.tsx'
 import { StepHeader } from '@ui/components/StepHeader.tsx'
 import { TextField } from '@ui/components/TextField.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
-import type { TranslationKey } from '@ui/i18n/types.ts'
-import type { CopingDto } from '@/app/dto/onboarding.ts'
-import type { CopingSuggestionDto } from '@/app/dto/coping.ts'
+import { type TranslationKey } from '@ui/i18n/types.ts'
+import { type CopingDto } from '@/app/dto/onboarding.ts'
+import { type CopingSuggestionDto } from '@/app/dto/coping.ts'
 
 interface CopingStepProps {
   strategies: CopingSuggestionDto[]
@@ -63,7 +63,7 @@ export function CopingStep({
   onFinish,
   onBack,
 }: CopingStepProps) {
-  const { t, t_plural } = useTranslation()
+  const { t, tPlural } = useTranslation()
 
   const hasCustomCoping = (customCoping?.label.trim().length ?? 0) > 0
   const count = selected.length + (hasCustomCoping ? 1 : 0)
@@ -89,7 +89,7 @@ export function CopingStep({
           )}
           {count > 0 ? (
             <p className="type-body-sm text-muted text-center">
-              {t_plural('onboarding.coping.selectedNote', count)}
+              {tPlural('onboarding.coping.selectedNote', count)}
             </p>
           ) : null}
           <Button size="md" fullWidth onClick={onFinish} disabled={count === 0}>

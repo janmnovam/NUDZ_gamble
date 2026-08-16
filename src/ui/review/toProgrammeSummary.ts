@@ -1,5 +1,5 @@
-import type { FinalSummaryResponse } from '@/app/dto/review.ts'
-import type { DayCellState } from '@ui/components/DayCell.tsx'
+import { type FinalSummaryResponse } from '@/app/dto/review.ts'
+import { type DayCellState } from '@ui/components/DayCell.tsx'
 
 export interface ProgrammeDay {
   /** Day of the month, as the calendar shows it. */

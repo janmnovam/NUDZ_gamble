@@ -16,7 +16,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
 }
 
-function alreadyInstalled(): boolean {
+function isInstalled(): boolean {
   if (typeof window === 'undefined') return false
   const standaloneDisplay = window.matchMedia('(display-mode: standalone)').matches
   // iOS Safari exposes its own non-standard flag instead of display-mode.
@@ -64,7 +64,7 @@ export function InstallPrompt() {
     } catch {
       seen = false
     }
-    if (seen || alreadyInstalled()) return
+    if (seen || isInstalled()) return
     // Install prompt is phone-only — desktop users are not nudged.
     if (!isPhone()) return
 

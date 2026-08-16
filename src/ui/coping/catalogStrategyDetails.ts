@@ -1,5 +1,5 @@
-import type { CopingStrategyDto, CopingSuggestionDto } from '@/app/dto/coping.ts'
-import type { CatalogStrategyDetail } from '@ui/coping/CatalogStrategyDetailScreen.tsx'
+import { type CopingStrategyDto, type CopingSuggestionDto } from '@/app/dto/coping.ts'
+import { type CatalogStrategyDetail } from '@ui/coping/CatalogStrategyDetailScreen.tsx'
 
 type CatalogStrategyDetailContent = Omit<CatalogStrategyDetail, 'id'>
 
