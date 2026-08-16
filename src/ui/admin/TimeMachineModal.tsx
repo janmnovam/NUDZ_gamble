@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { useAdminStore } from '@ui/admin/adminStore.ts'
+import { useAdminService } from '@ui/app/AppContext.ts'
+import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { Button } from '@ui/components/Button.tsx'
 import { TextField } from '@ui/components/TextField.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
@@ -23,9 +25,12 @@ interface TimeMachineModalProps {
  */
 export function TimeMachineModal({ currentDay }: TimeMachineModalProps) {
   const { t } = useTranslation()
+  const admin = useAdminService()
+  const userId = useCurrentUser((s) => s.userId)
+  const clearCurrentUser = useCurrentUser((s) => s.clear)
   const closePanel = useAdminStore((s) => s.closePanel)
   const simulateDay = useAdminStore((s) => s.simulateDay)
-  const wipeData = useAdminStore((s) => s.wipeData)
+  const forgetInterventionStart = useAdminStore((s) => s.forgetInterventionStart)
   const interventionStartDate = useAdminStore((s) => s.interventionStartDate)
 
   const [dayInput, setDayInput] = useState(() => String(Math.max(currentDay, 1)))
@@ -50,10 +55,23 @@ export function TimeMachineModal({ currentDay }: TimeMachineModalProps) {
     if (canConfirm) simulateDay(parsedDay)
   }
 
-  const wipe = () => {
-    if (window.confirm(t('admin.timeMachine.wipeConfirm'))) {
-      void wipeData()
+  // Wipe through the AdminService inbound port (drops the current user's data,
+  // keeping the seeded contacts directory), then forget the local session state
+  // and reload into a fresh onboarding.
+  const wipe = async () => {
+    if (userId === null) {
+      console.error('[admin] no current user to wipe')
+      return
     }
+    if (!window.confirm(t('admin.timeMachine.wipeConfirm'))) return
+    const result = await admin.dropUserData(userId)
+    if (result.error) {
+      console.error('[admin] dropUserData failed', result.error)
+      return
+    }
+    forgetInterventionStart()
+    clearCurrentUser()
+    window.location.reload()
   }
 
   return createPortal(
@@ -95,7 +113,9 @@ export function TimeMachineModal({ currentDay }: TimeMachineModalProps) {
 
         <button
           type="button"
-          onClick={wipe}
+          onClick={() => {
+            void wipe()
+          }}
           className="text-danger focus-visible:ring-danger inline-flex items-center justify-center gap-1.5 self-center rounded-sm px-2 py-1 text-sm font-medium hover:brightness-90 focus-visible:ring-2 focus-visible:outline-none"
         >
           <Trash2 className="size-4" aria-hidden />

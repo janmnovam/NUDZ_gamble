@@ -85,3 +85,12 @@ export function useNotificationService() {
   }
   return app.notification
 }
+
+/** The admin inbound port (destructive data reset). Throws outside <AppProvider>. */
+export function useAdminService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useAdminService must be used within an <AppProvider>')
+  }
+  return app.admin
+}

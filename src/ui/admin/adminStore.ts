@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 
 import type { ISOTimestamp } from '@domain/model.ts'
-import { db } from '@/core/index.ts'
 import { isoForDay } from '@ui/clock.ts'
 
 /**
@@ -15,7 +14,11 @@ import { isoForDay } from '@ui/clock.ts'
  * clientNow()` into its service call. To turn the user-entered intervention day
  * into an instant we need `interventionStartDate` (day 1); it comes back from
  * onboarding's `complete()` and is persisted so it survives a reload — the demo
- * data in IndexedDB does too.
+ * data does too.
+ *
+ * Wiping the demo data goes through the `AdminService` inbound port (see
+ * `TimeMachineModal`), not the database directly; this store only forgets its
+ * own persisted start date.
  */
 const START_KEY = 'nudz.interventionStartDate'
 
@@ -42,8 +45,8 @@ interface AdminStore {
   simulateDay: (day: number) => void
   /** Return to the real clock. */
   exitTimeMachine: () => void
-  /** Wipe all local data (IndexedDB + remembered start) and reload to onboarding. */
-  wipeData: () => Promise<void>
+  /** Drop the remembered start date (after the data behind it has been wiped). */
+  forgetInterventionStart: () => void
 }
 
 export const useAdminStore = create<AdminStore>()((set, get) => ({
@@ -72,13 +75,12 @@ export const useAdminStore = create<AdminStore>()((set, get) => ({
   exitTimeMachine: () => {
     set({ simulatedTime: null, panelOpen: false })
   },
-  wipeData: async () => {
+  forgetInterventionStart: () => {
     try {
       localStorage.removeItem(START_KEY)
     } catch {
       // ignore
     }
-    await db.delete()
-    window.location.reload()
+    set({ interventionStartDate: null, simulatedTime: null })
   },
 }))
