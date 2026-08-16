@@ -5,7 +5,7 @@ import { type AppDatabase } from '../db'
 /**
  * Clears every store in one shot. This is the one adapter allowed to reach
  * past a single table into `db.tables` — a whole-database wipe has no
- * per-entity meaning. Mirrors the old dev `resetDb()`, now behind a port.
+ * per-entity meaning.
  */
 export class DatabaseAdminAdapter implements DatabaseAdmin {
   private readonly db: AppDatabase
