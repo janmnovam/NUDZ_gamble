@@ -242,4 +242,13 @@ export const en: Record<TranslationKey, string> = {
     'Set your limits for the upcoming week. Your previous limits are pre-filled — you can lower them.',
   'review.previous': 'Previous: {value}',
   'review.cta': 'Save limits',
+
+  'install.title': 'Install the app',
+  'install.body': 'Add Hlídej.se to your home screen for quick access and reminders.',
+  'install.cta': 'Install',
+  'install.later': 'Not now',
+  'install.close': 'Close',
+  'install.ios.body': 'Add Hlídej.se to your home screen for quick access and reminders.',
+  'install.ios.step': 'Tap Share, then choose “Add to Home Screen”.',
+  'install.ios.cta': 'Got it',
 }

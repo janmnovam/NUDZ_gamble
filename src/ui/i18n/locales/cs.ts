@@ -249,4 +249,13 @@ export const cs = {
     'Nastavte si limity pro nadcházející týden. Výchozí jsou vaše předchozí limity — můžete je snížit.',
   'review.previous': 'Předchozí: {value}',
   'review.cta': 'Uložit limity',
+
+  'install.title': 'Nainstalovat aplikaci',
+  'install.body': 'Přidejte si Hlídej.se na plochu — rychlý přístup a připomínky přímo v telefonu.',
+  'install.cta': 'Nainstalovat',
+  'install.later': 'Teď ne',
+  'install.close': 'Zavřít',
+  'install.ios.body': 'Přidejte si Hlídej.se na plochu pro rychlý přístup a připomínky.',
+  'install.ios.step': 'Klepněte na Sdílet a zvolte „Přidat na plochu“.',
+  'install.ios.cta': 'Rozumím',
 } as const

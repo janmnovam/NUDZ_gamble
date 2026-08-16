@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
 
+test.beforeEach(async ({ page }) => {
+  // Suppress the first-run install prompt so it can't overlay these flows.
+  await page.addInitScript(() => {
+    localStorage.setItem('nudz.installPromptSeen', '1')
+  })
+})
+
 test('onboarding renders the intro screen', async ({ page }) => {
   await page.goto('/')
 

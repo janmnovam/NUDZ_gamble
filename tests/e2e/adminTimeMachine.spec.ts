@@ -13,6 +13,10 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript((name) => {
     indexedDB.deleteDatabase(name)
   }, DB_NAME)
+  // Suppress the first-run install prompt so it can't overlay these flows.
+  await page.addInitScript(() => {
+    localStorage.setItem('nudz.installPromptSeen', '1')
+  })
 })
 
 async function stepWheel(page: Page, drumLabel: string, steps: number): Promise<void> {

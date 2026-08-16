@@ -17,12 +17,14 @@ import { OnboardingFlow } from '@ui/onboarding/OnboardingFlow.tsx'
 import { FinalSummaryFlow } from '@ui/review/FinalSummaryFlow.tsx'
 import { WeekReviewFlow } from '@ui/review/WeekReviewFlow.tsx'
 import { useFinalSummary } from '@ui/review/useFinalSummary.ts'
+import { InstallPrompt } from '@ui/install/InstallPrompt.tsx'
 
 export function App() {
   return (
     <I18nProvider>
       <AppProvider>
         <AppRoutes />
+        <InstallPrompt />
       </AppProvider>
     </I18nProvider>
   )
