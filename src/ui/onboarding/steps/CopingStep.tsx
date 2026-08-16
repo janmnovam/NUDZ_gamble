@@ -74,8 +74,7 @@ export function CopingStep({
         label={t('onboarding.coping.custom.label')}
         value={customCoping?.label ?? ''}
         onChange={(value) => {
-          // TODO
-          onCustomCopingChange({ id: 'TODO', label: value, type: 'custom' })
+          onCustomCopingChange({ label: value, type: 'custom' })
         }}
         placeholder={t('onboarding.coping.custom.placeholder')}
       />
