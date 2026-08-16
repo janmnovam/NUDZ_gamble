@@ -104,7 +104,7 @@ describe('buildCatalogStrategyDetails', () => {
     expect(details[0]?.title).toBe('Na chvíli odejdu od hraní')
     expect(presentation).toEqual({
       title: 'Na chvíli odejdu od hraní',
-      summary: '',
+      summary: 'Zavřu stránku nebo aplikaci, odložím zařízení nebo se přesunu jinam.',
     })
   })
 })
