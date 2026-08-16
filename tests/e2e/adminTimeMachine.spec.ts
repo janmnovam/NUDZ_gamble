@@ -31,7 +31,7 @@ async function completeOnboarding(page: Page): Promise<void> {
   await page.getByRole('textbox', { name: 'Sázky za týden' }).fill('10000')
   await page.getByRole('button', { name: 'Pokračovat' }).click()
   await page.getByRole('button', { name: 'Pokračovat' }).click()
-  await page.getByRole('checkbox', { name: 'Na chvíli změním prostředí' }).click()
+  await page.getByRole('checkbox', { name: /^Na chvíli odejdu od hraní/ }).click()
   await page.getByRole('button', { name: 'Dokončit nastavení' }).click()
   await page.getByRole('button', { name: 'Rozumím' }).click()
 }

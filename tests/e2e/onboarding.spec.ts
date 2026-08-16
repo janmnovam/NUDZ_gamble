@@ -52,9 +52,9 @@ test('completes onboarding with 10 h / 10 000 CZK reference', async ({ page }) =
 
   // Step 5 — coping strategies: pick at least one, then finish.
   await expect(
-    page.getByRole('heading', { name: 'Co uděláš, když budeš chtít hrát?' }),
+    page.getByRole('heading', { name: 'Co můžete udělat při nutkání hrát' }),
   ).toBeVisible()
-  await page.getByRole('checkbox', { name: 'Na chvíli změním prostředí' }).click()
+  await page.getByRole('checkbox', { name: /^Na chvíli odejdu od hraní/ }).click()
   await page.getByRole('button', { name: 'Dokončit nastavení' }).click()
 
   // Step 6 — summary. Confirms reference + suggested limits landed on the record.
