@@ -45,6 +45,14 @@ export interface CopingStrategyService {
   ): Promise<Result<void>>
 
   /**
+   * Adopt a catalog suggestion the user didn't pick at onboarding — writes a
+   * new `type: 'default'` row, active, appended after all existing
+   * strategies. Rejects an unknown suggestion `code`. `time` is the
+   * caller-supplied instant that stamps `createdAt`.
+   */
+  select(code: string, userId: UserId, time: ISOTimestamp): Promise<Result<CopingStrategyDto>>
+
+  /**
    * Edit a custom strategy's label and/or optional detail fields. Rejects an
    * empty id, an unknown id, and an attempt to edit a non-custom (catalog)
    * strategy. `time` is the caller-supplied instant that stamps `updatedAt`.

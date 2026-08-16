@@ -103,3 +103,38 @@ export function buildCatalogStrategyDetails(
     return content === undefined ? [] : [{ id: strategy.id, ...content }]
   })
 }
+
+/**
+ * Catalog suggestions the user hasn't adopted — no persisted `type: 'default'`
+ * row matches the suggestion's label (current or legacy, see
+ * `labelsForSuggestion`). Without this, a suggestion skipped at onboarding has
+ * no persisted row and never surfaces again, since `list` only returns rows
+ * that already exist.
+ */
+export function unadoptedCatalogSuggestions(
+  strategies: readonly CopingStrategyDto[],
+  suggestions: readonly CopingSuggestionDto[],
+): CopingSuggestionDto[] {
+  const adoptedLabels = new Set(
+    strategies.filter((strategy) => strategy.type === 'default').map((strategy) => strategy.label),
+  )
+
+  return suggestions.filter(
+    (suggestion) => !labelsForSuggestion(suggestion).some((label) => adoptedLabels.has(label)),
+  )
+}
+
+/**
+ * Detail screens for unadopted catalog suggestions, keyed by the suggestion's
+ * stable catalog code (there is no persisted row id yet) — lets the library
+ * open a suggestion's overview before the user selects it.
+ */
+export function buildUnadoptedCatalogStrategyDetails(
+  strategies: readonly CopingStrategyDto[],
+  suggestions: readonly CopingSuggestionDto[],
+): CatalogStrategyDetail[] {
+  return unadoptedCatalogSuggestions(strategies, suggestions).flatMap((suggestion) => {
+    const content = detailContentFromSuggestion(suggestion)
+    return content === undefined ? [] : [{ id: suggestion.id, ...content }]
+  })
+}

@@ -61,6 +61,19 @@ function createService() {
     ),
   )
   const remove = jest.fn(() => Promise.resolve(ok(undefined)))
+  const select = jest.fn(() =>
+    Promise.resolve(
+      ok({
+        id: 'catalog-2',
+        label: 'Ozvu se někomu, komu důvěřuji',
+        type: 'default' as const,
+        active: true,
+        priority: 3,
+        whenToUse: null,
+        howToStart: null,
+      }),
+    ),
+  )
   const service: CopingStrategyService = {
     getSuggestions: () =>
       Promise.resolve(
@@ -80,6 +93,20 @@ function createService() {
             noteLabel: 'DOSTUPNÁ ALTERNATIVA',
             note: 'Pokud se nemůžete přesunout, změňte alespoň to, co máte před sebou.',
           },
+          {
+            // Not adopted by any row in STRATEGIES — must still surface in the library.
+            id: 'reach_out',
+            label: 'Ozvu se někomu, komu důvěřuji',
+            type: 'default',
+            summary: 'Ozvu se člověku, se kterým se cítím bezpečně.',
+            title: 'Ozvu se někomu, komu důvěřuji',
+            whatToDo: 'Ozvěte se člověku, se kterým se cítíte bezpečně.',
+            whyItCanHelp: 'Krátký kontakt může snížit pocit, že na situaci musíte být bez podpory.',
+            howTo: 'Napište, že máte teď nutkání hrát.',
+            whenUseful: 'Když je těžké přerušit hraní bez podpory.',
+            noteLabel: 'DOSTUPNÁ ALTERNATIVA',
+            note: 'Pokud teď nemáte komu napsat, využijte kontakty na odbornou pomoc.',
+          },
         ]),
       ),
     list: () => Promise.resolve(ok(STRATEGIES)),
@@ -87,9 +114,10 @@ function createService() {
     toggle,
     update,
     remove,
+    select,
   }
 
-  return { service, create, toggle, update, remove }
+  return { service, create, toggle, update, remove, select }
 }
 
 function createContactService(): ContactService {
@@ -267,6 +295,28 @@ describe('CopingFlow strategy-library integration', () => {
         'demo-user',
         expect.any(String),
       )
+    })
+  })
+
+  it('lists a catalog suggestion skipped at onboarding and adopts it through select', async () => {
+    const { service, select } = createService()
+    renderFlow(service)
+
+    const otherHeading = await screen.findByRole('heading', { level: 2, name: 'Další strategie' })
+    const otherSection = otherHeading.closest('section')
+    if (otherSection === null) throw new Error('Sekce Další strategie musí být vykreslená')
+
+    expect(within(otherSection).getByText('Ozvu se někomu, komu důvěřuji')).not.toBeNull()
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'Další možnosti pro strategii „Ozvu se někomu, komu důvěřuji“',
+      }),
+    )
+    fireEvent.click(screen.getByRole('button', { name: 'Přidat do Vybraných' }))
+
+    await waitFor(() => {
+      expect(select).toHaveBeenCalledWith('reach_out', 'demo-user', expect.any(String))
     })
   })
 

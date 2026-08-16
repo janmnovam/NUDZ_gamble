@@ -5,6 +5,8 @@ import { COPING_STRATEGY_DEFAULTS } from '@data/seeds/copingDefaults.ts'
 import {
   buildCatalogStrategyDetails,
   buildCatalogStrategyPresentation,
+  buildUnadoptedCatalogStrategyDetails,
+  unadoptedCatalogSuggestions,
 } from '@ui/coping/catalogStrategyDetails.ts'
 
 const CATALOG = [
@@ -106,5 +108,38 @@ describe('buildCatalogStrategyDetails', () => {
       title: 'Na chvíli odejdu od hraní',
       summary: 'Zavřu stránku nebo aplikaci, odložím zařízení nebo se přesunu jinam.',
     })
+  })
+})
+
+describe('unadoptedCatalogSuggestions / buildUnadoptedCatalogStrategyDetails', () => {
+  // Only the first catalogue strategy has a persisted row — the other five
+  // were skipped at onboarding and must stay reachable.
+  const partialStrategies = strategies.slice(0, 1)
+
+  it('returns every suggestion without a matching persisted row', () => {
+    const unadopted = unadoptedCatalogSuggestions(partialStrategies, suggestions)
+
+    expect(unadopted.map(({ id }) => id)).toEqual([
+      'reach_out',
+      'let_urge_pass',
+      'start_small_activity',
+      'remember_why',
+      'reduce_access',
+    ])
+  })
+
+  it('keys unadopted details by the suggestion code, not a persisted row id', () => {
+    const details = buildUnadoptedCatalogStrategyDetails(partialStrategies, suggestions)
+
+    expect(details).toHaveLength(5)
+    expect(details.map(({ id }) => id)).not.toContain('persisted-1')
+    expect(details.find(({ id }) => id === 'reach_out')?.title).toBe(
+      'Ozvu se někomu, komu důvěřuji',
+    )
+  })
+
+  it('returns nothing once every suggestion has been adopted', () => {
+    expect(unadoptedCatalogSuggestions(strategies, suggestions)).toEqual([])
+    expect(buildUnadoptedCatalogStrategyDetails(strategies, suggestions)).toEqual([])
   })
 })

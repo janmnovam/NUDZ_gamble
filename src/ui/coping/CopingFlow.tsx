@@ -11,6 +11,8 @@ import { StrategySection } from '@ui/coping/StrategySection.tsx'
 import {
   buildCatalogStrategyDetails,
   buildCatalogStrategyPresentation,
+  buildUnadoptedCatalogStrategyDetails,
+  unadoptedCatalogSuggestions,
 } from '@ui/coping/catalogStrategyDetails.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { useContactService, useCopingService } from '@ui/app/AppContext.ts'
@@ -175,6 +177,14 @@ export function CopingFlow() {
       })
   }
 
+  const handleAdopt = (code: string) => {
+    if (userId === null) return
+    void copingService.select(code, userId, clientNow()).then((res) => {
+      if (res.error) console.error('[coping] select failed', res.error)
+      else reload()
+    })
+  }
+
   const handleDelete = (copingStrategyId: string) => {
     if (userId === null) return
     void copingService.remove(copingStrategyId, userId).then((res) => {
@@ -206,10 +216,24 @@ export function CopingFlow() {
     }
   }
 
+  // Suggestions skipped at onboarding have no persisted row yet — surface them
+  // in "Další strategie" too, so they stay reachable instead of disappearing.
+  for (const suggestion of unadoptedCatalogSuggestions(state.strategies, suggestions)) {
+    otherStrategies.push({
+      id: suggestion.id,
+      kind: 'catalog',
+      title: suggestion.title ?? suggestion.label,
+      sub: suggestion.summary ?? '',
+    })
+  }
+
   return (
     <StrategySection
       contacts={contacts.filter((contact) => contact.category === 'counselling').map(toContactItem)}
-      catalogStrategyDetails={buildCatalogStrategyDetails(state.strategies, suggestions)}
+      catalogStrategyDetails={[
+        ...buildCatalogStrategyDetails(state.strategies, suggestions),
+        ...buildUnadoptedCatalogStrategyDetails(state.strategies, suggestions),
+      ]}
       selectedStrategies={selectedStrategies}
       otherStrategies={otherStrategies}
       hiddenStrategies={NO_HIDDEN_STRATEGIES}
@@ -223,7 +247,9 @@ export function CopingFlow() {
         const strategy = state.strategies.find((item) => item.id === id)
         if (strategy !== undefined) {
           handleToggle(id, !strategy.active)
+          return
         }
+        handleAdopt(id)
       }}
       onCreateCustomStrategy={handleAdd}
       onUpdateCustomStrategy={handleUpdate}

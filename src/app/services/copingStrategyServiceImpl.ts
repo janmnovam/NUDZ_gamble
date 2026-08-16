@@ -89,6 +89,31 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
     })
   }
 
+  select(code: string, userId: UserId, time: ISOTimestamp): Promise<Result<CopingStrategyDto>> {
+    return run(async () => {
+      const defaults = await this.deps.repo.loadDefaults()
+      const match = defaults.find((d) => d.code === code)
+      if (match === undefined) {
+        throw new DomainError(
+          ERROR_TYPES.VALIDATION,
+          ERROR_CODES.coping.UNKNOWN_SUGGESTION,
+          `coping: unknown suggestion code "${code}"`,
+        )
+      }
+      const existing = await this.deps.repo.listByUser(userId)
+      const created = await this.deps.repo.create(
+        {
+          userId,
+          label: match.label,
+          type: 'default',
+          priority: nextCopingPriority(existing),
+        },
+        time,
+      )
+      return toCopingStrategyDto(created)
+    })
+  }
+
   update(
     copingStrategyId: string,
     req: UpdateCopingStrategyRequest,

@@ -417,6 +417,100 @@ describe('CopingStrategyServiceImpl.update', () => {
   })
 })
 
+describe('CopingStrategyServiceImpl.select', () => {
+  it('adopts a suggestion by code, appending after the highest existing priority', async () => {
+    const defaults: CopingStrategyDefault[] = [
+      { code: 'reach_out', label: 'Ozvu se někomu, komu důvěřuji', priority: 2 },
+    ]
+    const existing: CopingStrategy[] = [
+      {
+        copingStrategyId: 'c1',
+        userId: 'demo-user',
+        label: 'Na chvíli změním prostředí',
+        type: 'default',
+        whenToUse: null,
+        howToStart: null,
+        priority: 1,
+        active: true,
+        createdAt: TIME,
+        updatedAt: null,
+      },
+    ]
+    const create = jest.fn(
+      (input: { userId: UserId; label: string; type: string; priority: number }, time: string) =>
+        Promise.resolve({
+          copingStrategyId: 'new-id',
+          userId: input.userId,
+          label: input.label,
+          type: input.type,
+          whenToUse: null,
+          howToStart: null,
+          priority: input.priority,
+          active: true,
+          createdAt: time,
+          updatedAt: null,
+        } as CopingStrategy),
+    )
+    const repo = {
+      loadDefaults: () => Promise.resolve(defaults),
+      listByUser: () => Promise.resolve(existing),
+      create,
+    } as unknown as CopingStrategyRepository
+    const service = new CopingStrategyServiceImpl({ repo })
+
+    const result = unwrap(await service.select('reach_out', USER_ID, TIME))
+
+    expect(create).toHaveBeenCalledWith(
+      { userId: 'demo-user', label: 'Ozvu se někomu, komu důvěřuji', type: 'default', priority: 2 },
+      TIME,
+    )
+    expect(result).toEqual({
+      id: 'new-id',
+      label: 'Ozvu se někomu, komu důvěřuji',
+      type: 'default',
+      active: true,
+      priority: 2,
+      whenToUse: null,
+      howToStart: null,
+    })
+  })
+
+  it('rejects an unknown suggestion code without touching the repo', async () => {
+    const create = jest.fn()
+    const repo = {
+      loadDefaults: () => Promise.resolve([]),
+      create,
+    } as unknown as CopingStrategyRepository
+    const service = new CopingStrategyServiceImpl({ repo })
+
+    const res = await service.select('does-not-exist', USER_ID, TIME)
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('COPING_UNKNOWN_SUGGESTION')
+    expect(create).not.toHaveBeenCalled()
+  })
+
+  it('wires up through createDataLayer: adopts a seeded default end to end', async () => {
+    const db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
+    const data: DataLayer = createDataLayer(db)
+    const service = new CopingStrategyServiceImpl({ repo: data.copingStrategies })
+
+    const suggestions = unwrap(await service.getSuggestions(TIME))
+    const suggestion = suggestions[0]
+    if (suggestion === undefined) throw new Error('expected at least one default suggestion')
+
+    const adopted = unwrap(await service.select(suggestion.id, USER_ID, TIME))
+    expect(adopted.type).toBe('default')
+    expect(adopted.label).toBe(suggestion.label)
+
+    const listed = unwrap(await service.list(USER_ID, TIME))
+    expect(listed).toContainEqual(adopted)
+
+    db.close()
+    await db.delete()
+  })
+})
+
 describe('CopingStrategyServiceImpl.remove', () => {
   it('delegates to repo.remove', async () => {
     const remove = jest.fn(() => Promise.resolve())
