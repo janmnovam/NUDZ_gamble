@@ -24,6 +24,18 @@ export interface NotificationCheckResult {
   reminder: ReminderResponse
 }
 
+export interface LastChanceCheckResult {
+  /** Whether the caller should show the last-chance popup right now. */
+  due: boolean
+}
+
 export interface NotificationService {
   checkSchedule(request: NotificationCheckRequest): Promise<NotificationCheckResult>
+
+  /**
+   * The independent last-chance channel: true only when a `LAST_CHANCE_REMINDER_TIMES`
+   * slot has been crossed since its own `lastFiredAt` AND a day is still missing on
+   * the last day of the week. Runs alongside `checkSchedule`, not in place of it.
+   */
+  checkLastChance(request: NotificationCheckRequest): Promise<LastChanceCheckResult>
 }
