@@ -232,6 +232,9 @@ export const cs = {
   'notification.reminder.body': 'Doplňte prosím záznam za {date}.',
   'notification.reminder.review.title': 'Týdenní shrnutí čeká',
   'notification.reminder.review.body': 'Nastavte prosím limity pro týden {week}.',
+  'notification.lastChance.title': 'Poslední šance na týdenní review.',
+  'notification.lastChance.body':
+    'Zítra se automaticky uzavře review za minulý týden programu. Dnes máte poslední možnost upravit záznamy a review si uzavřít.',
 
   'coping.title': 'Váš Coping',
   'coping.lead':
