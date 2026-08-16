@@ -1,6 +1,6 @@
 # Data Model
 
-Single source of truth for the data layer. Diagrams: [`../../../docs/architecture.md`](../../../docs/architecture.md).
+Single source of truth for the data layer. Diagrams: [`architecture.md`](architecture.md).
 Field names verbatim from the brief — don't rename (export spec depends on them).
 
 Stance: MVP on IndexedDB, one demo user `A001`; schema modelled server-ready

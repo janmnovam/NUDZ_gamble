@@ -23,7 +23,7 @@ export interface DomainConfig {
   readonly PROGRAMME_DAYS: number
   /**
    * How many days after `behaviorDate` a check-in stays editable (doc 05 /
-   * `data-model.md`'s `EDIT_WINDOW_DAYS`, float — was left `TBD`). Set equal
+   * `docs/data-model.md`'s `EDIT_WINDOW_DAYS`, float — was left `TBD`). Set equal
    * to `WEEK_LENGTH_DAYS`: editing is allowed anywhere in the still-open
    * week, no separate day-count cutoff on top of `weekClosed` (doc 05's
    * default reading — one boundary, not two overlapping ones).

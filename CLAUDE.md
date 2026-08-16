@@ -10,7 +10,9 @@ beats more half-finished features.**
 
 ## Where things live (single source of truth — don't copy here)
 
+- **Index of every document, plus which one wins in a conflict → [docs/README.md](docs/README.md).**
 - Stack, commands, scripts, layout, licenses → [README.md](README.md).
+- Tables, field names, invariants, Dexie stores → [docs/data-model.md](docs/data-model.md) (authoritative for the data layer).
 - Full requirements, data model, CSV export spec → [Zadání_Hackathon_2026_shared.docx.md](Zadání_Hackathon_2026_shared.docx.md) (Czech, authoritative). The rules below are an English digest, not a replacement.
 - **Where we knowingly deviate from that spec → [docs/decisions.md](docs/decisions.md).** Check it before "fixing" something that looks wrong against the spec — it may be a decision, not a bug.
 - Hexagon layout, ports, DTOs, per-port build status → [docs/architecture.md](docs/architecture.md) (authoritative). The Architecture section below is a digest, not a replacement — check that doc for the current status of any port before assuming it's implemented.

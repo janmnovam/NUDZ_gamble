@@ -5,7 +5,7 @@
  * `src/domain` (intervention logic). Contains no Dexie/React imports so the
  * domain layer may import it without breaking its infrastructure boundary.
  *
- * Field names are verbatim from the brief / `src/data/docs/data-model.md`.
+ * Field names are verbatim from the brief / `docs/data-model.md`.
  * Money is integer CZK, time is integer minutes, timestamps are ISO 8601.
  */
 import type {

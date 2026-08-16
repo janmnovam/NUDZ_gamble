@@ -83,7 +83,9 @@ public/      icons, favicon
 ```
 
 The layering is hexagonal (ports & adapters) — [docs/architecture.md](docs/architecture.md)
-is the authoritative description, including the per-port build status.
+is the authoritative description, including the per-port build status. All the other
+written material is indexed in [docs/README.md](docs/README.md), which also spells out
+which document wins when two of them disagree.
 
 Path aliases `@/`, `@ui/`, `@domain/`, `@data/` are configured in `tsconfig.app.json`,
 `vite.config.ts` and `jest.config.ts` (Jest does not read Vite's resolver, so the mapping
