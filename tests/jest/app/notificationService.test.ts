@@ -9,6 +9,7 @@ const USER_ID = 'demo-user'
 function makeService(reminder: ReminderResponse) {
   const reminders: ReminderService = {
     getDueReminder: () => Promise.resolve(ok(reminder)),
+    getLastChance: () => Promise.resolve(ok(false)),
   }
   return new NotificationServiceImpl({ reminders })
 }
@@ -68,7 +69,10 @@ describe('NotificationServiceImpl.checkSchedule', () => {
       behaviorDate: '2026-09-01T00:00:00.000Z',
     }
     const service = new NotificationServiceImpl({
-      reminders: { getDueReminder: () => Promise.resolve(ok(reminder)) },
+      reminders: {
+        getDueReminder: () => Promise.resolve(ok(reminder)),
+        getLastChance: () => Promise.resolve(ok(false)),
+      },
       config: { ...DEFAULT_CONFIG, REMINDER_TIMES: ['12:00'] },
     })
     const early = await service.checkSchedule({
