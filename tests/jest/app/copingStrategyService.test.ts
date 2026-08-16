@@ -4,7 +4,7 @@ import type { CopingStrategyDefault } from '@domain/model.ts'
 import type { CopingStrategyRepository } from '@domain/ports.ts'
 
 describe('CopingStrategyServiceImpl.getSuggestions', () => {
-  it('maps the domain defaults to { id, label } picker options (code → id)', async () => {
+  it('maps the domain defaults to { id, label, type } picker options (code → id)', async () => {
     const defaults: CopingStrategyDefault[] = [
       { code: 'change_environment', label: 'Na chvíli změním prostředí', priority: 1 },
       { code: 'reach_out', label: 'Ozvu se někomu, komu důvěřuji', priority: 2 },
@@ -15,8 +15,8 @@ describe('CopingStrategyServiceImpl.getSuggestions', () => {
     const service = new CopingStrategyServiceImpl({ repo })
 
     await expect(service.getSuggestions()).resolves.toEqual([
-      { id: 'change_environment', label: 'Na chvíli změním prostředí' },
-      { id: 'reach_out', label: 'Ozvu se někomu, komu důvěřuji' },
+      { id: 'change_environment', label: 'Na chvíli změním prostředí', type: 'default' },
+      { id: 'reach_out', label: 'Ozvu se někomu, komu důvěřuji', type: 'default' },
     ])
   })
 

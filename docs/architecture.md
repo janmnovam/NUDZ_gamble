@@ -138,7 +138,7 @@ outbound sub-lists.
   },
   "coping": [
     {
-      "label": "Jít na 15 minut ven",
+      "label": "Na chvíli změním prostředí",
       "type": "default"
     }
   ]
@@ -159,7 +159,7 @@ outbound sub-lists.
   },
   "coping": [
     {
-      "label": "Jít na 15 minut ven",
+      "label": "Na chvíli změním prostředí",
       "type": "default"
     }
   ],
@@ -457,7 +457,10 @@ month/final-summary view, not just this 7-cell week strip. Carried by a real DTO
 ## Outbound ports (driven)
 
 Storage contracts the domain depends on, each implemented by a data-layer adapter (and,
-later, an HTTP adapter). Accepts/Returns reference the snake_case domain models.
+later, an HTTP adapter). The port signatures accept/return the **camelCase domain model**
+(`src/domain/model.ts`); the JSON blocks below show the **snake_case storage entity**
+(`src/data/model.ts`) the adapter maps that model to — so `Profile.userId` is stored as
+`user_id`, and so on.
 
 ### ProfileRepository
 
@@ -531,7 +534,7 @@ later, an HTTP adapter). Accepts/Returns reference the snake_case domain models.
 {
   "coping_strategy_id": "9a1c…",
   "user_id": "A001",
-  "label": "Jít na 15 minut ven",
+  "label": "Na chvíli změním prostředí",
   "type": "default",
   "priority": 1,
   "active": true,
@@ -540,14 +543,14 @@ later, an HTTP adapter). Accepts/Returns reference the snake_case domain models.
 }
 ```
 
-**CopingStrategyDefault**
+**CopingStrategyDefault** (from the seed catalog, `src/data/seeds/copingDefaults.ts`)
 
 ```json
 {
-  "code": "step_out",
-  "label": "Jít na 15 minut ven",
+  "code": "change_environment",
+  "label": "Na chvíli změním prostředí",
   "priority": 1,
-  "reminder_text": "Vyjdi ven na 15 minut."
+  "reminder_text": "Vytvořím si krátký odstup od místa nebo zařízení spojeného s hraním."
 }
 ```
 
@@ -562,6 +565,25 @@ later, an HTTP adapter). Accepts/Returns reference the snake_case domain models.
 | listByUser | All check-ins for a user, ordered by `behavior_date` |
 
 Note: method names above have drifted from the original draft (`upsert`/`getByDate`/`listByWeek`) — this reflects what's actually implemented today.
+
+The port speaks the camelCase domain `CheckIn` (`src/domain/model.ts`); the row it stores is the snake_case `CheckInEntity` (`src/data/model.ts`) shown here:
+
+**CheckIn** (storage entity)
+
+```json
+{
+  "check_in_id": "b7e0…",
+  "user_id": "A001",
+  "behavior_date": "2026-09-03",
+  "week_no": 1,
+  "played": true,
+  "time_min": 60,
+  "stakes_czk": 500,
+  "winnings_czk": 0,
+  "submitted_at": "2026-09-04T08:00:00+02:00",
+  "updated_at": null
+}
+```
 
 ### CheckInEditRepository
 
@@ -581,34 +603,28 @@ Not in the original port list — added alongside `CheckInRepository` to log che
 
 Not in the original port list — supports a counselling/emergency contacts list (`Contact` model: category, phone, url, availability, priority).
 
-| Method | Accepts | Returns | Description |
-|---|---|---|---|
-| upsert | `CheckIn` | `void` | Insert or replace, keyed on (user, behavior_date) |
-| getByDate | `UserId, ISODate` | `CheckIn?` | One day's check-in |
-| listByUser | `UserId` | `CheckIn[]` | All check-ins for a user |
-| listByWeek | `UserId, weekNo` | `CheckIn[]` | Check-ins for a given study week |
-
-**CheckIn**
-
-```json
-{
-  "check_in_id": "b7e0…",
-  "user_id": "A001",
-  "behavior_date": "2026-09-03",
-  "week_no": 1,
-  "played": true,
-  "time_min": 60,
-  "stakes_czk": 500,
-  "winnings_czk": 0,
-  "submitted_at": "2026-09-04T08:00:00+02:00",
-  "updated_at": null
-}
-```
 | Method | Description |
 |---|---|
 | seed | Idempotent seed from `CONTACTS`, safe on every boot |
 | list | All contacts, by priority |
 | get | One contact by id |
+
+The port speaks the camelCase domain `Contact` (`src/domain/model.ts`); the row it stores is the snake_case `ContactEntity` (`src/data/model.ts`) shown here:
+
+**Contact** (storage entity)
+
+```json
+{
+  "contact_id": "d5f3…",
+  "name": "Linka pro problémové hráče",
+  "purpose": "Anonymní poradenství",
+  "phone": "+420 xxx xxx xxx",
+  "url": null,
+  "availability": "Po–Pá 8–20",
+  "category": "counselling",
+  "priority": 1
+}
+```
 
 ### ReviewRepository
 

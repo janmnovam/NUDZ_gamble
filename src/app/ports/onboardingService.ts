@@ -11,6 +11,7 @@ import type {
   ReferenceWeekRequest,
   SuggestedLimitsResponse,
 } from '@/app/dto/onboarding.ts'
+import type { ISOTimestamp } from '@domain/model.ts'
 
 export interface OnboardingService {
   /**
@@ -29,6 +30,9 @@ export interface OnboardingService {
   /**
    * Finalize onboarding: persist profile + week-1 limit + coping atomically.
    * Rejects if no coping strategy is given or a limit exceeds the 90% cap.
+   * `time` is the caller-supplied instant — it stamps the record `*_at` fields, and
+   * its date component anchors the intervention start (the day after). Pass an
+   * offset-bearing instant so that date is the user's local day (see `dateOf`).
    */
-  complete(req: OnboardingProfileRequest): Promise<OnboardingProfileResponse>
+  complete(req: OnboardingProfileRequest, time: ISOTimestamp): Promise<OnboardingProfileResponse>
 }

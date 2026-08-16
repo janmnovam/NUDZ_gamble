@@ -32,8 +32,10 @@ export interface ProfileRepository {
 export interface CopingStrategyRepository {
   /** Predefined suggestions (Dr. Kazmer's list) for the onboarding picker. */
   loadDefaults(): Promise<CopingStrategyDefault[]>
-  create(input: CopingStrategyInput): Promise<CopingStrategy>
-  setActive(copingStrategyId: string, active: boolean): Promise<void>
+  /** `time` (caller-supplied instant) stamps `createdAt` — the adapter reads no clock. */
+  create(input: CopingStrategyInput, time: ISOTimestamp): Promise<CopingStrategy>
+  /** `time` (caller-supplied instant) stamps `updatedAt`. */
+  setActive(copingStrategyId: string, active: boolean, time: ISOTimestamp): Promise<void>
   listByUser(userId: UserId): Promise<CopingStrategy[]>
 }
 

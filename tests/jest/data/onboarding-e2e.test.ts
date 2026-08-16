@@ -3,7 +3,6 @@ import { completeOnboarding } from '@domain/onboarding.ts'
 import type { OnboardingInput } from '@domain/onboarding.ts'
 
 const NOW = '2026-09-01T22:30:00.000Z'
-const TODAY = '2026-09-01'
 
 const input: OnboardingInput = {
   userId: 'A001',
@@ -30,8 +29,7 @@ describe('onboarding end to end', () => {
     const data = createDataLayer(db, () => NOW)
     await completeOnboarding(input, {
       repo: data.onboarding,
-      now: () => NOW,
-      today: { today: () => TODAY },
+      time: NOW,
       newId,
     })
 

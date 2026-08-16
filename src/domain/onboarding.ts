@@ -1,4 +1,4 @@
-import { type TodayClock, nextDate } from '@domain/clock.ts'
+import { dateOf, nextDate } from '@domain/clock.ts'
 import { isWithinCap } from '@domain/limits.ts'
 import {
   type CopingStrategy,
@@ -28,10 +28,13 @@ export interface OnboardingInput {
 
 export interface OnboardingDeps {
   repo: OnboardingRepository
-  /** UTC instant source — stamps `*_at` record timestamps. */
-  now: () => ISOTimestamp
-  /** Local calendar date source — same anchor the study calendar reads back with. */
-  today: TodayClock
+  /**
+   * Caller-supplied instant — stamps `*_at` fields, and its date component
+   * (`dateOf`) anchors "today", so the intervention starts the day after it.
+   * Must carry the local offset (not a `Z`-normalized instant) for that date to
+   * be the user's local day — see `dateOf`.
+   */
+  time: ISOTimestamp
   newId: () => string
 }
 
@@ -54,12 +57,12 @@ export async function completeOnboarding(
     throw new Error('onboarding: stakes limit exceeds the 90% cap')
   }
 
-  const at = deps.now()
+  const at = deps.time
 
   const profile: Profile = {
     userId: input.userId,
     onboardingCompletedAt: at,
-    interventionStartDate: nextDate(deps.today.today()),
+    interventionStartDate: nextDate(dateOf(at)),
     referenceTimeMin: input.referenceTimeMin,
     referenceStakesCzk: input.referenceStakesCzk,
   }

@@ -44,8 +44,6 @@ export function createApp(data: DataLayer = createDataLayer()): App {
     onboarding: new OnboardingServiceImpl({
       repo: data.onboarding,
       profiles: data.profiles,
-      now: data.now,
-      today,
       newId,
     }),
     coping: new CopingStrategyServiceImpl({ repo: data.copingStrategies }),

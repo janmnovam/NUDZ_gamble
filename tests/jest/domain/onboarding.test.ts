@@ -3,14 +3,12 @@ import { completeOnboarding } from '@domain/onboarding.ts'
 import type { OnboardingDeps, OnboardingInput } from '@domain/onboarding.ts'
 
 const FIXED_NOW = '2026-09-01T22:30:00.000Z'
-const FIXED_TODAY = '2026-09-01'
 
 function fakeDeps() {
   const saved: { profile?: Profile; limit?: Limit; coping?: CopingStrategy[] } = {}
   let counter = 0
   const deps: OnboardingDeps = {
-    now: () => FIXED_NOW,
-    today: { today: () => FIXED_TODAY },
+    time: FIXED_NOW,
     newId: () => `id-${String((counter += 1))}`,
     repo: {
       save: (profile, limit, coping) => {
@@ -97,11 +95,12 @@ describe('completeOnboarding', () => {
     await expect(completeOnboarding({ ...baseInput, coping: [] }, deps)).rejects.toThrow(/coping/)
   })
 
-  it('starts the intervention the day after the local today, not the UTC instant', async () => {
-    // Late-evening UTC instant whose local date (in a zone ahead of UTC) is
-    // already the next day — proves the start date follows `today`, not `now`.
+  it("starts the intervention the day after the instant's local date, not its UTC date", async () => {
+    // Same instant as FIXED_NOW (22:30Z on the 1st) but expressed with a +02:00
+    // offset, so its local date is already the 2nd. The start must follow that
+    // local date (→ the 3rd), proving `dateOf` reads the offset, not the UTC day.
     const { deps, saved } = fakeDeps()
-    deps.today = { today: () => '2026-09-02' }
+    deps.time = '2026-09-02T00:30:00.000+02:00'
     await completeOnboarding(baseInput, deps)
     expect(saved.profile?.interventionStartDate).toBe('2026-09-03')
   })

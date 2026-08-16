@@ -18,20 +18,16 @@ import type {
 } from '@/app/dto/onboarding.ts'
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import { toOnboardingInput, toOnboardingProfileResponse } from '@/app/mappers/onboardingMapper.ts'
-import { type TodayClock, nextDate } from '@domain/clock.ts'
+import { dateOf, nextDate } from '@domain/clock.ts'
 import { limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
-import type { UserId } from '@domain/model.ts'
+import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import { completeOnboarding } from '@domain/onboarding.ts'
-import type { Clock, OnboardingRepository, ProfileRepository } from '@domain/ports.ts'
+import type { OnboardingRepository, ProfileRepository } from '@domain/ports.ts'
 
 export interface OnboardingServiceDeps {
   repo: OnboardingRepository
   /** Read-only lookup for `getStatus` — `OnboardingRepository` is a write-only atomic port. */
   profiles: ProfileRepository
-  /** UTC instant source — stamps the record `*_at` timestamps. */
-  now: Clock
-  /** Local calendar date source — anchors the intervention start date. */
-  today: TodayClock
   newId: () => string
   /** The single demo user these records belong to. */
   userId?: UserId
@@ -48,7 +44,11 @@ export class OnboardingServiceImpl implements OnboardingService {
 
   async getStatus(): Promise<OnboardingStatusResponse> {
     const profile = await this.deps.profiles.get(this.userId)
-    return { completed: profile !== undefined }
+    return {
+      userId: this.userId,
+      completed: profile !== undefined,
+      completedAt: profile?.onboardingCompletedAt ?? null,
+    }
   }
 
   getSuggestedLimits(req: ReferenceWeekRequest): Promise<SuggestedLimitsResponse> {
@@ -64,16 +64,18 @@ export class OnboardingServiceImpl implements OnboardingService {
     })
   }
 
-  async complete(req: OnboardingProfileRequest): Promise<OnboardingProfileResponse> {
+  async complete(
+      req: OnboardingProfileRequest,
+      time: ISOTimestamp,
+  ): Promise<OnboardingProfileResponse> {
     const input = toOnboardingInput(req, this.userId)
     await completeOnboarding(input, {
       repo: this.deps.repo,
-      now: this.deps.now,
-      today: this.deps.today,
+      time: time,
       newId: this.deps.newId,
     })
-    // Same value the domain just persisted: the day after the local `today`.
-    const interventionStartDate = nextDate(this.deps.today.today())
+    // Same value the domain just persisted: the day after the instant's local date.
+    const interventionStartDate = nextDate(dateOf(time))
     return toOnboardingProfileResponse(req, interventionStartDate)
   }
 }

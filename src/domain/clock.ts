@@ -19,7 +19,7 @@
  * "ordering trap") — that check lives in guards.ts instead.
  */
 import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
-import type { ISODate } from '@domain/model.ts'
+import type { ISODate, ISOTimestamp } from '@domain/model.ts'
 
 /** Injected "today" source — real clock in production, fixed/offset clock in tests and the demo drawer. */
 export interface TodayClock {
@@ -89,6 +89,18 @@ function fromUtcMs(ms: number): ISODate {
  */
 export function nextDate(date: ISODate): ISODate {
   return fromUtcMs(toUtcMs(date) + MS_PER_DAY)
+}
+
+/**
+ * The calendar date an ISO 8601 timestamp falls on, **in the timestamp's own
+ * timezone** — a plain string slice, deliberately NOT `new Date(ts).toISOString()`,
+ * which re-normalizes to UTC and reports the wrong local day near midnight
+ * (doc 02's timezone warning). This is how the backend derives "today" now that
+ * callers pass a single instant: the caller MUST supply an offset-bearing instant
+ * (local `+hh:mm`), not a `Z`-normalized one, or the date comes back as the UTC day.
+ */
+export function dateOf(timestamp: ISOTimestamp): ISODate {
+  return timestamp.slice(0, 10)
 }
 
 /** Pure implementation of `StudyCalendar` for one user's `interventionStartDate`. */

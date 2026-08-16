@@ -6,5 +6,5 @@ import type { CopingStrategyDefault } from '@domain/model.ts'
 
 /** A predefined suggestion → the UI-shaped picker option (`code` becomes `id`). */
 export function toCopingSuggestionDto(d: CopingStrategyDefault): CopingSuggestionDto {
-  return { id: d.code, label: d.label }
+  return { id: d.code, label: d.label, type: 'default' }
 }

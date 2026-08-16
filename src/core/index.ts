@@ -46,7 +46,7 @@ export function createDataLayer(
 ): DataLayer {
   return {
     profiles: new ProfileAdapter(database),
-    copingStrategies: new CopingStrategyAdapter(database, now),
+    copingStrategies: new CopingStrategyAdapter(database),
     limits: new LimitAdapter(database),
     now,
     onboarding: new OnboardingAdapter(database),

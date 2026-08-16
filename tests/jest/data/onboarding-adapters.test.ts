@@ -37,18 +37,24 @@ describe('onboarding adapters', () => {
   })
 
   it('writes custom + adopted-default coping and lists them by priority', async () => {
-    await data.copingStrategies.create({
-      userId: 'A001',
-      label: 'Zavolat bratrovi',
-      type: 'custom',
-      priority: 2,
-    })
-    const adopted = await data.copingStrategies.create({
-      userId: 'A001',
-      label: 'Jít na 15 minut ven',
-      type: 'default',
-      priority: 1,
-    })
+    await data.copingStrategies.create(
+      {
+        userId: 'A001',
+        label: 'Zavolat bratrovi',
+        type: 'custom',
+        priority: 2,
+      },
+      FIXED_NOW,
+    )
+    const adopted = await data.copingStrategies.create(
+      {
+        userId: 'A001',
+        label: 'Jít na 15 minut ven',
+        type: 'default',
+        priority: 1,
+      },
+      FIXED_NOW,
+    )
 
     const list = await data.copingStrategies.listByUser('A001')
     expect(list.map((s) => s.type)).toEqual(['default', 'custom'])
@@ -58,13 +64,16 @@ describe('onboarding adapters', () => {
   })
 
   it('deactivates a coping strategy', async () => {
-    const s = await data.copingStrategies.create({
-      userId: 'A001',
-      label: 'Dechové cvičení',
-      type: 'default',
-      priority: 1,
-    })
-    await data.copingStrategies.setActive(s.copingStrategyId, false)
+    const s = await data.copingStrategies.create(
+      {
+        userId: 'A001',
+        label: 'Dechové cvičení',
+        type: 'default',
+        priority: 1,
+      },
+      FIXED_NOW,
+    )
+    await data.copingStrategies.setActive(s.copingStrategyId, false, FIXED_NOW)
 
     const [reloaded] = await data.copingStrategies.listByUser('A001')
     expect(reloaded?.active).toBe(false)
@@ -72,7 +81,9 @@ describe('onboarding adapters', () => {
   })
 
   it('rejects setActive on an unknown id', async () => {
-    await expect(data.copingStrategies.setActive('nope', true)).rejects.toThrow('not found')
+    await expect(data.copingStrategies.setActive('nope', true, FIXED_NOW)).rejects.toThrow(
+      'not found',
+    )
   })
 
   const week1Limit: Limit = {
