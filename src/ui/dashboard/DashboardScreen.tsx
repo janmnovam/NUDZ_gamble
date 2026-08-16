@@ -104,25 +104,26 @@ export function DashboardScreen({
   const previousDayDue = dashboard.days.some(
     (day) => day.studyDay === dashboard.studyDay - 1 && day.state === 'missing',
   )
-  // The banner is driven by the same data: missing days first (Figma "24
-  // Dashboard — den 6"), otherwise the programme-start notice on day 1.
-  const missing = dashboard.missingDays
-  const firstMissingDay = missing[0]
-  // The banner names the first missing day but its tap must land on a day that's
-  // actually still in the backfill window — a missing day past the rolling
-  // window (or in a review-closed week) is shown but not fillable.
-  const firstBackfillableDay = dashboard.days.find((day) => day.backfillable)?.date
-  const showStartNotice = firstMissingDay === undefined && dashboard.studyDay <= 1
+  // The fill-in banner only ever promises what the user can actually do: it
+  // names and counts the missing days still inside the backfill window. A
+  // missing day past the window (or in a review-closed week) is surfaced greyed
+  // in the strip above, but naming it here would falsely imply "Doplnit je
+  // můžete během 5 dní" for a day that can no longer be filled.
+  const backfillableDays = dashboard.days.filter((day) => day.backfillable)
+  const firstBackfillableDay = backfillableDays[0]?.date
+  const showStartNotice = dashboard.missingDays.length === 0 && dashboard.studyDay <= 1
   // Naming the day beats "fill in the missing days": on day 3 you want to be
   // told *which* day, and when there is nothing to do you want to hear that too.
   const missingTitle =
-    firstMissingDay === undefined
+    firstBackfillableDay === undefined
       ? ''
-      : missing.length === 1
+      : backfillableDays.length === 1
         ? t('dashboard.banner.missing.one', {
-            day: `${weekdayAbbrev(firstMissingDay, locale)} ${String(dayOfMonth(firstMissingDay))}`,
+            day: `${weekdayAbbrev(firstBackfillableDay, locale)} ${String(dayOfMonth(firstBackfillableDay))}`,
           })
-        : t_plural('dashboard.banner.missing', missing.length, { count: missing.length })
+        : t_plural('dashboard.banner.missing', backfillableDays.length, {
+            count: backfillableDays.length,
+          })
 
   return (
     <Screen
@@ -228,12 +229,12 @@ export function DashboardScreen({
           })}
         </div>
 
-        {firstMissingDay === undefined ? null : (
+        {firstBackfillableDay === undefined ? null : (
           <Banner
             icon={Info}
             title={missingTitle}
             body={t('dashboard.banner.missing.body')}
-            {...(onBackfillDay === undefined || firstBackfillableDay === undefined
+            {...(onBackfillDay === undefined
               ? {}
               : {
                   onClick: () => {
@@ -252,7 +253,7 @@ export function DashboardScreen({
         />
       ) : null}
 
-      {firstMissingDay === undefined && !showStartNotice ? (
+      {dashboard.missingDays.length === 0 && !showStartNotice ? (
         <Banner
           icon={CircleCheck}
           title={t('dashboard.banner.allDone.title')}

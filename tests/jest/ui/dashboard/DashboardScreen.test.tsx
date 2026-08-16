@@ -173,13 +173,37 @@ describe('DashboardScreen', () => {
     expect(screen.getByText('Vše vyplněno')).not.toBeNull()
   })
 
-  it('counts the days when more than one is missing', () => {
+  it('counts the backfillable days when more than one is fillable', () => {
     renderScreen({
       studyDay: 4,
       pendingAction: 'checkin_due',
+      days: DAY_1.days.map((day) =>
+        day.studyDay === 2 || day.studyDay === 3
+          ? { ...day, state: 'missing' as const, backfillable: true }
+          : day,
+      ),
       missingDays: ['2026-09-02T00:00:00.000Z', '2026-09-03T00:00:00.000Z'],
     })
     expect(screen.getByText('Nemáte vyplněné 2 dny')).not.toBeNull()
+  })
+
+  it('does not offer to fill a missing day that is past the backfill window', () => {
+    // Reported case: only day 1 is missing and it is 6 days back (outside the
+    // window), so the fill-in banner must not name it or promise a backfill.
+    renderScreen({
+      studyDay: 7,
+      pendingAction: 'none',
+      days: DAY_1.days.map((day) => {
+        if (day.studyDay === 1) return { ...day, state: 'missing' as const, backfillable: false }
+        if (day.studyDay === 7) return day // today, future
+        return { ...day, state: 'completed' as const, played: true, timeMin: 10, stakesCzk: 10 }
+      }),
+      missingDays: ['2026-09-01T00:00:00.000Z'],
+    })
+    expect(screen.queryByText(/Nemáte vyplněn/)).toBeNull()
+    // ...and it isn't wrongly reported as "all filled" either — the day is
+    // genuinely missing, just no longer fillable.
+    expect(screen.queryByText('Vše vyplněno')).toBeNull()
   })
 
   it('shows the programme-start notice only on day 1', () => {
