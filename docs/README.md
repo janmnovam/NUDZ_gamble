@@ -71,6 +71,19 @@ assignment: don't edit it to match the code.** If the code diverges, that belong
 Note doc 12 describes the person-day export the app deliberately does **not** produce —
 see [decisions.md](decisions.md).
 
+## Feature briefs — [../tasks/](../tasks/)
+
+Per-feature specs written before building, kept because parts of them are still live
+reference. Today there is one set, for the coping-strategy library
+([tasks/coping-strategie/](../tasks/coping-strategie/)):
+
+| File | What it is | Trust it? |
+|---|---|---|
+| [content.md](../tasks/coping-strategie/content.md) | The user-facing Czech copy for the strategy catalog and the contacts directory | **Yes** — it is the source `seeds/copingDefaults.ts` and `seeds/contacts.ts` were transcribed from. On a conflict, the current Figma wins |
+| [assignment.md](../tasks/coping-strategie/assignment.md) | The dev spec for the library screen | As a description of intent; its status header is maintained |
+| [backend-assignment.md](../tasks/coping-strategie/backend-assignment.md) | The data-wiring handoff | Mostly delivered — only hiding a strategy is left, tracked in [handover.md](handover.md) |
+| [productova-rozhodnuti.md](../tasks/coping-strategie/productova-rozhodnuti.md) | An internal product decision log (D01–D21) for coping strategies | Background only. It is **not** [decisions.md](decisions.md) — that one records deviations from the brief and is the authoritative one |
+
 ## Working material — not documentation of the code
 
 - [Tests.txt](Tests.txt) — a hand-written 29-day scenario (limits per week, which days are

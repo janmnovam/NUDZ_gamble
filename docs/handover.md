@@ -30,7 +30,8 @@ deliberately empty — fill it in when you split the work.**
 | 3 | **`reviewable_weeks` hardcoded empty** | `buildDashboardVM` never fills it, so `pendingAction` can't resolve to `review_available` and the dashboard never *offers* a review on its own. Reviews are still reachable (see below), so this is polish, not a blocker. | `src/domain/dashboard.ts:211`, `dashboardServiceImpl.ts` — `ReviewRepository` is already injected for exactly this | S | |
 | 4 | **Reminder fires on one hardcoded slot** | `REMINDER_TIMES: ['15:30']` stands in for a user-settable notification time. Fine for the demo, flagged as a simplification — the brief only requires *one* working scenario. | `src/domain/config.ts` | M (needs a settings surface) | |
 | 5 | **Reports tab before day 29** | The tab is reachable from day 1 but the screen is designed as the *final* summary; unreached weeks render locked. Honest, but it is a product decision whether it should be there at all before day 29. | `src/ui/review/`, `TabBar` | product call | |
-| 6 | **`mobile-safari` e2e never run** | Only Chromium was installed and exercised. | `npx playwright install webkit` | S | |
+| 6 | **Hiding a coping strategy is presentational only** | The library screen renders a "Skryté" section and takes an `onHideStrategy` callback, but `CopingFlow` passes an empty `NO_HIDDEN_STRATEGIES` constant and never wires the callback — so nothing can be hidden. The last open item from [tasks/coping-strategie/backend-assignment.md](../tasks/coping-strategie/backend-assignment.md); everything else in that handoff is done. | `src/ui/coping/CopingFlow.tsx:27,239`; needs a hidden/active distinction the service can persist | S–M | |
+| 7 | **`mobile-safari` e2e never run** | Only Chromium was installed and exercised. | `npx playwright install webkit` | S | |
 
 ### Not on this list any more
 

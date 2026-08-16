@@ -1,6 +1,12 @@
 # Knihovna strategií — předání pro backend
 
-:::Stav: TODO
+:::Stav: Z velké části HOTOVO — zbývá jen skrývání strategií
+
+Aktualizace: katalog, kontakty i perzistentní uživatelský stav jsou napojené
+(`CopingStrategyService`, `ContactService`, Dexie adaptéry). Z tohoto zadání
+zbývá **skrývání strategií**: obrazovka ho umí zobrazit, ale `CopingFlow`
+plní `hiddenStrategies` prázdnou konstantou a `onHideStrategy` nepředává.
+Zbytek dokumentu ponechán jako popis očekávaného chování.
 
 ## Cíl
 

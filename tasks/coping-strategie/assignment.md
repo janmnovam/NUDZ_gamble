@@ -1,6 +1,14 @@
 # Knihovna strategií — vývojové zadání
 
-:::Stav: Frontend knihovny DONE; datové napojení TODO
+:::Stav: Frontend knihovny DONE; datové napojení DONE až na skrývání strategií
+
+Aktualizace: datové napojení je hotové — katalog i jeho detailní texty se čtou
+z databáze (seed `copingDefaults.ts`), kontakty jde přes `ContactService`
+a uživatelský stav přes `CopingStrategyService` (`list`/`create`/`toggle`/
+`update`/`remove`), takže po obnovení PWA stav přetrvá. **Nezapojené zůstává
+jediné: skrývání strategií** — `CopingFlow` předává `hiddenStrategies` prázdnou
+konstantu a `onHideStrategy` nepředává vůbec, takže sekce „Skryté" je zatím jen
+prezentační. Vedeno v [docs/handover.md](../../docs/handover.md).
 
 Tento dokument je samostatné zadání pro vývoj. Uživatelské texty a obsah
 katalogu jsou v [content.md](content.md).
