@@ -32,6 +32,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [customStrategy, setCustomStrategy] = useState('')
   const [suggestedLimits, setSuggestedLimits] = useState<SuggestedLimitsResponse | null>(null)
   const [interventionStartDate, setInterventionStartDate] = useState<Date | null>(null)
+  const [submitting, setSubmitting] = useState(false)
 
   // Load the predefined coping suggestions from the service once.
   useEffect(() => {
@@ -70,6 +71,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   // Hand the collected answers to the OnboardingService, then confirm.
   const finishSetup = async () => {
+    // Guards against a double-tap firing `complete` twice: the second call would
+    // hit the store's append-only `[user_id+week_no]` limit and throw.
+    if (submitting) return
+    setSubmitting(true)
+
     // Selected predefined strategies (by id) + the optional custom one → domain coping DTOs.
     const selected = copingSelected
       .map((id) => copingOptions.find((option) => option.id === id))
@@ -88,6 +94,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       goNext()
     } catch (error) {
       console.error('[onboarding] complete failed', error)
+      setSubmitting(false)
     }
   }
 
@@ -140,6 +147,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             void finishSetup()
           }}
           onBack={goBack}
+          submitting={submitting}
         />
       )
     case 5:

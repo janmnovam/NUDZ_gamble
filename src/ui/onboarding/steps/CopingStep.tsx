@@ -24,6 +24,7 @@ interface CopingStepProps {
   onCustomStrategyChange: (value: string) => void
   onFinish: () => void
   onBack: () => void
+  submitting?: boolean
 }
 
 /** Onboarding step 5 — coping strategies (Figma "05 Copingová strategie"). */
@@ -35,6 +36,7 @@ export function CopingStep({
   onCustomStrategyChange,
   onFinish,
   onBack,
+  submitting = false,
 }: CopingStepProps) {
   const { t, locale } = useTranslation()
 
@@ -50,7 +52,7 @@ export function CopingStep({
       contentClassName="gap-4"
       footer={
         <div className="flex flex-col items-center gap-2">
-          <Button size="md" fullWidth onClick={onFinish} disabled={count === 0}>
+          <Button size="md" fullWidth onClick={onFinish} disabled={count === 0 || submitting}>
             {t('onboarding.coping.cta')}
           </Button>
           <p className="type-body-sm text-faint text-center">
