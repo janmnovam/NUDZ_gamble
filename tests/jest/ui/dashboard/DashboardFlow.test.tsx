@@ -1,0 +1,71 @@
+import { render, screen, waitFor } from '@testing-library/react'
+import { jest } from '@jest/globals'
+
+import type { DashboardResponse } from '@/app/dto/dashboard.ts'
+import type { DashboardService } from '@/app/ports/dashboardService.ts'
+import type { App } from '@/core/index.ts'
+import { AppProvider } from '@ui/app/AppProvider.tsx'
+import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
+import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
+
+const DASHBOARD: DashboardResponse = {
+  studyDay: 1,
+  weekNo: 1,
+  time: { used: 0, limit: 480, percent: 0, remaining: 480, status: 'OK' },
+  stakes: { used: 0, limit: 8000, percent: 0, remaining: 8000, status: 'OK' },
+  overallStatus: 'OK',
+  days: Array.from({ length: 7 }, (_, index) => ({
+    studyDay: index + 1,
+    date: `2026-09-0${String(index + 1)}T00:00:00.000Z`,
+    state: 'future' as const,
+  })),
+  missingDays: [],
+  pendingAction: 'none',
+  cautionThresholdPercent: 80,
+}
+
+// Only the dashboard seam matters here, so a narrowed cast keeps the fake focused.
+function renderFlow(dashboard: DashboardService) {
+  render(
+    <I18nProvider>
+      <AppProvider app={{ dashboard } as App}>
+        <DashboardFlow />
+      </AppProvider>
+    </I18nProvider>,
+  )
+}
+
+describe('DashboardFlow', () => {
+  it('shows a loading state until the service resolves', () => {
+    // A promise that never settles keeps the flow in its initial state.
+    renderFlow({ getDashboard: () => new Promise<DashboardResponse>(() => undefined) })
+
+    expect(screen.getByText('Načítám…')).not.toBeNull()
+  })
+
+  it('renders the dashboard once the service resolves', async () => {
+    renderFlow({ getDashboard: () => Promise.resolve(DASHBOARD) })
+
+    expect(await screen.findByText('Den 1')).not.toBeNull()
+    expect(screen.getByText('zbývá 8 h z 8 h')).not.toBeNull()
+  })
+
+  it('falls back to an error message when the service rejects', async () => {
+    // The flow logs the failure; silence it so the run stays readable.
+    const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+    renderFlow({ getDashboard: () => Promise.reject(new Error('no limit set for week 2')) })
+
+    expect(await screen.findByText('Něco se nepovedlo.')).not.toBeNull()
+    expect(logged).toHaveBeenCalled()
+    logged.mockRestore()
+  })
+
+  it('does not render the screen while loading', async () => {
+    renderFlow({ getDashboard: () => Promise.resolve(DASHBOARD) })
+
+    expect(screen.queryByText('Celkový stav')).toBeNull()
+    await waitFor(() => {
+      expect(screen.getByText('Celkový stav')).not.toBeNull()
+    })
+  })
+})

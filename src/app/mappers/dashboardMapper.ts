@@ -1,5 +1,6 @@
 /** Maps the domain `DashboardVM` (`@domain/dashboard.ts`) onto the `DashboardResponse` DTO. */
 import type { AxisDto, DashboardResponse, DayCellDto } from '@/app/dto/dashboard.ts'
+import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
 import type { AxisView, DashboardVM, DayCell } from '@domain/dashboard.ts'
 
 function toAxisDto(axis: AxisView): AxisDto {
@@ -23,7 +24,10 @@ function toDayCellDto(day: DayCell): DayCellDto {
   }
 }
 
-export function toDashboardResponse(vm: DashboardVM): DashboardResponse {
+export function toDashboardResponse(
+  vm: DashboardVM,
+  config: DomainConfig = DEFAULT_CONFIG,
+): DashboardResponse {
   return {
     studyDay: vm.studyDay,
     weekNo: vm.weekNo,
@@ -33,5 +37,6 @@ export function toDashboardResponse(vm: DashboardVM): DashboardResponse {
     days: vm.days.map(toDayCellDto),
     missingDays: vm.missingDays,
     pendingAction: vm.pendingAction,
+    cautionThresholdPercent: Math.round(config.POZOR_THRESHOLD * 100),
   }
 }

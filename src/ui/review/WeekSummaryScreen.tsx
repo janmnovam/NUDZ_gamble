@@ -1,10 +1,11 @@
 import { ArrowLeft, Info } from 'lucide-react'
 
 import { Card } from '@ui/components/Card.tsx'
+import { DayCell } from '@ui/components/DayCell.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
-import { StatusChip } from '@ui/review/components/StatusChip.tsx'
+import { StatusChip } from '@ui/components/StatusChip.tsx'
 import { ReviewShell } from '@ui/review/components/ReviewShell.tsx'
-import type { FinalSummaryWeek, ReviewDayCell } from '@ui/review/types.ts'
+import type { FinalSummaryWeek } from '@ui/review/types.ts'
 import { cn } from '@ui/lib/cn.ts'
 
 interface WeekSummaryScreenProps {
@@ -13,35 +14,11 @@ interface WeekSummaryScreenProps {
   onExport: () => void
 }
 
-function DayCell({ day }: { day: ReviewDayCell }) {
-  const missing = day.state === 'missing'
-
-  return (
-    <div
-      className={cn(
-        'flex h-[62px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-md',
-        missing ? 'bg-warning-subtle text-warning' : 'bg-brand-subtle text-ink',
-      )}
-    >
-      <span className={cn('type-overline', missing ? 'text-warning' : 'text-faint')}>
-        {day.dayLabel}
-      </span>
-      <span className={cn('type-label', missing ? 'text-warning' : 'text-ink')}>
-        {day.dayNumber}
-      </span>
-      <span
-        className={cn('size-1.5 rounded-full', missing ? 'bg-warning' : 'bg-status-ok')}
-        aria-hidden
-      />
-    </div>
-  )
-}
-
 function SummaryRow({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <span className="text-muted text-[14px] leading-5">{label}</span>
-      <span className={cn('type-label text-right', danger ? 'text-[#9e4224]' : 'text-ink')}>
+      <span className={cn('type-label text-right', danger ? 'text-status-exceeded' : 'text-ink')}>
         {value}
       </span>
     </div>
@@ -108,7 +85,21 @@ export function WeekSummaryScreen({ week, onBack, onExport }: WeekSummaryScreenP
           <p className="type-overline text-faint">{t('review.week.progressTitle')}</p>
           <div className="grid grid-cols-7 gap-1">
             {week.days.map((day) => (
-              <DayCell key={`${day.dayLabel}-${String(day.dayNumber)}`} day={day} />
+              <DayCell
+                key={`${day.dayLabel}-${String(day.dayNumber)}`}
+                weekday={day.dayLabel}
+                day={day.dayNumber}
+                state={day.state}
+                ariaLabel={t('dashboard.day.aria', {
+                  weekday: day.dayLabel,
+                  day: day.dayNumber,
+                  state: t(
+                    day.state === 'missing'
+                      ? 'dashboard.dayState.missing'
+                      : 'dashboard.dayState.completed',
+                  ),
+                })}
+              />
             ))}
           </div>
           <p className="type-body-sm text-faint">{t('review.week.missingNote')}</p>
