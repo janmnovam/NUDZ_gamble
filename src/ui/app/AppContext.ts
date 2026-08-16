@@ -40,3 +40,12 @@ export function useExportService() {
   }
   return app.export
 }
+
+/** The review inbound port, wired to the data layer. Throws outside <AppProvider>. */
+export function useReviewService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useReviewService must be used within an <AppProvider>')
+  }
+  return app.review
+}

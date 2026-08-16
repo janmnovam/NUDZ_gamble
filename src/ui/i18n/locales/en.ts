@@ -54,6 +54,7 @@ export const en: Record<TranslationKey, string> = {
   'nav.tabs.coping': 'Strategies',
   'nav.tabs.reports': 'Reports',
   'review.final.overline': 'Monthly summary · {day}',
+  'review.final.day': 'DAY {day}',
   'review.final.title': 'Reports',
   'review.final.limitsDoneTitle': 'Limits are no longer set',
   'review.final.limitsDoneBody':

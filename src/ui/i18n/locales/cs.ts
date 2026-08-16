@@ -58,6 +58,7 @@ export const cs = {
   'nav.tabs.coping': 'Strategie',
   'nav.tabs.reports': 'Přehledy',
   'review.final.overline': 'Měsíční souhrn · {day}',
+  'review.final.day': 'DEN {day}',
   'review.final.title': 'Přehledy',
   'review.final.limitsDoneTitle': 'Limity už se nenastavují',
   'review.final.limitsDoneBody':
