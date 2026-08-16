@@ -6,6 +6,7 @@
  * check-in to prompt for.
  */
 import type {
+  LastChanceCheckResult,
   NotificationCheckRequest,
   NotificationCheckResult,
   NotificationService,
@@ -41,5 +42,26 @@ export class NotificationServiceImpl implements NotificationService {
       return { due: false, reminder: null }
     }
     return { due: result.data !== null, reminder: result.data }
+  }
+
+  async checkLastChance({
+    userId,
+    time,
+    lastFiredAt,
+  }: NotificationCheckRequest): Promise<LastChanceCheckResult> {
+    const config = this.deps.config ?? DEFAULT_CONFIG
+    const slotDue = isReminderTimeDue({
+      times: config.LAST_CHANCE_REMINDER_TIMES,
+      lastFiredAt,
+      now: time,
+    })
+    if (!slotDue) return { due: false }
+
+    const result = await this.deps.reminders.getLastChance(userId, time)
+    if (result.error) {
+      console.error('[notification] getLastChance failed', result.error)
+      return { due: false }
+    }
+    return { due: result.data === true }
   }
 }

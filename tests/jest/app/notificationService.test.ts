@@ -6,10 +6,10 @@ import { DEFAULT_CONFIG } from '@domain/config.ts'
 
 const USER_ID = 'demo-user'
 
-function makeService(reminder: ReminderResponse) {
+function makeService(reminder: ReminderResponse, lastChance = false) {
   const reminders: ReminderService = {
     getDueReminder: () => Promise.resolve(ok(reminder)),
-    getLastChance: () => Promise.resolve(ok(false)),
+    getLastChance: () => Promise.resolve(ok(lastChance)),
   }
   return new NotificationServiceImpl({ reminders })
 }
@@ -88,5 +88,47 @@ describe('NotificationServiceImpl.checkSchedule', () => {
       lastFiredAt: null,
     })
     expect(onTime.due).toBe(true)
+  })
+})
+
+describe('NotificationServiceImpl.checkLastChance', () => {
+  it('is not due before the last-chance slot (21:00)', async () => {
+    const service = makeService(null, true)
+    const result = await service.checkLastChance({
+      userId: USER_ID,
+      time: '2026-09-07T20:30:00+02:00',
+      lastFiredAt: null,
+    })
+    expect(result).toEqual({ due: false })
+  })
+
+  it('is due once the slot passes and a last-chance day is missing', async () => {
+    const service = makeService(null, true)
+    const result = await service.checkLastChance({
+      userId: USER_ID,
+      time: '2026-09-07T21:00:00+02:00',
+      lastFiredAt: null,
+    })
+    expect(result).toEqual({ due: true })
+  })
+
+  it('is not due once the slot passes if nothing is missing', async () => {
+    const service = makeService(null, false)
+    const result = await service.checkLastChance({
+      userId: USER_ID,
+      time: '2026-09-07T21:00:00+02:00',
+      lastFiredAt: null,
+    })
+    expect(result).toEqual({ due: false })
+  })
+
+  it("doesn't refire the same slot on the same day", async () => {
+    const service = makeService(null, true)
+    const result = await service.checkLastChance({
+      userId: USER_ID,
+      time: '2026-09-07T21:30:00+02:00',
+      lastFiredAt: '2026-09-07T21:00:00+02:00',
+    })
+    expect(result).toEqual({ due: false })
   })
 })
