@@ -6,7 +6,12 @@ import type { CopingStrategy, CopingStrategyDefault } from '@domain/model.ts'
 
 /** A predefined suggestion → the UI-shaped picker option (`code` becomes `id`). */
 export function toCopingSuggestionDto(d: CopingStrategyDefault): CopingSuggestionDto {
-  return { id: d.code, label: d.label, type: 'default' }
+  return {
+    id: d.code,
+    label: d.label,
+    type: 'default',
+    ...(d.reminderText === undefined ? {} : { summary: d.reminderText }),
+  }
 }
 
 /** A persisted strategy → the UI-shaped management-screen row (`copingStrategyId` becomes `id`). */

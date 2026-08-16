@@ -9,9 +9,14 @@ const TIME = '2026-09-04T08:00:00+02:00'
 const USER_ID = 'demo-user'
 
 describe('CopingStrategyServiceImpl.getSuggestions', () => {
-  it('maps the domain defaults to { id, label, type } picker options (code → id)', async () => {
+  it('maps the domain defaults to picker options with an optional library summary', async () => {
     const defaults: CopingStrategyDefault[] = [
-      { code: 'change_environment', label: 'Na chvíli změním prostředí', priority: 1 },
+      {
+        code: 'change_environment',
+        label: 'Na chvíli změním prostředí',
+        priority: 1,
+        reminderText: 'Vytvořím si krátký odstup.',
+      },
       { code: 'reach_out', label: 'Ozvu se někomu, komu důvěřuji', priority: 2 },
     ]
     const repo = {
@@ -20,7 +25,12 @@ describe('CopingStrategyServiceImpl.getSuggestions', () => {
     const service = new CopingStrategyServiceImpl({ repo })
 
     await expect(service.getSuggestions('demo-user', '2026-09-01T12:00:00.000Z')).resolves.toEqual([
-      { id: 'change_environment', label: 'Na chvíli změním prostředí', type: 'default' },
+      {
+        id: 'change_environment',
+        label: 'Na chvíli změním prostředí',
+        type: 'default',
+        summary: 'Vytvořím si krátký odstup.',
+      },
       { id: 'reach_out', label: 'Ozvu se někomu, komu důvěřuji', type: 'default' },
     ])
   })
