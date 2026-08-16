@@ -33,6 +33,7 @@ export function App() {
  */
 function ReportsSection() {
   const { t } = useTranslation()
+  const navigate = useAppView((state) => state.navigate)
   const { exportData } = useExportDownload()
   const summary = useFinalSummary()
 
@@ -50,6 +51,9 @@ function ReportsSection() {
     <FinalSummaryFlow
       summary={summary.summary}
       programme={summary.programme}
+      onOpenCurrentWeek={() => {
+        navigate('dashboard')
+      }}
       onExport={exportData}
     />
   )

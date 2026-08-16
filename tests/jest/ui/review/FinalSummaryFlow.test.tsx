@@ -39,10 +39,19 @@ const TEST_SUMMARY: FinalSummaryViewModel = {
   ],
 }
 
-function renderFinalSummary(summary = TEST_SUMMARY, onExport: jest.Mock = jest.fn()) {
+function renderFinalSummary(
+  summary = TEST_SUMMARY,
+  onExport: jest.Mock = jest.fn(),
+  onOpenCurrentWeek: jest.Mock = jest.fn(),
+) {
   render(
     <I18nProvider>
-      <FinalSummaryFlow programme={PROGRAMME} summary={summary} onExport={onExport} />
+      <FinalSummaryFlow
+        onOpenCurrentWeek={onOpenCurrentWeek}
+        programme={PROGRAMME}
+        summary={summary}
+        onExport={onExport}
+      />
     </I18nProvider>,
   )
 }
@@ -72,5 +81,35 @@ describe('FinalSummaryFlow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Zpět' }))
     expect(screen.getByText('Měsíční souhrn · TEST DAY')).toBeTruthy()
+  })
+
+  it('sends a running week to the dashboard instead of a read-only detail', () => {
+    const onOpenCurrentWeek = jest.fn()
+    const running = {
+      ...TEST_SUMMARY,
+      weeks: TEST_SUMMARY.weeks.map((w, i) => {
+        if (i !== 0) return w
+        // A running week has no verdict, so the key is absent rather than undefined.
+        const { status: _status, ...rest } = w
+        return { ...rest, state: 'running' as const }
+      }),
+    }
+    renderFinalSummary(running, jest.fn(), onOpenCurrentWeek)
+
+    fireEvent.click(screen.getByRole('button', { name: /Týden 1/ }))
+
+    // The week detail is framed as a closed record; the dashboard is the live
+    // view of the week you are actually in.
+    expect(onOpenCurrentWeek).toHaveBeenCalled()
+    expect(screen.queryByText('Záznamy jsou jen ke čtení.')).toBeNull()
+  })
+
+  it('still opens the read-only detail for a closed week', () => {
+    const onOpenCurrentWeek = jest.fn()
+    renderFinalSummary(TEST_SUMMARY, jest.fn(), onOpenCurrentWeek)
+
+    fireEvent.click(screen.getByRole('button', { name: /Týden 1/ }))
+
+    expect(onOpenCurrentWeek).not.toHaveBeenCalled()
   })
 })

@@ -8,6 +8,12 @@ import { WeekSummaryScreen } from '@ui/review/WeekSummaryScreen.tsx'
 
 interface FinalSummaryFlowProps {
   summary: FinalSummaryViewModel
+  /**
+   * Opens the running week. There is no read-only detail for it — the dashboard
+   * already *is* the live view of the current week, and the week detail is
+   * framed as a closed, read-only record.
+   */
+  onOpenCurrentWeek: () => void
   /** The same data laid out as a month grid, for the programme overview. */
   programme: ProgrammeSummary
   onExport: () => void
@@ -15,7 +21,12 @@ interface FinalSummaryFlowProps {
 
 type View = { kind: 'list' } | { kind: 'week'; week: FinalSummaryWeek } | { kind: 'programme' }
 
-export function FinalSummaryFlow({ summary, programme, onExport }: FinalSummaryFlowProps) {
+export function FinalSummaryFlow({
+  summary,
+  programme,
+  onOpenCurrentWeek,
+  onExport,
+}: FinalSummaryFlowProps) {
   const [view, setView] = useState<View>({ kind: 'list' })
   const back = () => {
     setView({ kind: 'list' })
@@ -33,7 +44,8 @@ export function FinalSummaryFlow({ summary, programme, onExport }: FinalSummaryF
     <FinalSummaryScreen
       summary={summary}
       onOpenWeek={(week) => {
-        setView({ kind: 'week', week })
+        if (week.state === 'running') onOpenCurrentWeek()
+        else setView({ kind: 'week', week })
       }}
       onOpenProgramme={() => {
         setView({ kind: 'programme' })
