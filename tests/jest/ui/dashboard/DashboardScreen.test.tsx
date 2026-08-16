@@ -83,7 +83,23 @@ describe('DashboardScreen', () => {
     )
     const cta = screen.getByRole('button', { name: 'Vyplnit check-in' })
     expect((cta as HTMLButtonElement).disabled).toBe(false)
-    expect(screen.getByText('Vyplnit chybějící dny')).not.toBeNull()
+    // Naming the day is the point — "fill in the missing days" told the user
+    // neither which day nor how many.
+    expect(screen.getByText('Nemáte vyplněný st 2')).not.toBeNull()
+  })
+
+  it('confirms when nothing is missing, instead of showing no banner at all', () => {
+    renderScreen({ studyDay: 4 })
+    expect(screen.getByText('Vše vyplněno')).not.toBeNull()
+  })
+
+  it('counts the days when more than one is missing', () => {
+    renderScreen({
+      studyDay: 4,
+      pendingAction: 'checkin_due',
+      missingDays: ['2026-09-02T00:00:00.000Z', '2026-09-03T00:00:00.000Z'],
+    })
+    expect(screen.getByText('Nemáte vyplněné 2 dny')).not.toBeNull()
   })
 
   it('shows the programme-start notice only on day 1', () => {

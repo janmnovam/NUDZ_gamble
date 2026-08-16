@@ -175,7 +175,12 @@ export const en: Record<TranslationKey, string> = {
   'dashboard.dayState.missing': 'record missing',
   'dashboard.dayState.today': 'today',
   'dashboard.dayState.future': "hasn't started yet",
-  'dashboard.banner.missing.title': 'Fill in the missing days',
+  'dashboard.banner.missing.one': "You haven't filled in {day}",
+  'dashboard.banner.missing.few': "You haven't filled in {count} days",
+  'dashboard.banner.missing.other': "You haven't filled in {count} days",
+  'dashboard.banner.missing.body': 'You can still add them before this week ends.',
+  'dashboard.banner.allDone.title': 'All filled in',
+  'dashboard.banner.allDone.body': 'See you tomorrow — the next check-in covers today.',
   'dashboard.banner.started.title': 'Self-tracking has started',
   'dashboard.banner.started.body':
     'You’ll enter today tomorrow. Every check-in always covers the previous day.',

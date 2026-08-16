@@ -181,7 +181,12 @@ export const cs = {
   'dashboard.dayState.missing': 'chybí záznam',
   'dashboard.dayState.today': 'dnes',
   'dashboard.dayState.future': 'zatím nezačal',
-  'dashboard.banner.missing.title': 'Vyplnit chybějící dny',
+  'dashboard.banner.missing.one': 'Nemáte vyplněný {day}',
+  'dashboard.banner.missing.few': 'Nemáte vyplněné {count} dny',
+  'dashboard.banner.missing.other': 'Nemáte vyplněných {count} dnů',
+  'dashboard.banner.missing.body': 'Doplnit je můžete do konce tohoto týdne.',
+  'dashboard.banner.allDone.title': 'Vše vyplněno',
+  'dashboard.banner.allDone.body': 'Zase zítra — další check-in bude na dnešek.',
   'dashboard.banner.started.title': 'Sebesledování začalo',
   'dashboard.banner.started.body':
     'Dnešní den zadáte zítra. Každý check-in se vždy vztahuje k předchozímu dni.',

@@ -37,16 +37,19 @@ const STATE_STYLES: Record<DayCellState, DayCellStyle> = {
     dot: 'bg-status-ok-fill',
   },
   missing: {
-    container: 'bg-status-caution-subtle border-2 border-transparent',
+    container: 'bg-status-caution-subtle border-status-caution-fill border-2',
     weekday: 'text-status-caution',
     day: 'text-status-caution',
     dot: 'bg-status-caution-fill',
   },
+  // Today has no record of its own — a check-in always covers the previous day
+  // — so it must not borrow the filled-in look. The ring marks where you are;
+  // the neutral fill says there is nothing here yet.
   today: {
-    container: 'bg-brand-subtle border-2 border-brand',
+    container: 'bg-sunken border-2 border-brand',
     weekday: 'text-brand',
     day: 'text-brand',
-    dot: 'bg-brand',
+    dot: 'bg-line-strong',
   },
   locked: {
     container: 'border-2 border-transparent',

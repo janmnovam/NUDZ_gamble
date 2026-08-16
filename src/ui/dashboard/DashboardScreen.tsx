@@ -1,4 +1,4 @@
-import { ArrowRight, Info } from 'lucide-react'
+import { ArrowRight, CircleCheck, Info } from 'lucide-react'
 
 import { type AxisDto, type DayCellDto, type DashboardResponse } from '@/app/dto/dashboard.ts'
 import { Banner } from '@ui/components/Banner.tsx'
@@ -71,7 +71,7 @@ export function DashboardScreen({
   timeMachineActive = false,
   onExitTimeMachine,
 }: DashboardScreenProps) {
-  const { t, locale } = useTranslation()
+  const { t, t_plural, locale } = useTranslation()
 
   const hourUnit = t('dashboard.unitHour')
   const minuteUnit = t('dashboard.unitMinute')
@@ -101,8 +101,19 @@ export function DashboardScreen({
   const checkInDue = dashboard.pendingAction === 'checkin_due'
   // The banner is driven by the same data: missing days first (Figma "24
   // Dashboard — den 6"), otherwise the programme-start notice on day 1.
-  const firstMissingDay = dashboard.missingDays[0]
+  const missing = dashboard.missingDays
+  const firstMissingDay = missing[0]
   const showStartNotice = firstMissingDay === undefined && dashboard.studyDay <= 1
+  // Naming the day beats "fill in the missing days": on day 3 you want to be
+  // told *which* day, and when there is nothing to do you want to hear that too.
+  const missingTitle =
+    firstMissingDay === undefined
+      ? ''
+      : missing.length === 1
+        ? t('dashboard.banner.missing.one', {
+            day: `${weekdayAbbrev(firstMissingDay, locale)} ${String(dayOfMonth(firstMissingDay))}`,
+          })
+        : t_plural('dashboard.banner.missing', missing.length, { count: missing.length })
 
   return (
     <Screen
@@ -205,7 +216,8 @@ export function DashboardScreen({
         {firstMissingDay === undefined ? null : (
           <Banner
             icon={Info}
-            title={t('dashboard.banner.missing.title')}
+            title={missingTitle}
+            body={t('dashboard.banner.missing.body')}
             {...(onBackfillDay === undefined
               ? {}
               : {
@@ -222,6 +234,14 @@ export function DashboardScreen({
           icon={Info}
           title={t('dashboard.banner.started.title')}
           body={t('dashboard.banner.started.body')}
+        />
+      ) : null}
+
+      {firstMissingDay === undefined && !showStartNotice ? (
+        <Banner
+          icon={CircleCheck}
+          title={t('dashboard.banner.allDone.title')}
+          body={t('dashboard.banner.allDone.body')}
         />
       ) : null}
     </Screen>
