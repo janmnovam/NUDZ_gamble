@@ -159,15 +159,23 @@ missing-day set + `has_missing`, `usage_event` aggregates.
 `is_backfill` is the one of these that leaves the app: it is computed at export time
 and written as a column in `check_in.csv`. It is still never stored.
 
-## usage_event — tracked events
-| event_type | fires | feeds metric |
+## usage_event — designed, not yet recorded
+
+> **Nothing writes a `usage_event` today.** The store, the `UsageEventAdapter` and the
+> `UsageEventRepository` port all exist, and `createDataLayer()` wires the adapter up —
+> but no service injects it and no code path calls it, so the table stays empty. The brief
+> marks this log as **required**, so this is an open gap rather than a decision. The table
+> below is the intended contract, kept so that wiring it up later is a matter of emitting
+> rows, not of redesigning anything.
+
+| event_type | should fire | feeds metric |
 |---|---|---|
 | `exposed` | first arrival to the app (once) | N exposed |
 | `onboarding_completed` | user finishes onboarding (consent) | N consented |
 | `app_opened` | every PWA open | N used > x times (count); N used > y weeks (span of `occurred_at`) |
 | `review_reached` | reaches a review milestone; `detail.day ∈ {7,14,21,28}` | N "used" at pre-defined time points |
 
-- Counts/spans are derived from rows + `occurred_at` — nothing aggregated is stored.
+- Counts/spans would be derived from rows + `occurred_at` — nothing aggregated is stored.
 - "Use" of the intervention = ≥ 1 `app_opened`; milestone engagement = `review_reached`.
 - `exposed` may instead be derived as a user's first `app_opened`.
 
@@ -232,9 +240,17 @@ It is deliberately **not** part of the CSV export: the export ships the four raw
 only, and backfill reaches the researchers through `check_in.is_backfill` instead.
 
 ## Open
-- Default coping content pending Dr. Kazmer (app not blocked — users add their own).
+- **`usage_event` is not emitted at all** — see the section above. The only gap here that
+  the brief calls required.
 - Reference week editable after onboarding? Default no.
-- Demo-drawer actions in `usage_event`: don't-log vs `origin` tag.
+- Demo-drawer actions in `usage_event`: don't-log vs `origin` tag (moot until events are
+  emitted at all).
+
+Resolved: **default coping content is in.** `src/data/seeds/copingDefaults.ts` carries six
+catalog strategies with the full detail copy (`title`, `what_to_do`, `why_it_can_help`,
+`how_to`, `when_useful`, notes, restriction options), transcribed from
+`tasks/coping-strategie/content.md` and rendered by `CatalogStrategyDetailScreen`. It is
+still marked PROVISIONAL pending NUDZ sign-off on the wording, but nothing is blocked.
 
 Resolved since this doc was written: demo clock persistence uses **localStorage**
 (`src/ui/admin/adminStore.ts`), not an `app_meta` table — the time machine is a UI

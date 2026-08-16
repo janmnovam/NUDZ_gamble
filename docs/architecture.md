@@ -88,6 +88,76 @@ in `src/app/ports` and implemented by a service in `src/app/services`, which del
 actual rules to `src/domain`. **Depends on** lists the ports the service needs, split into
 inbound and outbound sub-lists.
 
+### The shape every service shares
+
+All ten implementations are built the same way. Knowing this shape means the per-port
+sections below only have to describe what is *different*.
+
+**1. The port is an interface, the impl is a class with a `Deps` object.** A port
+(`src/app/ports/xService.ts`) declares methods and the DTOs they speak. Its impl
+(`src/app/services/xServiceImpl.ts`) takes one `XServiceDeps` object in the constructor and
+stores it — no container, no decorators, no service locator. `createApp()` is the only
+place that knows which concrete adapter satisfies which dependency, which is what makes a
+service trivially testable with a hand-written fake.
+
+```ts
+export interface OnboardingServiceDeps {
+  repo: OnboardingRepository
+  profiles: ProfileRepository
+  newId: () => string
+}
+
+export class OnboardingServiceImpl implements OnboardingService {
+  private readonly deps: OnboardingServiceDeps
+  constructor(deps: OnboardingServiceDeps) { this.deps = deps }
+  // …
+}
+```
+
+Note `newId` is injected as a plain function rather than reached for directly — id
+generation is I/O-ish (it is `crypto.randomUUID()`), so the service stays deterministic
+under test.
+
+**2. Services do not throw — they resolve to `Result<T>`.** `src/app/result.ts` defines
+`{ data: T | null, error: ErrorEnvelope | null }`, and the `run()` helper wraps a throwing
+body into it:
+
+```ts
+getDashboard(userId: UserId, time: ISOTimestamp): Promise<Result<DashboardResponse>> {
+  return run(async () => { /* may throw DomainError */ })
+}
+```
+
+`run()` never rejects. A thrown `DomainError` maps onto its own `type` + `code`; anything
+else becomes `type: 'internal'`. The envelope also carries a `trace` — the first stack
+frame outside `errors.ts`/`result.ts`, e.g. `completeOnboarding (onboarding.ts:51:11)` —
+which is for the console, never for the screen.
+
+**3. Errors are a two-level taxonomy, and the codes are a registry.** `ErrorType`
+(`validation` · `not_found` · `conflict` · `internal`) is the broad category a caller can
+branch on without matching strings. `DomainErrorCode` is the specific one, and every code
+lives in the frozen `ERROR_CODES` map (`src/domain/errorCodes.ts`) rather than being typed
+as a literal at the throw site — so `errorMessageKey` keys its translation table off the
+same registry and the two cannot drift.
+
+**4. The domain never sees a DTO, and the UI never sees a domain object.** The impl maps
+at the boundary using `src/app/mappers/*`, calls pure functions or use cases in
+`src/domain`, and maps back. Where the seam is currently a straight copy it is still routed
+through a mapper, so the two shapes are free to diverge without touching either side.
+
+**5. Time is a parameter, never a dependency.** Every time-dependent method takes an
+`ISOTimestamp` as its last argument (`getDashboard(userId, time)`), and the caller — always
+the UI — supplies it. See §Clock — removed for why, and for the offset-bearing requirement.
+
+**Two deliberate exceptions to point 2:**
+
+- `ContactService.list()` returns a bare `ContactDto[]`. Reading a bundled, seeded
+  directory has no failure the user can act on, so the envelope would be ceremony.
+- `NotificationService.checkSchedule()` returns a plain `NotificationCheckResult`, and
+  `ReminderService` returns the domain's own `ReminderResponse`. Both are questions
+  ("should something pop right now?"), not commands, and both are consumed by a polling
+  hook that has nothing to show on failure.
+
 ### OnboardingService
 
 **Status:** ✅ DONE — `getSuggestedLimits` + `complete` + `getStatus` implemented as `OnboardingServiceImpl` (`src/app/services/onboardingServiceImpl.ts`), tested (`tests/jest/app/onboardingService.test.ts`), wired via `createApp()` and consumed by the UI onboarding flow (`src/ui/onboarding/OnboardingFlow.tsx`). `getStatus` is what `src/ui/App.tsx` calls on mount to decide whether to show the onboarding wizard or skip straight to the dashboard — a returning demo user (or seeded data) never re-runs onboarding.
@@ -919,6 +989,206 @@ Two consequences worth knowing:
 - The demo time machine is therefore a **UI** concern, not a clock adapter:
   `src/ui/admin/TimeMachineModal.tsx` plus the seeding helpers in `src/dev/`.
   Nothing in `src/domain` or `src/data` knows it exists.
+
+## Data layer — inside `src/data`
+
+The outbound ports above say *what* storage must provide. This section is *how* it is
+provided today. Everything here is replaceable: nothing outside `src/data` imports Dexie.
+
+```
+src/data/
+  db.ts          AppDatabase (Dexie subclass) + schema versions + Query/Repository types
+  repository.ts  DexieRepository — the generic table wrapper every adapter reuses
+  model.ts       storage entities — snake_case rows, the persisted contract
+  mappers.ts     entity ⟷ domain, one pure pair per entity
+  ids.ts         newId() = crypto.randomUUID()
+  adapters/      one class per outbound port
+  seeds/         bundled reference data (contacts, coping defaults)
+```
+
+### `AppDatabase` and its versions
+
+`AppDatabase` extends Dexie and declares one `Table` field per store. Schema history is
+append-only — each `version(n)` block stays in the file forever, because a returning user's
+browser may still hold any older version:
+
+| v | What it adds |
+|---|---|
+| 1 | `profile`, `coping_strategy`, `limits`, `check_ins`, `reviews`, `usage_events` |
+| 2 | `contacts` — the global help-line directory |
+| 3 | `check_in_edits` — the append-only edit audit trail |
+| 4 | No new store. An `upgrade()` migration rewriting `intervention_start_date` and `behavior_date` from date-only strings to canonical UTC-midnight timestamps |
+
+Two index conventions matter:
+
+- **`&[a+b]` is a unique compound index, and it is load-bearing.** It is what makes "≤1
+  check-in per day", "1 limit per week" and "1 review per week" fail the *write* rather than
+  merely being checked in code. `OnboardingAdapter` leans on this deliberately: it uses
+  `limits.add` (not `put`) so a duplicate week aborts the whole transaction.
+- **Booleans are never indexed.** `active`, `played` and `incomplete` are stored but absent
+  from every index — IndexedDB cannot index boolean keys at all. Queries narrow by `user_id`
+  first and filter in memory, which is free at this data size.
+
+### `DexieRepository` — the generic building block
+
+One small class (`repository.ts`) wraps a single Dexie table with `get` / `getAll` /
+`query` / `count` / `put` / `bulkPut` / `remove`. `query()` takes a deliberately minimal
+`Query<T>` spec — one indexed equality match, then an in-memory `filter`, then
+`sortBy` / `reverse` / `offset` / `limit`:
+
+```ts
+const rows = await this.repo.query({
+  where: { field: 'user_id', equals: userId },
+  sortBy: 'week_no',
+})
+```
+
+The spec is kept small on purpose. Anything richer — joins across stores, aggregations —
+uses the public `table` escape hatch and drops to raw Dexie in the one adapter that needs
+it, rather than growing a query language nobody else uses.
+
+### The adapter pattern, and its three shapes
+
+Every adapter implements one outbound port, holds a `DexieRepository` (or the raw `db`),
+and maps at the boundary — the domain object goes in, the entity goes to storage. They come
+in three shapes:
+
+1. **Thin repo wrapper** — `ProfileAdapter`, `LimitAdapter`, `CheckInAdapter`,
+   `ReviewAdapter`, `UsageEventAdapter`, `CheckInEditAdapter`. Construct a `DexieRepository`
+   over one table, map in and out, done:
+
+   ```ts
+   async save(profile: Profile): Promise<void> {
+     await this.repo.put(profileToEntity(profile))
+   }
+   async get(userId: UserId): Promise<Profile | undefined> {
+     const entity = await this.repo.get(userId)
+     return entity && profileToDomain(entity)
+   }
+   ```
+
+2. **Transaction-spanning** — `OnboardingAdapter` (profile + week-1 limit + coping written
+   atomically) and `DatabaseAdminAdapter` (deletes a user across every user-scoped store in
+   one `rw` transaction). These reach past a single table on purpose, because the operation
+   itself spans tables.
+
+3. **Seed-backed** — `ContactAdapter` and `CopingStrategyAdapter` also serve bundled
+   reference data from `seeds/`. `ContactRepository.seed()` is idempotent and safe to call
+   on every read, so a fresh install has contacts without a setup step.
+
+### The entity ⟷ domain seam
+
+`mappers.ts` holds one pure pair per entity (`profileToEntity` / `profileToDomain`, …).
+This is a **real rename**, not a formality: the domain is camelCase and the rows are
+snake_case, because the row names are the brief's column names and the CSV export depends
+on them. Keeping the rename in one file means a change on either side stays local.
+
+The mappers also canonicalise: day-valued fields pass through
+`canonicalCalendarTimestamp()` on the way in, so a calendar day is always stored as
+`YYYY-MM-DDT00:00:00.000Z` no matter what the caller handed over.
+
+### Composition
+
+`createDataLayer(database = db)` (`src/core/index.ts`) instantiates all ten adapters and
+returns them as a `DataLayer` object. Passing a different `AppDatabase` is what lets tests
+run against `fake-indexeddb` with no other change. `createApp()` then builds the ten
+services on top of that `DataLayer`.
+
+`StudyCalendar` is deliberately **not** part of `DataLayer`: it needs a user's
+`interventionStartDate`, which isn't known until a profile is loaded, so it is built
+per-user at the call site rather than once at startup.
+
+## Frontend layer — inside `src/ui`
+
+The UI is the only layer allowed to be stateful, asynchronous and time-aware. It reaches
+the app exclusively through the inbound ports; nothing in `src/ui` imports Dexie or touches
+a domain entity.
+
+```
+src/ui/
+  App.tsx        provider stack + the view switch
+  app/           AppProvider/AppContext (DI), appView + currentUser stores
+  clock.ts       clientNow() — the app's only real clock
+  components/    shared presentational pieces (Button, Card, DayCell, TabBar, …)
+  <feature>/     one folder per screen family: onboarding, checkin, dashboard,
+                 coping, review — each a Flow + Screen(s) pair
+  i18n/          provider, hooks, cs/en locale mirrors, plural + interpolation
+  lib/           pure helpers: cn, date, duration, money, download, keyboard inset
+  errors/        domain error code → translation key
+  notifications/ system-notification gateway + polling hook
+  admin/         the demo time machine (secret gesture, day/time jump, reset)
+  install/       PWA install prompt
+  export/        useExportDownload — ZIP bytes → browser download
+```
+
+### Provider stack and dependency injection
+
+`App` mounts `I18nProvider` → `AppProvider` → routes. `AppProvider` calls `createApp()`
+**once** and puts the resulting `App` object on a React context; it also accepts an
+injected `app` prop, which is the seam tests use to pass fakes. Screens never import a
+service — they ask for one:
+
+```ts
+const dashboard = useDashboardService()   // throws outside <AppProvider>
+```
+
+There is one such hook per inbound port (`useOnboardingService`, `useCheckInService`,
+`useCopingService`, `useContactService`, `useReviewService`, `useExportService`, …). Each
+throws a named error outside the provider rather than returning `null`, so a
+missing-provider mistake fails loudly at the first call instead of as a downstream
+`undefined`.
+
+### State: three Zustand stores, all UI-only
+
+Persistent data lives in IndexedDB; Zustand holds only what the *session* needs.
+
+| Store | Holds | Persisted? |
+|---|---|---|
+| `appView` | Which screen is showing, plus optional navigation params (e.g. the date a backfill check-in should target) | No |
+| `currentUser` | The current `userId`, resolved at startup from `OnboardingService.getStatus` and adopted on `complete` | No — deliberately re-resolved from the stored profile on every reload |
+| `adminStore` | Demo time machine: simulated instant, panel open state | The intervention start date is mirrored to `localStorage` so a jump survives a refresh |
+
+### The Flow / Screen convention
+
+Each feature folder splits in two, and the split is the testing strategy:
+
+- **`XFlow.tsx`** — the *connected* half. Calls the service hooks, holds loading/error
+  state, reads `clientNow()` (or the simulated instant), and decides what to render.
+- **`XScreen.tsx`** — the *presentational* half. A pure function of its props: it receives
+  a DTO and callbacks, and never calls a service. This is what makes screens testable
+  without mounting the whole app, and what lets the same screen render for the real user,
+  a seeded demo, or a Storybook-style fixture.
+
+Multi-step features (onboarding, check-in) put each step in a `steps/` subfolder and keep
+the step machine in the flow.
+
+### Design source
+
+The UI follows a Figma file agreed with the team and the clinicians —
+**`Hackathon2026Figma.fig`**. It is **not in this repository**; the working copy currently
+lives in one person's `~/Downloads`, which means it is a single point of failure. It should
+be moved somewhere shared (or committed under `docs/design/`) before submission. The
+dashboard and the reports screens were built frame-by-frame from it, so it is the reference
+for any visual question this document does not answer.
+
+### i18n
+
+Czech is the source language; English is a key-for-key mirror (209 keys each today). Every
+user-facing string goes through `useTranslation()` — no literals in components — with
+`interpolate.ts` for `{placeholder}` substitution and `plural.ts` for Czech's three-form
+plurals. `TranslationKey` is a union derived from the Czech file, so a typo in a key is a
+type error rather than a blank on screen.
+
+### Time, and the demo machine
+
+`clientNow()` is the only real clock in the codebase, and it returns an **offset-bearing**
+ISO timestamp (`+02:00`), never a `Z`-normalised one — the backend derives "today" from the
+date component, so normalising would shift the day near midnight.
+
+The time machine (`admin/`) is a UI concern end to end: a 7-tap gesture on the dashboard's
+day heading (`useMultiTap`) opens a modal that sets a simulated instant, which flows into
+the same `time` parameter every service already takes. Nothing in `src/domain` or
+`src/data` knows it exists.
 
 ## TODO — what is left
 

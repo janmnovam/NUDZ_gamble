@@ -67,6 +67,10 @@ see [decisions.md](decisions.md).
 - [Tests.txt](Tests.txt) — a hand-written 29-day scenario (limits per week, which days are
   filled, backfilled or left missing) used to exercise the demo by hand. Test *data*, not
   a test plan.
+- **`Hackathon2026Figma.fig`** — the design the UI was built from, agreed with the team and
+  the clinicians. **Not in this repo** (see [architecture.md § Design source](architecture.md#design-source)):
+  the only copy sits in a personal `~/Downloads`, so it needs a shared home before
+  submission. It is the reference for any visual question the docs don't answer.
 
 ## Diagrams
 
