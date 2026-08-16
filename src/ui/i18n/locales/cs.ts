@@ -147,12 +147,30 @@ export const cs = {
   'onboarding.limits.unitMinute': 'min',
   'onboarding.limits.currency': 'Kč',
 
-  'onboarding.coping.title': 'Co uděláš, když budeš chtít hrát?',
+  'onboarding.coping.title': 'Co můžete udělat při nutkání hrát',
   'onboarding.coping.lead':
     'Vyber aspoň jednu strategii. Připomeneme ti ji, když se přiblížíš limitu nebo ho překročíš.',
   'onboarding.coping.custom.label': 'Vlastní strategie (nepovinné)',
   'onboarding.coping.custom.placeholder': 'Napiš vlastní…',
   'onboarding.coping.cta': 'Dokončit nastavení',
+  'onboarding.coping.strategy.changeEnvironment.title': 'Na chvíli odejdu od hraní',
+  'onboarding.coping.strategy.changeEnvironment.description':
+    'Zavřu stránku nebo aplikaci, odložím zařízení nebo se přesunu jinam.',
+  'onboarding.coping.strategy.reachOut.title': 'Ozvu se někomu, komu důvěřuji',
+  'onboarding.coping.strategy.reachOut.description':
+    'Ozvu se člověku, se kterým se cítím bezpečně a nemusím mu všechno vysvětlovat.',
+  'onboarding.coping.strategy.wait.title': 'S rozhodnutím chvíli počkám',
+  'onboarding.coping.strategy.wait.description':
+    'Dám si deset minut, během kterých nemusím nic rozhodovat.',
+  'onboarding.coping.strategy.activity.title': 'Pustím se do něčeho jiného',
+  'onboarding.coping.strategy.activity.description':
+    'Vrátím pozornost k tomu, co je pro mě důležité a proč chci hraní omezit.',
+  'onboarding.coping.strategy.reason.title': 'Připomenu si, proč chci hrát méně',
+  'onboarding.coping.strategy.reason.description':
+    'Vrátím pozornost k tomu, co je pro mě důležité a proč chci hraní omezit.',
+  'onboarding.coping.strategy.access.title': 'Omezím si přístup ke hraní',
+  'onboarding.coping.strategy.access.description':
+    'Odhlásím se, odstraním uloženou platbu nebo využiju blokaci či sebevyloučení.',
   'onboarding.coping.count.one': '{count} vybraná',
   'onboarding.coping.count.few': '{count} vybrané',
   'onboarding.coping.count.other': '{count} vybraných',

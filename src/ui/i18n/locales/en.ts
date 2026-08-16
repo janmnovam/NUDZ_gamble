@@ -143,12 +143,30 @@ export const en: Record<TranslationKey, string> = {
   'onboarding.limits.unitMinute': 'min',
   'onboarding.limits.currency': 'Kč',
 
-  'onboarding.coping.title': 'What will you do when you want to gamble?',
+  'onboarding.coping.title': 'What you can do when you feel the urge to gamble',
   'onboarding.coping.lead':
     "Pick at least one strategy. We'll remind you of it when you get close to a limit or go over it.",
   'onboarding.coping.custom.label': 'Your own strategy (optional)',
   'onboarding.coping.custom.placeholder': 'Write your own…',
   'onboarding.coping.cta': 'Finish setup',
+  'onboarding.coping.strategy.changeEnvironment.title': 'Step away from gambling for a while',
+  'onboarding.coping.strategy.changeEnvironment.description':
+    'I will close the site or app, put the device down, or move somewhere else.',
+  'onboarding.coping.strategy.reachOut.title': 'Contact someone I trust',
+  'onboarding.coping.strategy.reachOut.description':
+    'I will contact someone I feel safe with and do not have to explain everything to.',
+  'onboarding.coping.strategy.wait.title': 'Wait before I decide',
+  'onboarding.coping.strategy.wait.description':
+    'I will give myself ten minutes in which I do not have to decide anything.',
+  'onboarding.coping.strategy.activity.title': 'Do something else',
+  'onboarding.coping.strategy.activity.description':
+    'I will return my attention to what matters to me and why I want to gamble less.',
+  'onboarding.coping.strategy.reason.title': 'Remind myself why I want to gamble less',
+  'onboarding.coping.strategy.reason.description':
+    'I will return my attention to what matters to me and why I want to gamble less.',
+  'onboarding.coping.strategy.access.title': 'Restrict my access to gambling',
+  'onboarding.coping.strategy.access.description':
+    'I will sign out, remove a saved payment method, or use blocking or self-exclusion.',
   'onboarding.coping.count.one': '{count} selected',
   'onboarding.coping.count.few': '{count} selected',
   'onboarding.coping.count.other': '{count} selected',
