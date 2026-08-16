@@ -2,13 +2,12 @@
  * Study-calendar port + implementation (doc 02) — day 1–28 / week 1–4
  * mapping.
  *
- * `TodayClock` is the only way domain code ever learns "today"; nothing in
- * this layer calls `new Date()` or `Date.now()` directly. It's named
- * distinctly from `Clock` in `ports.ts` (`() => ISOTimestamp`, used to stamp
- * `createdAt`/`submittedAt` on writes) — the two answer different
- * questions and must never be conflated: a record timestamp is a UTC
- * instant, "today" is a local calendar date (doc 02's timezone warning is
- * exactly about not blurring these two).
+ * A single `Clock` (`() => ISOTimestamp`, from `ports.ts`) is the only way domain
+ * code learns the time; nothing in this layer calls `new Date()` or `Date.now()`
+ * directly. "Today" is not a separate source — it's the calendar date of that
+ * instant, taken with `calendarDate` (an offset-preserving slice, doc 02's
+ * timezone warning): the caller must supply an offset-bearing instant so the day
+ * is the user's local day, not the UTC day.
  *
  * `createStudyCalendar` is the pure conversion layer built on top of it —
  * one method per formula in the spec, zero I/O, calendar arithmetic done in
@@ -20,11 +19,7 @@
  */
 import { DEFAULT_CONFIG, type DomainConfig } from '@domain/config.ts'
 import type { ISOCalendarTimestamp, ISODate, ISOTimestamp } from '@domain/model.ts'
-
-/** Injected "today" source — real clock in production, fixed/offset clock in tests and the demo drawer. */
-export interface TodayClock {
-  today(): ISODate
-}
+import type { Clock } from '@domain/ports.ts'
 
 /**
  * 1..28 while the programme runs.
@@ -47,7 +42,7 @@ export interface StudyCalendar {
   firstDay(week: WeekNo): StudyDay
   /** Last study day of a week: `7*week`. */
   lastDay(week: WeekNo): StudyDay
-  /** `studyDay(today())`. */
+  /** `studyDay(time())` — the study day the clock's instant falls on. */
   currentDay(): StudyDay
   /** `weekNo(currentDay())`. Throws if `currentDay() <= 0` — check that (or `isFinalSummary`) first. */
   currentWeek(): WeekNo
@@ -121,7 +116,7 @@ export function dateOf(timestamp: ISOTimestamp): ISODate {
 /** Pure implementation of `StudyCalendar` for one user's `interventionStartDate`. */
 export function createStudyCalendar(
   interventionStartDate: ISOCalendarTimestamp,
-  clock: TodayClock,
+  time: Clock,
   config: DomainConfig = DEFAULT_CONFIG,
 ): StudyCalendar {
   const startMs = toUtcMs(calendarDate(interventionStartDate))
@@ -144,7 +139,7 @@ export function createStudyCalendar(
 
   const lastDay = (week: WeekNo): StudyDay => WEEK_LENGTH_DAYS * week
 
-  const currentDay = (): StudyDay => studyDay(clock.today())
+  const currentDay = (): StudyDay => studyDay(time())
 
   const currentWeek = (): WeekNo => weekNo(currentDay())
 

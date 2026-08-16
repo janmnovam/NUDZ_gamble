@@ -8,7 +8,6 @@ import type {
   CheckInResultResponse,
   CheckInService,
 } from '@/app/ports/checkInService.ts'
-import type { TodayClock } from '@domain/clock.ts'
 import type {
   CheckInEditRepository,
   CheckInRepository,
@@ -22,8 +21,7 @@ export interface CheckInServiceDeps {
   checkInEdits: CheckInEditRepository
   limits: LimitRepository
   profiles: ProfileRepository
-  now: Clock
-  today: TodayClock
+  time: Clock
 }
 
 export class CheckInServiceImpl implements CheckInService {

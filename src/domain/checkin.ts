@@ -36,12 +36,12 @@ export type ValidateCheckIn = (
   context: { today: ISODate; weekFirstDay: ISOCalendarTimestamp },
 ) => CheckInValidation
 
-/** Pure command handler: a validated draft + `now` → the record to persist (upsert on `behaviorDate`). */
+/** Pure command handler: a validated draft + `time` → the record to persist (upsert on `behaviorDate`). */
 export type SubmitCheckIn = (
   userId: UserId,
   draft: CheckInDraft,
   weekNo: number,
-  now: ISOTimestamp,
+  time: ISOTimestamp,
   existing?: CheckIn,
 ) => CheckIn
 

@@ -3,14 +3,12 @@
  * method body is TODO. See docs/architecture.md §ReminderService.
  */
 import type { ReminderResponse, ReminderService } from '@/app/ports/reminderService.ts'
-import type { TodayClock } from '@domain/clock.ts'
 import type { CheckInRepository, Clock, ProfileRepository } from '@domain/ports.ts'
 
 export interface ReminderServiceDeps {
   checkIns: CheckInRepository
   profiles: ProfileRepository
-  now: Clock
-  today: TodayClock
+  time: Clock
 }
 
 export class ReminderServiceImpl implements ReminderService {

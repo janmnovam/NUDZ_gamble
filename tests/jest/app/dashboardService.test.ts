@@ -65,7 +65,7 @@ function makeService(params: { checkIns: CheckIn[]; today: string; noProfile?: b
     limits,
     checkIns,
     reviews,
-    today: { today: () => params.today },
+    time: () => `${params.today}T12:00:00.000Z`,
     userId: USER_ID,
   }
   return new DashboardServiceImpl(deps)

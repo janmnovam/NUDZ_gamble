@@ -21,7 +21,7 @@ interface CheckInFlowProps {
   behaviorDate: ISOCalendarTimestamp
   weekNo: number
   today: ISODate
-  now: ISOTimestamp
+  time: ISOTimestamp
   existingCheckIn?: CheckIn | undefined
   /** Reserved for the dashboard handoff; the two-page check-in itself does not render charts. */
   dashboard?: DashboardVM | undefined
@@ -47,7 +47,7 @@ export function CheckInFlow({
   behaviorDate,
   weekNo,
   today,
-  now,
+  time,
   existingCheckIn,
   programDayLabel,
   weekLabel,
@@ -68,7 +68,7 @@ export function CheckInFlow({
     onComplete({
       userId,
       weekNo,
-      submittedAt: now,
+      submittedAt: time,
       draft,
       previousDayState,
     })

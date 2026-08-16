@@ -9,7 +9,7 @@ describe('onboarding adapters', () => {
 
   beforeEach(() => {
     db = new AppDatabase(`nudz-gamble-jest-${crypto.randomUUID()}`)
-    data = createDataLayer(db, () => FIXED_NOW)
+    data = createDataLayer(db)
   })
 
   afterEach(async () => {

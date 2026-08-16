@@ -26,7 +26,7 @@ describe('onboarding end to end', () => {
   })
 
   it('completeOnboarding writes profile, limit, and coping via data.onboarding', async () => {
-    const data = createDataLayer(db, () => NOW)
+    const data = createDataLayer(db)
     await completeOnboarding(input, {
       repo: data.onboarding,
       time: NOW,

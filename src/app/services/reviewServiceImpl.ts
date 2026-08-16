@@ -9,7 +9,6 @@ import type {
   ReviewResponse,
   ReviewService,
 } from '@/app/ports/reviewService.ts'
-import type { TodayClock } from '@domain/clock.ts'
 import type {
   CheckInRepository,
   Clock,
@@ -23,8 +22,7 @@ export interface ReviewServiceDeps {
   limits: LimitRepository
   checkIns: CheckInRepository
   reviews: ReviewRepository
-  now: Clock
-  today: TodayClock
+  time: Clock
 }
 
 export class ReviewServiceImpl implements ReviewService {

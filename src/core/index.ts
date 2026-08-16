@@ -3,7 +3,7 @@
  *
  * Wire it once and inject the returned `DataLayer` into domain services:
  *
- *   const data = createDataLayer()          // default IndexedDB + system clock
+ *   const data = createDataLayer()          // default IndexedDB
  *   await data.profiles.save(profile)
  *   const defaults = await data.copingStrategies.loadDefaults()
  *
@@ -20,13 +20,11 @@ import { OnboardingAdapter } from '@data/adapters/onboardingAdapter.ts'
 import { ProfileAdapter } from '@data/adapters/profileAdapter.ts'
 import { ReviewAdapter } from '@data/adapters/reviewAdapter.ts'
 import { UsageEventAdapter } from '@data/adapters/usageEventAdapter.ts'
-import { systemNow } from '@data/clock.ts'
 import { type AppDatabase, db as defaultDb } from '@data/db.ts'
 import type {
   CheckInEditRepository,
   CheckInRepository,
   ContactRepository,
-  Clock,
   CopingStrategyRepository,
   LimitRepository,
   OnboardingRepository,
@@ -35,20 +33,16 @@ import type {
   UsageEventRepository,
 } from '@domain/ports.ts'
 
-// `TodayClock`/`StudyCalendar` aren't part of `DataLayer`: the study
+// `StudyCalendar` isn't part of `DataLayer`: the study
 // calendar needs a user's `interventionStartDate`, which isn't known
 // until a `Profile` is loaded, so it's built per-user at the call site
 // instead of once at composition-root startup.
 
-export function createDataLayer(
-  database: AppDatabase = defaultDb,
-  now: Clock = systemNow,
-): DataLayer {
+export function createDataLayer(database: AppDatabase = defaultDb): DataLayer {
   return {
     profiles: new ProfileAdapter(database),
     copingStrategies: new CopingStrategyAdapter(database),
     limits: new LimitAdapter(database),
-    now,
     onboarding: new OnboardingAdapter(database),
     contacts: new ContactAdapter(database),
     checkIns: new CheckInAdapter(database),
@@ -63,8 +57,6 @@ export interface DataLayer {
   profiles: ProfileRepository
   copingStrategies: CopingStrategyRepository
   limits: LimitRepository
-  /** Shared clock — pass to domain services instead of reading wall-clock time directly. */
-  now: Clock
   onboarding: OnboardingRepository
   contacts: ContactRepository
   checkIns: CheckInRepository
@@ -75,14 +67,13 @@ export interface DataLayer {
 
 export { AppDatabase, db } from '@data/db.ts'
 export { DexieRepository } from '@data/repository.ts'
-export { systemNow, systemTodayClock } from '@data/clock.ts'
 export type { Clock } from '@domain/ports.ts'
 export {
   createStudyCalendar,
+  dateOf,
   nextDate,
   type StudyCalendar,
   type StudyDay,
-  type TodayClock,
   type WeekNo,
 } from '@domain/clock.ts'
 export { newId } from '@data/ids.ts'
