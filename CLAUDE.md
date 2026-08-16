@@ -20,10 +20,11 @@ beats more half-finished features.**
 
 Hexagonal (ports & adapters). Calls flow outward from the UI, dependencies point inward toward the domain.
 
-- **Flow**: React UI (`src/ui`) → dispatcher (`src/app`, proposed, one method per use case) → inbound ports → domain services (`src/domain`, pure, no I/O) → outbound ports → Dexie adapters (`src/data`, via a generic `DexieRepository`) → IndexedDB. A composition root (`src/core`: `createDataLayer()` / `createApp()`) wires dispatcher, services, and adapters together.
+- **Flow**: React UI (`src/ui`) → inbound ports (`src/app/ports`, one method per use case) → service impls (`src/app/services`) → domain (`src/domain`, pure, no I/O) → outbound ports → Dexie adapters (`src/data`, via a generic `DexieRepository`) → IndexedDB. A composition root (`src/core`: `createDataLayer()` / `createApp()`) wires services and adapters; the UI reaches them through `AppProvider` / `useOnboardingService()` & co. (`src/ui/app/`).
 - **Inbound ports** (driving side, one domain service each): `OnboardingService`, `CheckInService`, `DashboardService`, `ReviewService`, `ReminderService`, `ExportService`.
-- **Outbound ports** (driven side, each backed by a Dexie adapter): `ProfileRepository`, `LimitRepository`, `CopingStrategyRepository`, `CheckInRepository`, `ReviewRepository`, `UsageEventRepository`, and `Clock` (`SystemClock` for real time, `TimeMachineClock` — advanceable — for the jury's 28-day demo walkthrough). An `HttpApiAdapter` is a future, not-yet-built alternative to the Dexie adapters.
-- **Model seams**: DTO (`src/app/dto`, proposed, UI-shaped) ⟷ domain model (`src/domain/model.ts`, framework-free) ⟷ storage entity (`src/data/model.ts`) — one mapper per seam. Shapes are identical today but free to diverge later without touching the core.
+- **Outbound ports** (driven side, each backed by a Dexie adapter): `ProfileRepository`, `LimitRepository`, `CopingStrategyRepository`, `CheckInRepository`, `CheckInEditRepository`, `ReviewRepository`, `UsageEventRepository`, `ContactRepository`. An `HttpApiAdapter` is a future, not-yet-built alternative to the Dexie adapters.
+- **No `Clock` port.** Time is not injected into the domain: every time-dependent service method takes the instant as a parameter, and the UI is the only thing that reads a real clock (`clientNow()` in `src/ui/clock.ts`, offset-bearing so "today" doesn't drift near midnight). The demo time machine is UI-side (`src/ui/admin/`, `src/dev/`), not a clock adapter.
+- **Model seams**: DTO (`src/app/dto`, UI-shaped camelCase) ⟷ domain model (`src/domain/model.ts`, framework-free) ⟷ storage entity (`src/data/model.ts`) — one mapper per seam. The domain is camelCase and the storage entity snake_case, so the entity mapper is a real rename; the DTO seam is thin today but free to diverge.
 - Each port carries a build status (📝 DRAFT · 🚧 IN PROGRESS · 🔍 REVIEW · ✅ DONE) tracked only in the architecture doc — don't assume a port is wired up without checking it there.
 
 ## Workflow
@@ -32,7 +33,9 @@ Hexagonal (ports & adapters). Calls flow outward from the UI, dependencies point
 
 ## Naming convention
 
-Prefer **camelCase** over snake_case in new methods/identifiers going forward. Existing snake_case (`src/domain/model.ts`, CSV export field names) stays as-is for now — a refactor will be done later, not a rename-on-sight.
+**camelCase everywhere in TypeScript** — the rename of `src/domain/model.ts` is done, so there is no snake_case left to tolerate in code.
+
+snake_case survives in exactly two places, and both are contracts rather than identifiers: the **Dexie store rows** (`src/data/model.ts`, mapped at the adapter boundary) and the **CSV export column names** (`src/app/mappers/exportMapper.ts`). Neither may be camelCased — the store shape is persisted data and the CSV headers are what the researchers read.
 
 ## Language
 

@@ -127,15 +127,23 @@ missing-day set + `has_missing`, `usage_event` aggregates.
 
 ## Dexie stores
 ```txt
+# v1
 profile:         "user_id"
-coping_strategy: "coping_strategy_id, user_id, type, priority, active"
-limits:          "limit_id, [user_id+week_no], user_id, week_no, limit_set_at"
-check_ins:       "check_in_id, [user_id+behavior_date], user_id, behavior_date, week_no, submitted_at, updated_at, played"
-reviews:         "review_id, [user_id+review_week_no], user_id, review_week_no, review_completed_at, incomplete"
+coping_strategy: "coping_strategy_id, user_id, type, priority"
+limits:          "limit_id, &[user_id+week_no], user_id, week_no, limit_set_at"
+check_ins:       "check_in_id, &[user_id+behavior_date], user_id, behavior_date, week_no, submitted_at, updated_at"
+reviews:         "review_id, &[user_id+review_week_no], user_id, review_week_no, review_completed_at"
 usage_events:    "usage_event_id, [user_id+occurred_at], user_id, event_type"
+# v2
 contacts:        "contact_id, category, priority"
+# v3
 check_in_edits:  "check_in_edit_id, user_id, check_in_id, edited_at"
 ```
+
+`&` marks a unique index — it is what makes rules 2–4 below fail the write
+rather than merely being checked in code. `active`, `played` and `incomplete`
+are stored fields but deliberately **not** indexed: every query that needs them
+already narrows by `user_id` first and filters in memory.
 
 ## Rules
 - Money/time = integers; % is float, display-time only, never persisted.

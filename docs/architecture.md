@@ -237,7 +237,7 @@ method-specific input.
 
 ### CheckInService
 
-**Status:** 📝 DRAFT — `src/domain/checkin.ts` has types/signatures only (`ValidateCheckIn`, `SubmitCheckIn`, `DayStateOf`, `IsBackfill`); no implementations yet. (Its outbound repos are further along — see `CheckInRepository`/`CheckInEditRepository` below.)
+**Status:** ✅ DONE — `src/domain/checkin.ts` implements `validateCheckIn`, `dayStateOf` and `isBackfill`; `CheckInServiceImpl` (`src/app/services/checkInServiceImpl.ts`) wraps submit/edit with the doc-07 feedback presenter and the edit audit trail, and the UI reaches it through `src/ui/checkin/CheckInRoute.tsx`.
 
 **Depends on**
 - Inbound
@@ -278,7 +278,7 @@ method-specific input.
 
 ### DashboardService
 
-**Status:** ✅ DONE (dashboard read path) — `buildDashboardVM()` builds the current week's 7-day `DashboardVM` (`src/domain/dashboard.ts`, tested in `tests/jest/domain/dashboard.test.ts`), built on `buildDayCell()` (one day → `DayCell`, reused for both the 7-cell week strip and, later, a 28-cell month/final-summary view), `dayStateOf`/`isBackfill` (`checkin.ts`), `classifyStatus`/`worseStatus` (`limits.ts`), and `resolvePendingAction` (`guards.ts`). The inbound-port wrapper (`DashboardServiceImpl`, `src/app/services/dashboardServiceImpl.ts`) and its DTO mapper (`src/app/mappers/dashboardMapper.ts`) are built and tested (`tests/jest/app/dashboardService.test.ts`), wired via `createApp()`, and consumed by `src/ui/dashboard/Dashboard.tsx` — the screen the UI lands on once onboarding is complete. Not yet wired: `reviewable_weeks` is hardcoded empty until `ReviewRepository`/`ReviewService` exist (TODO #4/#7 below); `ReviewRepository` is injected into `DashboardServiceImpl` for that future wiring but unused today.
+**Status:** ✅ DONE (dashboard read path) — `buildDashboardVM()` builds the current week's 7-day `DashboardVM` (`src/domain/dashboard.ts`, tested in `tests/jest/domain/dashboard.test.ts`), built on `buildDayCell()` (one day → `DayCell`, reused for both the 7-cell week strip and, later, a 28-cell month/final-summary view), `dayStateOf`/`isBackfill` (`checkin.ts`), `classifyStatus`/`worseStatus` (`limits.ts`), and `resolvePendingAction` (`guards.ts`). The inbound-port wrapper (`DashboardServiceImpl`, `src/app/services/dashboardServiceImpl.ts`) and its DTO mapper (`src/app/mappers/dashboardMapper.ts`) are built and tested (`tests/jest/app/dashboardService.test.ts`), wired via `createApp()`, and consumed by `src/ui/dashboard/DashboardFlow.tsx` / `DashboardScreen.tsx` — the screen the UI lands on once onboarding is complete. Not yet wired: `reviewable_weeks` is hardcoded empty until `ReviewRepository`/`ReviewService` exist (TODO #4/#7 below); `ReviewRepository` is injected into `DashboardServiceImpl` for that future wiring but unused today.
 
 **Depends on**
 - Inbound
@@ -318,7 +318,7 @@ method-specific input.
   "days": [
     {
       "studyDay": 1,
-      "date": "2026-09-01",
+      "date": "2026-09-01T00:00:00.000Z",
       "state": "completed",
       "played": true,
       "timeMinutes": 60,
@@ -326,14 +326,15 @@ method-specific input.
     },
     {
       "studyDay": 2,
-      "date": "2026-09-02",
+      "date": "2026-09-02T00:00:00.000Z",
       "state": "missing"
     }
   ],
   "missingDays": [
-    "2026-09-02"
+    "2026-09-02T00:00:00.000Z"
   ],
-  "pendingAction": "checkin_due"
+  "pendingAction": "checkin_due",
+  "cautionThresholdPercent": 80
 }
 ```
 
@@ -347,7 +348,7 @@ month/final-summary view, not just this 7-cell week strip. Carried by a real DTO
 
 ### ReviewService
 
-**Status:** 📝 DRAFT — no `review.ts`; `CanReview`/`IsWeekClosed` signatures exist in `guards.ts` but are unimplemented
+**Status:** ✅ DONE — `src/domain/review.ts` implements `getPendingReview`, `completeReview` and `getFinalSummary` on top of `canReview`/`isWeekClosed` (`guards.ts`); `ReviewServiceImpl` exposes them and the reports screens consume `getFinalSummary` (`src/ui/review/useFinalSummary.ts`). The final summary carries each week's used/limit pair, its seven days and whether the week has elapsed, so an unreached week renders locked instead of being judged against no data.
 
 **Depends on**
 - Inbound
@@ -407,16 +408,29 @@ month/final-summary view, not just this 7-cell week strip. Carried by a real DTO
 
 ```json
 {
+  "studyDay": 29,
   "weeks": [
     {
       "weekNo": 1,
+      "time": { "used": 350, "limit": 480 },
+      "stakes": { "used": 6500, "limit": 8000 },
       "timeStatus": "OK",
       "stakesStatus": "POZOR",
-      "overall": "POZOR"
+      "overall": "POZOR",
+      "days": [
+        { "studyDay": 1, "date": "2026-09-01T00:00:00.000Z", "state": "completed" },
+        { "studyDay": 2, "date": "2026-09-02T00:00:00.000Z", "state": "missing" }
+      ],
+      "filledDays": 6,
+      "elapsed": true
     }
   ]
 }
 ```
+
+`days` always holds the week's seven entries; two are shown here. `elapsed` is
+what makes an unreached week render locked rather than judged — its statuses
+would otherwise be computed against no data and read as a result.
 
 ### ReminderService
 
@@ -446,7 +460,7 @@ month/final-summary view, not just this 7-cell week strip. Carried by a real DTO
 
 ### ExportService
 
-**Status:** ✅ DONE — table fetch + sort is `buildExportBundle()` (`src/domain/export.ts`, tested in `tests/jest/domain/export.test.ts`), CSV text formatting is `toCheckInCsv`/`toLimitCsv`/`toCopingStrategyCsv` (`src/app/mappers/exportMapper.ts`, tested in `tests/jest/app/exportMapper.test.ts`), ZIP bundling is `createZip()` (`src/app/lib/zip.ts`, a dependency-free "store" writer, tested in `tests/jest/app/lib/zip.test.ts`) — no new npm dependency was pulled in for it. `ExportServiceImpl` (`src/app/services/exportServiceImpl.ts`, tested end to end in `tests/jest/app/exportService.test.ts`) wires the three together and is exposed via `createApp()`. The layering mirrors `DashboardService`: a pure domain builder → an app-layer mapper → a thin service, plus one extra app-layer step (zipping) this port needed and `DashboardService` didn't. What's *not* built yet: the UI trigger (a button on Dashboard/Review that calls `app.export.exportDataZip()` and turns the returned bytes into a browser download via `Blob`/`URL.createObjectURL` — deliberately a UI concern, out of scope for this port).
+**Status:** ✅ DONE — table fetch + sort is `buildExportBundle()` (`src/domain/export.ts`, tested in `tests/jest/domain/export.test.ts`), CSV text formatting is `toCheckInCsv`/`toLimitCsv`/`toCopingStrategyCsv` (`src/app/mappers/exportMapper.ts`, tested in `tests/jest/app/exportMapper.test.ts`), ZIP bundling is `createZip()` (`src/app/lib/zip.ts`, a dependency-free "store" writer, tested in `tests/jest/app/lib/zip.test.ts`) — no new npm dependency was pulled in for it. `ExportServiceImpl` (`src/app/services/exportServiceImpl.ts`, tested end to end in `tests/jest/app/exportService.test.ts`) wires the three together and is exposed via `createApp()`. The layering mirrors `DashboardService`: a pure domain builder → an app-layer mapper → a thin service, plus one extra app-layer step (zipping) this port needed and `DashboardService` didn't. The UI trigger is built too: the reports screen's export button goes through `useExportDownload()` (`src/ui/export/`), which turns the returned bytes into a browser download. The archive carries four CSVs — `profile`, `check_in`, `limit`, `coping_strategy` — as raw tables, not a derived person-day view.
 
 **Design history** — this port originally derived a single Příloha-2-shaped person-day CSV (`buildPersonDayRows`/`PersonDayRow`, one row per study day 1–28, `completed`/`missing` status, `is_backfill`). Mid-build, README's "Exporting data from app" section was updated (commits around `d8aaa46`/`5ea75c4`) to specify a different shape — three raw-table CSVs (`CHECK_IN`, `LIMIT`, `COPING_STRATEGY`) zipped together, no derived per-day rows. Per an explicit call from the project owner, the export was rebuilt to match README, superseding the person-day design. **Known tension:** Příloha 2 (CLAUDE.md's "CSV export (mandatory)") requires person-day-level export — one row per planned day 1–28, including no-play and missing days, with a `missing` row's value fields left blank/NA rather than absent. A raw `CHECK_IN` table dump doesn't satisfy that: there's no row at all for a day with no check-in, and no `study_day`/`checkin_status`/`is_backfill` derivation. Whether this is acceptable for grading is a product call outside this doc's scope — flagging it here so the gap isn't silently lost.
 
@@ -648,7 +662,7 @@ The port speaks the camelCase domain `Contact` (`src/domain/model.ts`); the row 
 
 ### ReviewRepository
 
-**Status:** 📝 DRAFT · adapter: `ReviewAdapter`
+**Status:** ✅ DONE · adapter: `ReviewAdapter` — tested (`tests/jest/data/reviewAdapter.test.ts`)
 
 | Method | Accepts | Returns | Description |
 |---|---|---|---|
@@ -671,7 +685,7 @@ The port speaks the camelCase domain `Contact` (`src/domain/model.ts`); the row 
 
 ### UsageEventRepository
 
-**Status:** 📝 DRAFT · adapter: `UsageEventAdapter`
+**Status:** ✅ DONE · adapter: `UsageEventAdapter` — tested (`tests/jest/data/usageEventAdapter.test.ts`)
 
 | Method | Accepts | Returns | Description |
 |---|---|---|---|
@@ -691,44 +705,44 @@ The port speaks the camelCase domain `Contact` (`src/domain/model.ts`); the row 
 }
 ```
 
-### Clock
+### Clock — removed
 
-**Status:** 🚧 IN PROGRESS · adapters: `SystemClock` (real, ✅ DONE), `TimeMachineClock` (demo, 📝 DRAFT)
+**Status:** ❌ GONE — there is no `Clock` outbound port any more.
 
-| Method | Accepts | Returns | Description |
-|---|---|---|---|
-| now | `—` | `ISOTimestamp` (string) | Current instant as an ISO 8601 timestamp |
+The domain used to pull "now" from an injected `Clock`/`TodayClock`. It no longer
+does: every time-dependent service method **accepts the instant as a parameter**
+(`getDashboard(userId, time)`, `exportDataZip(userId, time)`, …), and the UI is
+the single place that reads a real clock — `clientNow()` in `src/ui/clock.ts`.
 
-Both implement the `Clock` port (`now()`); the composition root picks which one —
-`SystemClock` in production, `TimeMachineClock` for the demo and tests. The domain only
-ever sees `now()`; any extra controls stay outside the port.
+Two consequences worth knowing:
 
-**SystemClock** — ✅ DONE · `src/data/clock.ts`
+- `clientNow()` returns an **offset-bearing** ISO timestamp (local `+hh:mm`),
+  not a `Z`-normalized one. The backend derives "today" from the date component,
+  so a normalized instant would shift the day near midnight.
+- The demo time machine is therefore a **UI** concern, not a clock adapter:
+  `src/ui/admin/TimeMachineModal.tsx` plus the seeding helpers in `src/dev/`.
+  Nothing in `src/domain` or `src/data` knows it exists.
 
-Returns real wall-clock time as an ISO 8601 string (`systemNow`). Stateless, no controls.
-The default everywhere except the demo and tests.
+## TODO — what is left
 
-**TimeMachineClock** — 📝 DRAFT · proposed `src/data/timeMachineClock.ts`
+Most of the domain is now built. What remains, in the order it blocks a
+"must work" jury flow:
 
-Holds a virtual "now" that the demo can move, so the jury can walk days 1–28 — missing
-day, backfill, weekly review, final summary — without waiting for real time. It honours
-the same `now()` contract; its controls below are exposed to a demo drawer / test helper,
-never called by the domain.
-
-| Control | Effect |
-|---|---|
-| setNow(iso) | Pin the virtual clock to a specific instant |
-| advanceDays(n) | Jump forward n calendar days |
-| reset | Return to real time (or the seeded start date) |
-
-## TODO — domain
-
-Everything downstream of onboarding is still unimplemented in `src/domain`. In priority order (each blocks a "must work" jury flow):
-
-1. **CheckInService** (`checkin.ts`) — `dayStateOf`/`isBackfill` are now implemented (pulled forward as a `DashboardService` dependency); `validateCheckIn`/`submitCheckIn` still need implementing against the existing type signatures. Its outbound repos (`CheckInRepository`, `CheckInEditRepository`) are already built, so this is the next unblocked piece.
-2. **DashboardService** (`dashboard.ts`) — ✅ `buildDashboardVM` builds the current week's `DashboardVM` from check-ins + limit history (never stored, per CLAUDE.md), and ✅ `DashboardServiceImpl` wraps it as the inbound port, consumed by `src/ui/dashboard/Dashboard.tsx`. Remaining: wire `reviewable_weeks` once `ReviewRepository` exists (#4/#7).
-3. **guards.ts implementations** — `evaluateLimitAdjustment` and `resolvePendingAction` are built. Still missing: `canEditCheckIn`, `isWeekClosed`, `canReview`. These block both `CheckInService` (edit window) and `ReviewService` (week-closing).
-4. **ReviewService** (new `review.ts`) — `getPendingReview`, `completeReview`, `getFinalSummary`; depends on guards #3 and a `ReviewRepository` adapter (currently 📝 DRAFT, no adapter yet).
-5. **ReminderService** (new `reminder.ts`) — `getDueReminder`; depends on `resolvePendingAction` from guards #3.
-6. ~~**ExportService**~~ — ✅ done (`src/domain/export.ts` + `src/app/mappers/exportMapper.ts` + `src/app/lib/zip.ts`), ahead of `CheckInService`/`ReviewService` since it only reads existing `CheckInRepository`/`LimitRepository`/`CopingStrategyRepository` data, not the not-yet-built submit/review flows. Still missing: the UI export button/download trigger.
-7. **Outbound gaps**: `ReviewRepository` and `UsageEventRepository` have no adapters yet (`src/data/adapters` has no `reviewAdapter.ts`/`usageEventAdapter.ts`); `TimeMachineClock` (the demo/jury clock) is still 📝 DRAFT — needed before any 28-day walkthrough can be demoed without waiting real days.
+1. **ReminderService** (`reminder.ts`) — the only inbound port still a wiring
+   stub (`getDueReminder` rejects). One reminder scenario that clicks through to
+   the check-in is a graded requirement; `resolvePendingAction` (`guards.ts`)
+   already gives it the input it needs.
+2. **Week 2–4 limits** — `buildDashboardVM` throws `no limit set for week N`
+   once the programme rolls past week 1, because only onboarding writes a limit.
+   `completeReview` sets the next week's limit, so the gap closes when the
+   review flow is reachable from the UI.
+3. **`reviewable_weeks`** — `buildDashboardVM` still hardcodes it empty, so
+   `pendingAction` can never resolve to `review_available`. `ReviewService`
+   exists now, so this is wiring rather than new logic.
+4. **CSV export shape** — the archive exports raw tables. CLAUDE.md's graded
+   requirement describes a *person-day* export (one row per planned day 1–28,
+   missing days blank/NA rather than zeros). Confirm which one is being graded.
+5. **Reports before day 29** — the reports tab is reachable from day 1, but the
+   screen is designed as the *final* summary. Weeks not yet reached render
+   locked, which is honest, but whether the tab should be there at all before
+   day 29 is a product decision.
