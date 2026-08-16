@@ -234,4 +234,11 @@ export const cs = {
   'admin.timeMachine.wipe': 'Smazat data',
   'admin.timeMachine.wipeConfirm': 'Opravdu smazat všechna data a začít od začátku?',
   'admin.timeMachine.close': 'Zavřít',
+
+  'review.overline': 'TÝDEN {week} SKONČIL',
+  'review.title': 'Nové limity na další týden',
+  'review.lead':
+    'Nastav si limity pro nadcházející týden. Výchozí jsou tvé předchozí limity — můžeš je snížit.',
+  'review.previous': 'Předchozí: {value}',
+  'review.cta': 'Uložit limity',
 } as const

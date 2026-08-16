@@ -12,6 +12,7 @@ import { DashboardScreen } from '@ui/dashboard/DashboardScreen.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { useDashboardService } from '@ui/app/AppContext.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
+import { useAppView } from '@ui/app/appView.ts'
 import { clientNow } from '@ui/clock.ts'
 
 type LoadState =
@@ -33,6 +34,7 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
   const { t } = useTranslation()
   // Injected by <AppProvider>, which is also how tests supply a fake.
   const dashboardService = useDashboardService()
+  const navigate = useAppView((s) => s.navigate)
   const userId = useCurrentUser((s) => s.userId)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
 
@@ -48,22 +50,29 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
   useEffect(() => {
     if (userId === null) return
     let cancelled = false
-
     const time = simulatedTime ?? clientNow()
+
     void dashboardService.getDashboard(userId, time).then((res) => {
       if (cancelled) return
-      if (res.error || !res.data) {
-        console.error('[dashboard] getDashboard failed', res.error)
-        setState({ status: 'failed', message: errorMessageKey(res.error) })
+      if (res.data) {
+        setState({ status: 'ready', dashboard: res.data })
         return
       }
-      setState({ status: 'ready', dashboard: res.data })
+      // The current week has no limits set yet (a new week has started): prompt
+      // for them via the review flow rather than showing an error the user can't
+      // act on. Runs on every load and after a time-machine jump.
+      if (res.error?.code === 'DASHBOARD_NO_LIMIT') {
+        navigate('review')
+        return
+      }
+      console.error('[dashboard] getDashboard failed', res.error)
+      setState({ status: 'failed', message: errorMessageKey(res.error) })
     })
 
     return () => {
       cancelled = true
     }
-  }, [dashboardService, userId, simulatedTime])
+  }, [dashboardService, navigate, userId, simulatedTime])
 
   if (state.status !== 'ready') {
     // The nav stays even when the dashboard can't load: without it a failure

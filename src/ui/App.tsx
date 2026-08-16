@@ -15,6 +15,7 @@ import { useTranslation } from '@ui/i18n/context.ts'
 import { useReminderNotifications } from '@ui/notifications/useReminderNotifications.ts'
 import { OnboardingFlow } from '@ui/onboarding/OnboardingFlow.tsx'
 import { FinalSummaryFlow } from '@ui/review/FinalSummaryFlow.tsx'
+import { WeekReviewFlow } from '@ui/review/WeekReviewFlow.tsx'
 import { useFinalSummary } from '@ui/review/useFinalSummary.ts'
 
 export function App() {
@@ -109,6 +110,8 @@ function AppRoutes() {
           }}
         />
       )
+    case 'review':
+      return <WeekReviewFlow />
     case 'checkin':
       return (
         <CheckInRoute

@@ -227,4 +227,11 @@ export const en: Record<TranslationKey, string> = {
   'admin.timeMachine.wipe': 'Delete data',
   'admin.timeMachine.wipeConfirm': 'Delete all data and start over?',
   'admin.timeMachine.close': 'Close',
+
+  'review.overline': 'WEEK {week} ENDED',
+  'review.title': 'New limits for next week',
+  'review.lead':
+    'Set your limits for the upcoming week. Your previous limits are pre-filled — you can lower them.',
+  'review.previous': 'Previous: {value}',
+  'review.cta': 'Save limits',
 }

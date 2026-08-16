@@ -73,3 +73,22 @@ test('wipes data and returns to onboarding', async ({ page }) => {
   // Reload lands back on the onboarding intro with an empty database.
   await expect(page.getByRole('heading', { name: 'Získej přehled nad svým hraním' })).toBeVisible()
 })
+
+test('prompts for next-week limits when a new week has none set', async ({ page }) => {
+  await completeOnboarding(page)
+
+  // Jump into week 2, whose limits are not set yet (only week 1 was, at onboarding).
+  await openTimeMachine(page)
+  await page.getByRole('textbox', { name: 'Přejít na den intervence:' }).fill('8')
+  await page.getByRole('button', { name: 'Potvrdit' }).click()
+
+  // Instead of a broken dashboard, the user is prompted for the new week's limits.
+  await expect(page.getByRole('heading', { name: 'Nové limity na další týden' })).toBeVisible()
+
+  // Accept the pre-filled previous limits.
+  await page.getByRole('button', { name: 'Uložit limity' }).click()
+
+  // The dashboard now renders the new week with its freshly set limits.
+  await expect(page.getByRole('heading', { name: 'Den 8' })).toBeVisible()
+  await expect(page.getByText('Týden 2/4')).toBeVisible()
+})

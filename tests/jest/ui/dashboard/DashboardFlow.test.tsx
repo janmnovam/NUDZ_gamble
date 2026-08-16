@@ -6,6 +6,7 @@ import type { DashboardService } from '@/app/ports/dashboardService.ts'
 import { fail, ok, type Result } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
+import { useAppView } from '@ui/app/appView.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
 import { I18nProvider } from '@ui/i18n/I18nProvider.tsx'
@@ -58,13 +59,28 @@ describe('DashboardFlow', () => {
     const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined)
     renderFlow({
       getDashboard: () =>
-        Promise.resolve(fail({ type: 'not_found', code: 'DASHBOARD_NO_LIMIT', trace: 'test' })),
+        Promise.resolve(fail({ type: 'not_found', code: 'DASHBOARD_NO_PROFILE', trace: 'test' })),
     })
 
     // "Something went wrong" tells the user nothing they can act on.
-    expect(await screen.findByText('Pro tento týden zatím nejsou nastavené limity.')).not.toBeNull()
+    expect(
+      await screen.findByText('Nenašli jsme tvůj profil. Dokonči prosím nastavení.'),
+    ).not.toBeNull()
     expect(logged).toHaveBeenCalled()
     logged.mockRestore()
+  })
+
+  it('redirects to the limit prompt when the current week has no limits', async () => {
+    useAppView.setState({ view: 'dashboard' })
+    renderFlow({
+      getDashboard: () =>
+        Promise.resolve(fail({ type: 'not_found', code: 'DASHBOARD_NO_LIMIT', trace: 'test' })),
+    })
+
+    // No error is shown; the flow routes to the start-of-week limit prompt.
+    await waitFor(() => {
+      expect(useAppView.getState().view).toBe('review')
+    })
   })
 
   it('falls back to a generic message for an unrecognised error', async () => {
