@@ -51,7 +51,7 @@ export const en: Record<TranslationKey, string> = {
   'status.NEUPLNE': 'INCOMPLETE',
   'nav.tabs.aria': 'Main navigation',
   'nav.tabs.home': 'Home',
-  'nav.tabs.coping': 'Your Coping',
+  'nav.tabs.coping': 'Strategies',
   'nav.tabs.reports': 'Reports',
   'review.final.overline': 'Monthly summary · {day}',
   'review.final.title': 'Reports',

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 import { Button } from '@ui/components/Button.tsx'
 import { Screen } from '@ui/components/Screen.tsx'
@@ -27,6 +27,7 @@ export interface CatalogStrategyDetail {
 
 interface CatalogStrategyDetailScreenProps {
   detail: CatalogStrategyDetail
+  nav?: ReactNode
   onBack: () => void
 }
 
@@ -44,7 +45,11 @@ function DetailSection({ label, children }: DetailSectionProps) {
   )
 }
 
-export function CatalogStrategyDetailScreen({ detail, onBack }: CatalogStrategyDetailScreenProps) {
+export function CatalogStrategyDetailScreen({
+  detail,
+  nav,
+  onBack,
+}: CatalogStrategyDetailScreenProps) {
   const headingRef = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
@@ -52,7 +57,7 @@ export function CatalogStrategyDetailScreen({ detail, onBack }: CatalogStrategyD
   }, [])
 
   return (
-    <Screen contentClassName="gap-4 pb-6">
+    <Screen contentClassName="gap-4 pb-6" nav={nav}>
       <header className="flex flex-col gap-1.5">
         <button
           type="button"

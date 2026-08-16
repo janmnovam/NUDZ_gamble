@@ -55,7 +55,7 @@ export const cs = {
   'status.NEUPLNE': 'NEÚPLNÉ',
   'nav.tabs.aria': 'Hlavní navigace',
   'nav.tabs.home': 'Domů',
-  'nav.tabs.coping': 'Váš Coping',
+  'nav.tabs.coping': 'Strategie',
   'nav.tabs.reports': 'Přehledy',
   'review.final.overline': 'Měsíční souhrn · {day}',
   'review.final.title': 'Přehledy',

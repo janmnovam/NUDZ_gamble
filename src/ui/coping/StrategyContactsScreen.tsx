@@ -1,15 +1,22 @@
+import { type ReactNode } from 'react'
+
 import { Screen } from '@ui/components/Screen.tsx'
 import { ContactCard, type StrategyContactItem } from '@ui/coping/components/ContactCard.tsx'
 import { StrategyTabs } from '@ui/coping/components/StrategyTabs.tsx'
 
 interface StrategyContactsScreenProps {
   contacts: readonly StrategyContactItem[]
+  nav?: ReactNode
   onTabChange: (tab: 'library' | 'contacts') => void
 }
 
-export function StrategyContactsScreen({ contacts, onTabChange }: StrategyContactsScreenProps) {
+export function StrategyContactsScreen({
+  contacts,
+  nav,
+  onTabChange,
+}: StrategyContactsScreenProps) {
   return (
-    <Screen contentClassName="gap-4 pb-6">
+    <Screen contentClassName="gap-4 pb-6" nav={nav}>
       <h1 className="font-sans text-[2rem] leading-[2.375rem] font-semibold tracking-[-0.5px]">
         Kontakty
       </h1>

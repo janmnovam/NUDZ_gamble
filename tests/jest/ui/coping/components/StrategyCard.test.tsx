@@ -94,4 +94,17 @@ describe('StrategyCard', () => {
     expect(onMore).toHaveBeenCalledTimes(1)
     expect(onOpen).not.toHaveBeenCalled()
   })
+
+  it('renders non-clickable content when no detail is available', () => {
+    render(
+      <StrategyCard kind="catalog" title="Na chvíli změním prostředí" sub="" onMore={jest.fn()} />,
+    )
+
+    expect(screen.getByText('Na chvíli změním prostředí')).not.toBeNull()
+    expect(
+      screen.queryByRole('button', {
+        name: 'Otevřít detail strategie „Na chvíli změním prostředí“',
+      }),
+    ).toBeNull()
+  })
 })

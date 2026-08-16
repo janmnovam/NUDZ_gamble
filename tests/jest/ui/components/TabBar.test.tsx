@@ -17,7 +17,7 @@ describe('TabBar', () => {
     const nav = renderTabBar()
 
     expect(nav.getAttribute('aria-label')).toBe('Hlavní navigace')
-    for (const label of ['Domů', 'Váš Coping', 'Přehledy']) {
+    for (const label of ['Domů', 'Strategie', 'Přehledy']) {
       expect(within(nav).getByText(label)).not.toBeNull()
     }
   })
@@ -38,9 +38,9 @@ describe('TabBar', () => {
 
   it('highlights exactly one tab', () => {
     const nav = renderTabBar({ active: 'coping' })
-    const highlighted = ['Domů', 'Váš Coping', 'Přehledy'].filter((label) =>
+    const highlighted = ['Domů', 'Strategie', 'Přehledy'].filter((label) =>
       within(nav).getByText(label).className.includes('text-brand'),
     )
-    expect(highlighted).toEqual(['Váš Coping'])
+    expect(highlighted).toEqual(['Strategie'])
   })
 })

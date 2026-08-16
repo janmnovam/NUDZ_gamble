@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 
 import { Button } from '@ui/components/Button.tsx'
 import { Screen } from '@ui/components/Screen.tsx'
@@ -17,10 +17,13 @@ interface StrategyLibraryScreenProps {
   otherStrategies: readonly StrategyLibraryItem[]
   hiddenStrategies: readonly StrategyLibraryItem[]
   customStrategyCount: number
+  nav?: ReactNode
+  canOpenStrategy?: (strategy: StrategyLibraryItem) => boolean
+  showContactsTab?: boolean
   onOpenStrategy: (id: string) => void
   onMoreStrategy: (id: string) => void
-  onDeleteStrategy: (id: string) => void
-  onHideStrategy: (id: string) => void
+  onDeleteStrategy?: (id: string) => void
+  onHideStrategy?: (id: string) => void
   onRestoreStrategy: (id: string) => void
   onToggleSelected: (id: string) => void
   onTabChange: (tab: 'library' | 'contacts') => void
@@ -32,11 +35,12 @@ interface StrategyListProps {
   openActionsId: string | null
   strategies: readonly StrategyLibraryItem[]
   onCloseActions: () => void
+  canOpenStrategy: (strategy: StrategyLibraryItem) => boolean
   onOpenActions: (id: string, trigger: HTMLButtonElement) => void
   onOpenStrategy: (id: string) => void
   onMoreStrategy: (id: string) => void
-  onRequestDelete: (strategy: StrategyLibraryItem) => void
-  onHideStrategy: (id: string) => void
+  onRequestDelete?: (strategy: StrategyLibraryItem) => void
+  onHideStrategy?: (id: string) => void
   onToggleSelected: (id: string) => void
 }
 
@@ -45,6 +49,7 @@ function StrategyList({
   openActionsId,
   strategies,
   onCloseActions,
+  canOpenStrategy,
   onOpenActions,
   onOpenStrategy,
   onMoreStrategy,
@@ -61,9 +66,13 @@ function StrategyList({
               kind="catalog"
               title={strategy.title}
               sub={strategy.sub}
-              onOpen={() => {
-                onOpenStrategy(strategy.id)
-              }}
+              {...(canOpenStrategy(strategy)
+                ? {
+                    onOpen: () => {
+                      onOpenStrategy(strategy.id)
+                    },
+                  }
+                : {})}
               onMore={(trigger) => {
                 onMoreStrategy(strategy.id)
                 onOpenActions(strategy.id, trigger)
@@ -74,9 +83,13 @@ function StrategyList({
               kind="custom"
               title={strategy.title}
               {...(strategy.sub === undefined ? {} : { sub: strategy.sub })}
-              onOpen={() => {
-                onOpenStrategy(strategy.id)
-              }}
+              {...(canOpenStrategy(strategy)
+                ? {
+                    onOpen: () => {
+                      onOpenStrategy(strategy.id)
+                    },
+                  }
+                : {})}
               onMore={(trigger) => {
                 onMoreStrategy(strategy.id)
                 onOpenActions(strategy.id, trigger)
@@ -90,12 +103,20 @@ function StrategyList({
               kind={strategy.kind}
               isSelected={isSelected}
               onClose={onCloseActions}
-              onRequestDelete={() => {
-                onRequestDelete(strategy)
-              }}
-              onHide={() => {
-                onHideStrategy(strategy.id)
-              }}
+              {...(onRequestDelete === undefined
+                ? {}
+                : {
+                    onRequestDelete: () => {
+                      onRequestDelete(strategy)
+                    },
+                  })}
+              {...(onHideStrategy === undefined
+                ? {}
+                : {
+                    onHide: () => {
+                      onHideStrategy(strategy.id)
+                    },
+                  })}
               onToggleSelected={() => {
                 onToggleSelected(strategy.id)
               }}
@@ -184,6 +205,9 @@ export function StrategyLibraryScreen({
   otherStrategies,
   hiddenStrategies,
   customStrategyCount,
+  nav,
+  canOpenStrategy = () => true,
+  showContactsTab = true,
   onOpenStrategy,
   onMoreStrategy,
   onDeleteStrategy,
@@ -220,7 +244,7 @@ export function StrategyLibraryScreen({
   }
 
   return (
-    <Screen contentClassName="gap-4 pb-6">
+    <Screen contentClassName="gap-4 pb-6" nav={nav}>
       <h1 className="type-display">Knihovna strategií</h1>
 
       <p className="text-muted text-[0.9375rem] leading-[1.375rem]">
@@ -228,7 +252,7 @@ export function StrategyLibraryScreen({
         použít i bez otevření aplikace.
       </p>
 
-      <StrategyTabs activeTab="library" onChange={onTabChange} />
+      {showContactsTab ? <StrategyTabs activeTab="library" onChange={onTabChange} /> : null}
 
       {selectedStrategies.length > 0 ? (
         <section className="flex flex-col gap-4" aria-labelledby="selected-strategies-heading">
@@ -245,14 +269,15 @@ export function StrategyLibraryScreen({
             openActionsId={openActionsId}
             strategies={selectedStrategies}
             onCloseActions={closeActions}
+            canOpenStrategy={canOpenStrategy}
             onOpenActions={(id, trigger) => {
               actionsTriggerRef.current = trigger
               setOpenActionsId(id)
             }}
             onOpenStrategy={onOpenStrategy}
             onMoreStrategy={onMoreStrategy}
-            onRequestDelete={requestDelete}
-            onHideStrategy={onHideStrategy}
+            {...(onDeleteStrategy === undefined ? {} : { onRequestDelete: requestDelete })}
+            {...(onHideStrategy === undefined ? {} : { onHideStrategy })}
             onToggleSelected={onToggleSelected}
           />
         </section>
@@ -268,14 +293,15 @@ export function StrategyLibraryScreen({
             openActionsId={openActionsId}
             strategies={otherStrategies}
             onCloseActions={closeActions}
+            canOpenStrategy={canOpenStrategy}
             onOpenActions={(id, trigger) => {
               actionsTriggerRef.current = trigger
               setOpenActionsId(id)
             }}
             onOpenStrategy={onOpenStrategy}
             onMoreStrategy={onMoreStrategy}
-            onRequestDelete={requestDelete}
-            onHideStrategy={onHideStrategy}
+            {...(onDeleteStrategy === undefined ? {} : { onRequestDelete: requestDelete })}
+            {...(onHideStrategy === undefined ? {} : { onHideStrategy })}
             onToggleSelected={onToggleSelected}
           />
         </section>
@@ -359,7 +385,7 @@ export function StrategyLibraryScreen({
               setShowHiddenStrategies(false)
             }
 
-            onDeleteStrategy(deleteCandidate.id)
+            onDeleteStrategy?.(deleteCandidate.id)
             setDeleteCandidate(undefined)
           }}
         />

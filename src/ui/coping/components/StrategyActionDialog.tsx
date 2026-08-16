@@ -13,7 +13,7 @@ type StrategyActionDialogProps = CommonStrategyActionDialogProps &
     | {
         context: 'visible'
         isSelected: boolean
-        onHide: () => void
+        onHide?: () => void
         onToggleSelected: () => void
       }
     | {
@@ -100,17 +100,19 @@ export function StrategyActionDialog(props: StrategyActionDialogProps) {
                 <Star aria-hidden="true" size={22} />
                 {props.isSelected ? 'Odebrat z Vybraných' : 'Přidat do Vybraných'}
               </button>
-              <button
-                type="button"
-                className="type-body-emphasis hover:bg-sunken flex min-h-11 items-center gap-3 rounded-sm px-3 text-left"
-                onClick={() => {
-                  props.onHide()
-                  onClose()
-                }}
-              >
-                <EyeOff aria-hidden="true" size={22} />
-                Skrýt
-              </button>
+              {props.onHide === undefined ? null : (
+                <button
+                  type="button"
+                  className="type-body-emphasis hover:bg-sunken flex min-h-11 items-center gap-3 rounded-sm px-3 text-left"
+                  onClick={() => {
+                    props.onHide?.()
+                    onClose()
+                  }}
+                >
+                  <EyeOff aria-hidden="true" size={22} />
+                  Skrýt
+                </button>
+              )}
             </>
           ) : (
             <button

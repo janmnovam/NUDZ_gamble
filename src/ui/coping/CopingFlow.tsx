@@ -4,7 +4,8 @@ import type { CopingStrategyDto } from '@/app/dto/coping.ts'
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import { Screen } from '@ui/components/Screen.tsx'
 import { TabBar } from '@ui/components/TabBar.tsx'
-import { CopingScreen } from '@ui/coping/CopingScreen.tsx'
+import { type StrategyLibraryItem } from '@ui/coping/StrategyLibraryScreen.tsx'
+import { StrategySection } from '@ui/coping/StrategySection.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { useCopingService } from '@ui/app/AppContext.ts'
 import { clientNow } from '@ui/clock.ts'
@@ -14,8 +15,18 @@ type LoadState =
   | { status: 'ready'; strategies: CopingStrategyDto[] }
   | { status: 'failed' }
 
+const NO_CONTACTS = [] as const
+const NO_CATALOG_DETAILS = [] as const
+const NO_HIDDEN_STRATEGIES = [] as const
+
+function toLibraryItem(strategy: CopingStrategyDto): StrategyLibraryItem {
+  return strategy.type === 'default'
+    ? { id: strategy.id, kind: 'catalog', title: strategy.label, sub: '' }
+    : { id: strategy.id, kind: 'custom', title: strategy.label }
+}
+
 /**
- * Feature entry point for the "Váš Coping" tab, matching `DashboardFlow`'s
+ * Feature entry point for the "Strategie" tab, matching `DashboardFlow`'s
  * shape: load the list through `CopingStrategyService` and hand it to the
  * (pure) screen. Toggle/add bump `reloadToken` to re-fetch the list from
  * storage afterwards rather than reconciling an optimistic copy, so the
@@ -77,5 +88,40 @@ export function CopingFlow() {
     )
   }
 
-  return <CopingScreen strategies={state.strategies} onToggle={handleToggle} onAdd={handleAdd} />
+  const selectedStrategies: StrategyLibraryItem[] = []
+  const otherStrategies: StrategyLibraryItem[] = []
+
+  for (const strategy of state.strategies) {
+    const item = toLibraryItem(strategy)
+    if (strategy.active) {
+      selectedStrategies.push(item)
+    } else {
+      otherStrategies.push(item)
+    }
+  }
+
+  return (
+    <StrategySection
+      contacts={NO_CONTACTS}
+      catalogStrategyDetails={NO_CATALOG_DETAILS}
+      selectedStrategies={selectedStrategies}
+      otherStrategies={otherStrategies}
+      hiddenStrategies={NO_HIDDEN_STRATEGIES}
+      nav={<TabBar active="coping" />}
+      showContactsTab={false}
+      createCustomStrategyFields="title-only"
+      onOpenStrategy={() => undefined}
+      onMoreStrategy={() => undefined}
+      onRestoreStrategy={() => undefined}
+      onToggleSelected={(id) => {
+        const strategy = state.strategies.find((item) => item.id === id)
+        if (strategy !== undefined) {
+          handleToggle(id, !strategy.active)
+        }
+      }}
+      onCreateCustomStrategy={(changes) => {
+        handleAdd(changes.title)
+      }}
+    />
+  )
 }
