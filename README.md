@@ -162,7 +162,7 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 ## Debug mode
 
-- A hidden feature that lets QA/testing set a specific intervention date.
+- A hidden feature that lets QA/testing set a specific intervention date or delete all data.
 - This allows testing specific time periods without waiting for real time to pass.
 - It's hidden behind "Den 1" number shown on the Home screen.
 - QA/testing must tap the version number exactly 7 times to reveal the Debug mode GUI.
