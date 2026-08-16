@@ -25,16 +25,21 @@ describe('DurationWheel', () => {
     expect(calls).toEqual([60])
   })
 
-  it('increments the minutes column by 1 minute on ArrowDown', () => {
+  it('increments the minutes column by one 5-minute step on ArrowDown', () => {
     const calls = renderWheel(0)
     fireEvent.keyDown(screen.getByRole('listbox', { name: 'Minuty' }), { key: 'ArrowDown' })
-    expect(calls).toEqual([1])
+    expect(calls).toEqual([5])
   })
 
   it('keeps the other unit when one column changes', () => {
     const calls = renderWheel(150) // 2 h 30 m
     fireEvent.keyDown(screen.getByRole('listbox', { name: 'Minuty' }), { key: 'ArrowUp' })
-    expect(calls).toEqual([149]) // 2 h 29 m — hours preserved
+    expect(calls).toEqual([145]) // 2 h 25 m — hours preserved
+  })
+
+  it('snaps a value that is off the 5-minute grid down onto it', () => {
+    const calls = renderWheel(484) // 8 h 4 m — e.g. an 80% limit suggestion
+    expect(calls).toEqual([480])
   })
 })
 
@@ -50,7 +55,7 @@ describe('DurationWheel maxMinutes cap', () => {
 
   it('allows the full minutes drum below the top hour', () => {
     renderWheel(0, 540) // 0 h, cap 9 h
-    expect(optionCount('Minuty')).toBe(60)
+    expect(optionCount('Minuty')).toBe(12) // 0, 5, … 55
     expect(optionCount('Hodiny')).toBe(10) // 0..9
   })
 
@@ -62,6 +67,6 @@ describe('DurationWheel maxMinutes cap', () => {
 
   it('exposes minutes only up to the remainder for a non-hour-aligned cap', () => {
     renderWheel(480, 525) // 8 h, cap 8 h 45 m
-    expect(optionCount('Minuty')).toBe(46) // 0..45
+    expect(optionCount('Minuty')).toBe(10) // 0, 5, … 45
   })
 })

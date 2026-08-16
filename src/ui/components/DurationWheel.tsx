@@ -7,7 +7,10 @@ const PAD = (ITEM_HEIGHT * (VISIBLE_ROWS - 1)) / 2
 // Fade the rows toward the top/bottom so the centered value reads as selected.
 const FADE_MASK = 'linear-gradient(to bottom, transparent, #000 20%, #000 80%, transparent)'
 
-const DEFAULT_MAX_MINUTES = 40 * 60
+/** The minutes drum moves in 5-minute steps. */
+const MINUTE_STEP = 5
+// A full week minus one step — the wheel tops out at 167 h 55 min.
+const DEFAULT_MAX_MINUTES = 7 * 24 * 60 - MINUTE_STEP
 
 interface WheelColumnProps {
   value: number
@@ -129,24 +132,38 @@ export function DurationWheel({
 }: DurationWheelProps) {
   const safeMinutes = Math.min(Math.max(minutes, 0), maxMinutes)
   const hours = Math.floor(safeMinutes / 60)
-  const mins = safeMinutes % 60
 
   const maxHours = Math.floor(maxMinutes / 60)
-  // At the top hour only the remaining minutes are reachable; otherwise 0–59.
-  const maxMinuteForHour = hours >= maxHours ? maxMinutes % 60 : 59
+  // At the top hour only the remaining minutes are reachable; otherwise 0–59,
+  // and the drum only ever stops on a whole step.
+  const maxMinuteForHour =
+    Math.floor((hours >= maxHours ? maxMinutes % 60 : 59) / MINUTE_STEP) * MINUTE_STEP
+  // A value that isn't on the grid (an 80% limit suggestion, seeded data) would
+  // leave the drum with nothing to select, so snap it down onto the grid.
+  const mins = Math.min(
+    Math.floor((safeMinutes % 60) / MINUTE_STEP) * MINUTE_STEP,
+    maxMinuteForHour,
+  )
 
   const hourOptions = useMemo(
     () => Array.from({ length: maxHours + 1 }, (_, index) => index),
     [maxHours],
   )
   const minuteOptions = useMemo(
-    () => Array.from({ length: maxMinuteForHour + 1 }, (_, index) => index),
+    () =>
+      Array.from({ length: maxMinuteForHour / MINUTE_STEP + 1 }, (_, index) => index * MINUTE_STEP),
     [maxMinuteForHour],
   )
 
   const commit = (total: number) => {
     onChange(Math.min(Math.max(total, 0), maxMinutes))
   }
+
+  // Keep the stored value equal to what the drums show after that snap.
+  const snapped = hours * 60 + mins
+  useEffect(() => {
+    if (snapped !== minutes) onChange(snapped)
+  }, [snapped, minutes, onChange])
 
   return (
     <div className="relative">
