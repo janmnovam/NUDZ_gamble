@@ -187,7 +187,7 @@ flowchart LR
 
 ### CopingStrategyService
 
-**Status:** ✅ DONE — `getSuggestions` implemented as `CopingStrategyServiceImpl` (`src/app/services/copingStrategyServiceImpl.ts`), tested (`tests/jest/app/copingStrategyService.test.ts`), wired via `createApp()` and consumed by the onboarding coping picker (`src/ui/onboarding/steps/CopingStep.tsx`). Post-onboarding management (create/toggle/list) can be surfaced here as those screens land.
+**Status:** ✅ DONE — `getSuggestions` implemented as `CopingStrategyServiceImpl` (`src/app/services/copingStrategyServiceImpl.ts`), tested (`tests/jest/app/copingStrategyService.test.ts`), wired via `createApp()` and consumed by the onboarding coping picker (`src/ui/onboarding/steps/CopingStep.tsx`). Post-onboarding management (`list`/`create`/`toggle`) is now built the same way — a thin DTO/repo wrapper over the already-DONE `CopingStrategyRepository`, validation delegated to pure domain helpers (`normalizeCopingLabel`, `nextCopingPriority` in `src/domain/coping.ts`, tested in `tests/jest/domain/coping.test.ts`). **No UI consumes it yet**: the bottom-nav "coping" tab (`nav.tabs.coping`, `src/ui/components/TabBar.tsx`) is still static chrome — `TAB_VIEWS.coping` is unset, so there's no management screen to wire it to.
 
 **Depends on**
 - Inbound
@@ -198,6 +198,13 @@ flowchart LR
 | Method         | Accepts | Returns                | Description                                             |
 |----------------|---------|------------------------|---------------------------------------------------------|
 | getSuggestions | `—`     | `CopingSuggestionDto[]` | Predefined coping suggestions for the onboarding picker |
+| list           | `—`     | `CopingStrategyDto[]`  | The user's own strategies (default + custom), by priority |
+| create         | `CreateCopingStrategyRequest` | `CopingStrategyDto` | Add a custom strategy, appended after the highest existing priority. Rejects an empty/whitespace-only label |
+| toggle         | `copingStrategyId`, `active` | `void` | Toggle a strategy active/inactive. Rejects an unknown id (propagated from the repo, not swallowed) |
+
+Every method also takes the caller-supplied `userId`/`time` (see `03c9355`) — omitted from
+the table above since that pair is implicit context on every inbound port, not
+method-specific input.
 
 **CopingSuggestionDto**
 
@@ -205,6 +212,26 @@ flowchart LR
 {
   "id": "change_environment",
   "label": "Na chvíli změním prostředí"
+}
+```
+
+**CopingStrategyDto**
+
+```json
+{
+  "id": "9a1c…",
+  "label": "Na chvíli změním prostředí",
+  "type": "default",
+  "active": true,
+  "priority": 1
+}
+```
+
+**CreateCopingStrategyRequest**
+
+```json
+{
+  "label": "Zavolat bratrovi"
 }
 ```
 
