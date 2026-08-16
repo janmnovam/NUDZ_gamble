@@ -134,7 +134,7 @@ export function DashboardScreen({
           size="md"
           fullWidth
           variant={checkInDue ? 'primary' : 'secondary'}
-          disabled={!checkInDue || !onCheckIn}
+          disabled={!onCheckIn}
           onClick={onCheckIn}
         >
           {checkInDue ? t('dashboard.cta.checkInDue') : t('dashboard.cta.checkInTomorrow')}

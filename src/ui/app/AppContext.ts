@@ -23,6 +23,15 @@ export function useCopingService() {
   return app.coping
 }
 
+/** The check-in inbound port, wired to the data layer. Throws outside <AppProvider>. */
+export function useCheckInService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useCheckInService must be used within an <AppProvider>')
+  }
+  return app.checkIn
+}
+
 /** The dashboard inbound port, wired to the data layer. Throws outside <AppProvider>. */
 export function useDashboardService() {
   const app = useContext(AppContext)

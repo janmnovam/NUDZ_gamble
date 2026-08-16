@@ -14,13 +14,17 @@ import { clientNow } from '@ui/clock.ts'
 type LoadState =
   { status: 'loading' } | { status: 'ready'; dashboard: DashboardResponse } | { status: 'failed' }
 
+interface DashboardFlowProps {
+  onCheckIn?: () => void
+}
+
 /**
  * Feature entry point for the dashboard, matching `OnboardingFlow` /
  * `CheckInFlow` as the component the app renders for this feature. Unlike
  * those two it has no steps: it loads the read model through `DashboardService`
  * and hands it to the (pure) screen, which is the only place that renders.
  */
-export function DashboardFlow() {
+export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
   const { t } = useTranslation()
   // Injected by <AppProvider>, which is also how tests supply a fake.
   const dashboardService = useDashboardService()
@@ -68,6 +72,7 @@ export function DashboardFlow() {
     <>
       <DashboardScreen
         dashboard={state.dashboard}
+        {...(onCheckIn ? { onCheckIn } : {})}
         onSecretTap={onSecretTap}
         timeMachineActive={simulatedTime !== null}
         onExitTimeMachine={exitTimeMachine}

@@ -5,6 +5,7 @@ import { useOnboardingService } from '@ui/app/AppContext.ts'
 import { useAppView } from '@ui/app/appView.ts'
 import { clientNow } from '@ui/clock.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
+import { CheckInRoute } from '@ui/checkin/CheckInRoute.tsx'
 import { CopingFlow } from '@ui/coping/CopingFlow.tsx'
 import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
 import { useExportDownload } from '@ui/export/useExportDownload.ts'
@@ -88,7 +89,24 @@ function AppRoutes() {
         />
       )
     case 'dashboard':
-      return <DashboardFlow />
+      return (
+        <DashboardFlow
+          onCheckIn={() => {
+            navigate('checkin')
+          }}
+        />
+      )
+    case 'checkin':
+      return (
+        <CheckInRoute
+          onComplete={() => {
+            navigate('dashboard')
+          }}
+          onCancel={() => {
+            navigate('dashboard')
+          }}
+        />
+      )
     case 'coping':
       return <CopingFlow />
     case 'reports':

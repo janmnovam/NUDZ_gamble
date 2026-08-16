@@ -4,7 +4,7 @@ import { create } from 'zustand'
  * Top-level screens the app can show. Add new screens here as they land
  * (e.g. 'checkin', 'review') and render them in `App`.
  */
-export type AppView = 'loading' | 'onboarding' | 'dashboard' | 'coping' | 'reports'
+export type AppView = 'loading' | 'onboarding' | 'dashboard' | 'checkin' | 'coping' | 'reports'
 
 interface AppViewStore {
   view: AppView
