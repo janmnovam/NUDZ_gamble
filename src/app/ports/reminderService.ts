@@ -12,4 +12,7 @@ export type { ReminderResponse } from '@domain/reminder.ts'
 export interface ReminderService {
   /** The one working reminder scenario, if due: the earliest missing check-in this week. */
   getDueReminder(userId: UserId, time: ISOTimestamp): Promise<Result<ReminderResponse>>
+
+  /** Last-chance week-boundary nudge: true if a still-missing day exists on the last day of the week. */
+  getLastChance(userId: UserId, time: ISOTimestamp): Promise<Result<boolean>>
 }
