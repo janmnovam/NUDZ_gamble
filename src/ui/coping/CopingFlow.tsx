@@ -8,6 +8,10 @@ import { type StrategyContactItem } from '@ui/coping/components/ContactCard.tsx'
 import { type CustomStrategyChanges } from '@ui/coping/CustomStrategyDetailScreen.tsx'
 import { type StrategyLibraryItem } from '@ui/coping/StrategyLibraryScreen.tsx'
 import { StrategySection } from '@ui/coping/StrategySection.tsx'
+import {
+  buildCatalogStrategyDetails,
+  buildCatalogStrategyPresentation,
+} from '@ui/coping/catalogStrategyDetails.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { useContactService, useCopingService } from '@ui/app/AppContext.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
@@ -18,28 +22,30 @@ type LoadState =
   | { status: 'ready'; strategies: CopingStrategyDto[] }
   | { status: 'failed' }
 
-const NO_CATALOG_DETAILS = [] as const
 const NO_HIDDEN_STRATEGIES = [] as const
 const CZECH_PHONE_PATTERN = /^(\+420)?(\d{3})(\d{3})(\d{3})$/
 
 function toLibraryItem(
   strategy: CopingStrategyDto,
-  summariesByLabel: ReadonlyMap<string, string>,
+  catalogPresentationByLabel: ReadonlyMap<string, { title: string; summary: string }>,
 ): StrategyLibraryItem {
-  return strategy.type === 'default'
-    ? {
-        id: strategy.id,
-        kind: 'catalog',
-        title: strategy.label,
-        sub: summariesByLabel.get(strategy.label) ?? '',
-      }
-    : {
-        id: strategy.id,
-        kind: 'custom',
-        title: strategy.label,
-        ...(strategy.howToStart === null ? {} : { sub: strategy.howToStart }),
-        ...(strategy.whenToUse === null ? {} : { whenToUse: strategy.whenToUse }),
-      }
+  if (strategy.type === 'default') {
+    const presentation = catalogPresentationByLabel.get(strategy.label)
+    return {
+      id: strategy.id,
+      kind: 'catalog',
+      title: presentation?.title ?? strategy.label,
+      sub: presentation?.summary ?? '',
+    }
+  }
+
+  return {
+    id: strategy.id,
+    kind: 'custom',
+    title: strategy.label,
+    ...(strategy.howToStart === null ? {} : { sub: strategy.howToStart }),
+    ...(strategy.whenToUse === null ? {} : { whenToUse: strategy.whenToUse }),
+  }
 }
 
 function formatPhone(phone: string): string {
@@ -189,15 +195,10 @@ export function CopingFlow() {
 
   const selectedStrategies: StrategyLibraryItem[] = []
   const otherStrategies: StrategyLibraryItem[] = []
-  const summariesByLabel = new Map<string, string>()
-  for (const suggestion of suggestions) {
-    if (suggestion.summary !== undefined) {
-      summariesByLabel.set(suggestion.label, suggestion.summary)
-    }
-  }
+  const catalogPresentationByLabel = buildCatalogStrategyPresentation(suggestions)
 
   for (const strategy of state.strategies) {
-    const item = toLibraryItem(strategy, summariesByLabel)
+    const item = toLibraryItem(strategy, catalogPresentationByLabel)
     if (strategy.active) {
       selectedStrategies.push(item)
     } else {
@@ -208,7 +209,7 @@ export function CopingFlow() {
   return (
     <StrategySection
       contacts={contacts.filter((contact) => contact.category === 'counselling').map(toContactItem)}
-      catalogStrategyDetails={NO_CATALOG_DETAILS}
+      catalogStrategyDetails={buildCatalogStrategyDetails(state.strategies, suggestions)}
       selectedStrategies={selectedStrategies}
       otherStrategies={otherStrategies}
       hiddenStrategies={NO_HIDDEN_STRATEGIES}

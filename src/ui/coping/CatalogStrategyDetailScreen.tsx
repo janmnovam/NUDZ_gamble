@@ -19,6 +19,7 @@ export interface CatalogStrategyDetail {
   howTo: string
   whenUseful: string
   note: string
+  noteLabel?: string
   restrictionOptions?: {
     intro: string
     items: readonly RestrictionOption[]
@@ -76,7 +77,7 @@ export function CatalogStrategyDetailScreen({
       <DetailSection label="PROČ TO MŮŽE POMOCI">{detail.whyItCanHelp}</DetailSection>
       <DetailSection label="JAK NA TO">{detail.howTo}</DetailSection>
       <DetailSection label="KDY SE MŮŽE HODIT">{detail.whenUseful}</DetailSection>
-      <DetailSection label="POZNÁMKA">{detail.note}</DetailSection>
+      <DetailSection label={detail.noteLabel ?? 'POZNÁMKA'}>{detail.note}</DetailSection>
 
       {detail.restrictionOptions !== undefined ? (
         <section className="bg-sunken flex flex-col gap-2.5 rounded-md p-4">

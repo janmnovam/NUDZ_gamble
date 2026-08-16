@@ -8,9 +8,9 @@ import {
   type UserId,
 } from '@domain/model.ts'
 import { type OnboardingRepository } from '@domain/ports.ts'
-import {DomainError, ERROR_TYPES} from "@domain/errors.ts";
-import {ERROR_CODES} from "@domain/errorCodes.ts";
-import {calendarTimestamp, dateOf} from "@domain/clock.ts";
+import { DomainError, ERROR_TYPES } from '@domain/errors.ts'
+import { ERROR_CODES } from '@domain/errorCodes.ts'
+import { calendarTimestamp, dateOf } from '@domain/clock.ts'
 
 export interface OnboardingCopingInput {
   label: string
