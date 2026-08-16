@@ -71,6 +71,7 @@ export function createApp(time: Clock, data: DataLayer = createDataLayer()): App
       checkIns: data.checkIns,
       reviews: data.reviews,
       time,
+      newId,
     }),
     reminder: new ReminderServiceImpl({
       checkIns: data.checkIns,
