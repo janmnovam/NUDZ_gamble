@@ -78,3 +78,13 @@ export interface UsageEventRepository {
   get(usageEventId: string): Promise<UsageEvent | undefined>
   listByUser(userId: UserId): Promise<UsageEvent[]>
 }
+
+/**
+ * Administrative outbound port. Destructive, coarse-grained maintenance
+ * operations over the whole store — not per-entity CRUD. Backed by a single
+ * adapter that reaches straight into the database; no domain objects cross it.
+ */
+export interface DatabaseAdmin {
+  /** Wipes every table. Irreversible; admin/dev use only. */
+  clearAll(): Promise<void>
+}

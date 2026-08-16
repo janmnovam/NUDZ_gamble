@@ -15,6 +15,7 @@ import { CheckInAdapter } from '@data/adapters/checkInAdapter.ts'
 import { CheckInEditAdapter } from '@data/adapters/checkInEditAdapter.ts'
 import { ContactAdapter } from '@data/adapters/contactAdapter.ts'
 import { CopingStrategyAdapter } from '@data/adapters/copingStrategyAdapter.ts'
+import { DatabaseAdminAdapter } from '@data/adapters/databaseAdminAdapter.ts'
 import { LimitAdapter } from '@data/adapters/limitAdapter.ts'
 import { OnboardingAdapter } from '@data/adapters/onboardingAdapter.ts'
 import { ProfileAdapter } from '@data/adapters/profileAdapter.ts'
@@ -26,6 +27,7 @@ import type {
   CheckInRepository,
   ContactRepository,
   CopingStrategyRepository,
+  DatabaseAdmin,
   LimitRepository,
   OnboardingRepository,
   ProfileRepository,
@@ -49,6 +51,7 @@ export function createDataLayer(database: AppDatabase = defaultDb): DataLayer {
     checkInEdits: new CheckInEditAdapter(database),
     usageEvents: new UsageEventAdapter(database),
     reviews: new ReviewAdapter(database),
+    databaseAdmin: new DatabaseAdminAdapter(database),
   }
 }
 
@@ -63,6 +66,7 @@ export interface DataLayer {
   checkInEdits: CheckInEditRepository
   usageEvents: UsageEventRepository
   reviews: ReviewRepository
+  databaseAdmin: DatabaseAdmin
 }
 
 export { AppDatabase, db } from '@data/db.ts'
