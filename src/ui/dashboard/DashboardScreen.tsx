@@ -14,6 +14,7 @@ import { type TranslationKey } from '@ui/i18n/types.ts'
 import { dayOfMonth, weekdayAbbrev } from '@ui/lib/date.ts'
 import { formatDurationCompact } from '@ui/lib/duration.ts'
 import { groupThousands } from '@ui/lib/money.ts'
+import type { ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
 
 /** Programme length in weeks — the "/4" in "Týden 1/4". */
 const TOTAL_WEEKS = 4
@@ -43,6 +44,8 @@ const DAY_STATE_KEYS = {
 
 interface DashboardScreenProps {
   dashboard: DashboardResponse
+  /** Full 28-day calendar, enriched in the UI with back-fill availability. */
+  programme?: ProgrammeSummary
   /** Opens the check-in. Omitted while none is due. */
   onCheckIn?: () => void
   /** Opens backfill for a missing day, by ISO date. */
@@ -65,6 +68,7 @@ interface DashboardScreenProps {
  */
 export function DashboardScreen({
   dashboard,
+  programme,
   onCheckIn,
   onBackfillDay,
   onSecretTap,
@@ -109,7 +113,9 @@ export function DashboardScreen({
   // missing day past the window (or in a review-closed week) is surfaced greyed
   // in the strip above, but naming it here would falsely imply "Doplnit je
   // můžete během 5 dní" for a day that can no longer be filled.
-  const backfillableDays = dashboard.days.filter((day) => day.backfillable)
+  const backfillableDays =
+    programme?.weeks.flat().filter((day) => day.backfillable) ??
+    dashboard.days.filter((day) => day.backfillable)
   const firstBackfillableDay = backfillableDays[0]?.date
   const showStartNotice = dashboard.missingDays.length === 0 && dashboard.studyDay <= 1
   // Naming the day beats "fill in the missing days": on day 3 you want to be
@@ -199,34 +205,44 @@ export function DashboardScreen({
 
       <Card className="flex flex-col gap-2">
         <p className="type-overline text-faint">{t('dashboard.week.overline')}</p>
-        <div className="grid grid-cols-7 gap-[5px]">
-          {dashboard.days.map((day) => {
-            const weekday = weekdayAbbrev(day.date, locale)
-            const dayNumber = dayOfMonth(day.date)
-            const cellState = toCellState(day, dashboard.studyDay)
-            const backfill = day.backfillable && onBackfillDay ? onBackfillDay : undefined
+        <div className="flex flex-col gap-2">
+          {(programme?.weeks ?? [dashboard.days]).map((week, weekIndex) => (
+            <div key={week[0]?.date ?? weekIndex} className="grid grid-cols-7 gap-[5px]">
+              {week.map((day) => {
+                const isProgrammeDay = 'dayOfMonth' in day
+                const weekday = isProgrammeDay ? day.weekday : weekdayAbbrev(day.date, locale)
+                const dayNumber = isProgrammeDay ? day.dayOfMonth : dayOfMonth(day.date)
+                const cellState = isProgrammeDay ? day.state : toCellState(day, dashboard.studyDay)
+                const backfillable = isProgrammeDay ? day.backfillable : day.backfillable
+                const backfill = backfillable && onBackfillDay ? onBackfillDay : undefined
+                const stateLabel = isProgrammeDay
+                  ? t(`review.programme.dayState.${cellState}` as TranslationKey)
+                  : t(DAY_STATE_KEYS[cellState as WeekStripState])
 
-            return (
-              <DayCell
-                key={day.date}
-                weekday={weekday}
-                day={dayNumber}
-                state={cellState}
-                ariaLabel={t('dashboard.day.aria', {
-                  weekday,
-                  day: dayNumber,
-                  state: t(DAY_STATE_KEYS[cellState]),
-                })}
-                {...(backfill === undefined
-                  ? {}
-                  : {
-                      onClick: () => {
-                        backfill(day.date)
-                      },
+                return (
+                  <DayCell
+                    key={day.date}
+                    weekday={weekday}
+                    day={dayNumber}
+                    state={cellState}
+                    {...(isProgrammeDay ? { ring: day.today } : {})}
+                    ariaLabel={t('dashboard.day.aria', {
+                      weekday,
+                      day: dayNumber,
+                      state: stateLabel,
                     })}
-              />
-            )
-          })}
+                    {...(backfill === undefined
+                      ? {}
+                      : {
+                          onClick: () => {
+                            backfill(day.date)
+                          },
+                        })}
+                  />
+                )
+              })}
+            </div>
+          ))}
         </div>
 
         {firstBackfillableDay === undefined ? null : (

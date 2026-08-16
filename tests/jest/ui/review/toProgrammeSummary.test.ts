@@ -108,4 +108,55 @@ describe('toProgrammeSummary', () => {
 
     expect(s.weeks.flat().filter((d) => d.state === 'missing')).toHaveLength(1)
   })
+
+  it('makes a missing day actionable within the last five days, across a week boundary', () => {
+    const response: FinalSummaryResponse = {
+      studyDay: 9,
+      weeks: [
+        week(1, {
+          closed: false,
+          days: week(1).days.map((day, index) =>
+            index === 3 ? { ...day, state: 'missing' as const } : day,
+          ),
+        }),
+        week(2),
+        week(3),
+        week(4),
+      ],
+    }
+
+    const summary = toProgrammeSummary(response, () => 'po', iso(8))
+    const programmeDayFour = summary.weeks.flat().find((day) => day.date === iso(3))
+
+    expect(programmeDayFour?.backfillable).toBe(true)
+  })
+
+  it('does not make an older or review-closed missing day actionable', () => {
+    const response: FinalSummaryResponse = {
+      studyDay: 9,
+      weeks: [
+        week(1, {
+          closed: false,
+          days: week(1).days.map((day, index) =>
+            index === 2 ? { ...day, state: 'missing' as const } : day,
+          ),
+        }),
+        week(2, {
+          closed: true,
+          days: week(2).days.map((day, index) =>
+            index === 0 ? { ...day, state: 'missing' as const } : day,
+          ),
+        }),
+        week(3),
+        week(4),
+      ],
+    }
+
+    const summary = toProgrammeSummary(response, () => 'po', iso(8))
+    const dayThree = summary.weeks.flat().find((day) => day.date === iso(2))
+    const dayEight = summary.weeks.flat().find((day) => day.date === iso(7))
+
+    expect(dayThree?.backfillable).toBe(false)
+    expect(dayEight?.backfillable).toBe(false)
+  })
 })

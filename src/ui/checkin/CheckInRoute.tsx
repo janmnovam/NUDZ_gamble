@@ -20,6 +20,7 @@ type LoadState =
       status: 'ready'
       dashboard: DashboardResponse
       behaviorDay: DayCellDto
+      behaviorWeekNo: number
       time: ISOTimestamp
     }
   | { status: 'failed'; message: TranslationKey }
@@ -42,7 +43,25 @@ function behaviorDayForCheckIn(
 ): DayCellDto | undefined {
   // A tapped backfill targets one exact day; honour it over the auto-pick.
   if (targetDate !== undefined) {
-    return dashboard.days.find((day) => day.date === targetDate)
+    const exact = dashboard.days.find((day) => day.date === targetDate)
+    if (exact) return exact
+
+    // The programme calendar can offer one of the last five days even when it
+    // belongs to the previous week. The dashboard DTO only contains the seven
+    // cells of the current week, so derive that programme-day number from one
+    // known cell. The write service remains the authority that validates the
+    // date, the five-day window and whether the week is still open.
+    const anchor = dashboard.days[0]
+    if (!anchor) return undefined
+    const dayOffset = Math.round((Date.parse(targetDate) - Date.parse(anchor.date)) / 86_400_000)
+    const studyDay = anchor.studyDay + dayOffset
+    if (studyDay < 1 || studyDay > 28) return undefined
+    return {
+      studyDay,
+      date: targetDate,
+      state: 'missing',
+      backfillable: true,
+    }
   }
 
   const missing = new Set(dashboard.missingDays)
@@ -96,7 +115,14 @@ export function CheckInRoute({ onComplete, onCancel, behaviorDate }: CheckInRout
       }
       const dashboard = dashboardRes.data
       const behaviorDay = behaviorDayForCheckIn(dashboard, behaviorDate)
-      if (behaviorDay) return { dashboard, behaviorDay, time: baseTime }
+      if (behaviorDay) {
+        return {
+          dashboard,
+          behaviorDay,
+          behaviorWeekNo: Math.ceil(behaviorDay.studyDay / 7),
+          time: baseTime,
+        }
+      }
 
       // A tapped backfill names one exact day — don't advance to the manual-test
       // "next day" fallback, which is only for the auto-pick path.
@@ -111,7 +137,12 @@ export function CheckInRoute({ onComplete, onCancel, behaviorDate }: CheckInRout
       const manualBehaviorDay = behaviorDayForCheckIn(manualDashboard)
       if (!manualBehaviorDay) return null
 
-      return { dashboard: manualDashboard, behaviorDay: manualBehaviorDay, time: manualTime }
+      return {
+        dashboard: manualDashboard,
+        behaviorDay: manualBehaviorDay,
+        behaviorWeekNo: Math.ceil(manualBehaviorDay.studyDay / 7),
+        time: manualTime,
+      }
     }
 
     void loadDashboardForCheckIn().then(
@@ -140,7 +171,7 @@ export function CheckInRoute({ onComplete, onCancel, behaviorDate }: CheckInRout
     const isYesterday = state.dashboard.studyDay - state.behaviorDay.studyDay === 1
     return {
       programDayLabel: `Den ${String(state.behaviorDay.studyDay)} Vašeho programu`,
-      weekLabel: `Týden ${String(state.dashboard.weekNo)} - Den ${String(
+      weekLabel: `Týden ${String(state.behaviorWeekNo)} - Den ${String(
         dayWithinWeek(state.behaviorDay.studyDay),
       )}`,
       behaviorDateLabel: behaviorDateLabel(state.behaviorDay.date, locale),
@@ -176,7 +207,7 @@ export function CheckInRoute({ onComplete, onCancel, behaviorDate }: CheckInRout
     <CheckInFlow
       userId={userId}
       behaviorDate={state.behaviorDay.date}
-      weekNo={state.dashboard.weekNo}
+      weekNo={state.behaviorWeekNo}
       today={state.time.slice(0, 10)}
       time={state.time}
       {...labels}

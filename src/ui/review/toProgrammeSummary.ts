@@ -11,6 +11,8 @@ export interface ProgrammeDay {
   today: boolean
   /** ISO date, used as a stable key. */
   date: string
+  /** UI hint: a missing day from the last five days in a still-open week. */
+  backfillable: boolean
 }
 
 export interface ProgrammeSummary {
@@ -25,6 +27,7 @@ export interface ProgrammeSummary {
 }
 
 const DAY_MS = 86_400_000
+const BACKFILL_WINDOW_DAYS = 5
 
 /** UTC parts, because the DTO's dates are timestamps pinned to UTC midnight. */
 function utcNoon(date: string): Date {
@@ -50,7 +53,9 @@ export function toProgrammeSummary(
   weekdayOf: (isoDate: string) => string,
   todayIso: string,
 ): ProgrammeSummary {
-  const days = response.weeks.flatMap((week) => week.days)
+  const days = response.weeks.flatMap((week) =>
+    week.days.map((day) => ({ ...day, weekClosed: week.closed })),
+  )
   const totals = response.weeks.reduce(
     (acc, week) => ({
       timeUsed: acc.timeUsed + week.time.used,
@@ -86,6 +91,11 @@ export function toProgrammeSummary(
       state,
       today: time === todayTime,
       date: iso,
+      backfillable:
+        day?.state === 'missing' &&
+        !day.weekClosed &&
+        (todayTime - time) / DAY_MS >= 1 &&
+        (todayTime - time) / DAY_MS <= BACKFILL_WINDOW_DAYS,
     }
     const row = weeks[weeks.length - 1]
     if (row === undefined || row.length === 7) weeks.push([cell])

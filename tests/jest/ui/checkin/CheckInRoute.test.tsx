@@ -283,6 +283,44 @@ describe('CheckInRoute', () => {
     )
   })
 
+  it('opens a back-fill day from the previous programme week', async () => {
+    const currentWeek: DashboardResponse = {
+      ...DASHBOARD,
+      studyDay: 9,
+      weekNo: 2,
+      days: Array.from({ length: 7 }, (_, index) => ({
+        studyDay: index + 8,
+        date: new Date(Date.UTC(2026, 8, index + 8)).toISOString(),
+        state: 'future' as const,
+        backfillable: false,
+      })),
+      missingDays: [],
+    }
+    const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
+      Promise.resolve(success(req)),
+    )
+
+    renderRoute({
+      checkIn: {
+        submitCheckIn,
+        editCheckIn: () => Promise.reject(new Error('unused')),
+      },
+      dashboard: { getDashboard: () => Promise.resolve(ok(currentWeek)) },
+      behaviorDate: '2026-09-04T00:00:00.000Z',
+    })
+
+    expect(await screen.findByText('Týden 1 - Den 4')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Ne\s+nehrál jsem/ }))
+
+    await waitFor(() => {
+      expect(submitCheckIn).toHaveBeenCalledWith(
+        expect.objectContaining({ behaviorDate: '2026-09-04T00:00:00.000Z' }),
+        USER_ID,
+        expect.any(String),
+      )
+    })
+  })
+
   it('surfaces an OUTSIDE_WINDOW refusal as a localized message', async () => {
     const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined)
     const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>(() =>
