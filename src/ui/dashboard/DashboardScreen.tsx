@@ -96,9 +96,14 @@ export function DashboardScreen({
           limit: format(axis.limit),
         })
 
-  // The domain resolves exactly one pending action; the CTA reflects that
-  // rather than whether a handler happens to be wired yet.
-  const checkInDue = dashboard.pendingAction === 'checkin_due'
+  // The primary CTA only ever fills in *yesterday* (the previous calendar day) —
+  // older gaps are backfilled by tapping their day cell. So it's enabled only
+  // when yesterday itself is still missing, and disabled once it's filled in
+  // (or before day 2, when there is no previous day yet). A missing day further
+  // back leaves the CTA disabled; the strip/banner point the user at it instead.
+  const previousDayDue = dashboard.days.some(
+    (day) => day.studyDay === dashboard.studyDay - 1 && day.state === 'missing',
+  )
   // The banner is driven by the same data: missing days first (Figma "24
   // Dashboard — den 6"), otherwise the programme-start notice on day 1.
   const missing = dashboard.missingDays
@@ -151,15 +156,17 @@ export function DashboardScreen({
         <Button
           size="md"
           fullWidth
-          variant={checkInDue ? 'primary' : 'secondary'}
-          // Gated on the domain's answer, not just on a handler being wired:
-          // on day 1 nothing has elapsed, and with every day filled in there is
-          // nothing to record — in both cases the check-in would be for a day
-          // that isn't due.
-          disabled={!checkInDue || !onCheckIn}
+          variant={previousDayDue ? 'primary' : 'secondary'}
+          // Enabled only while yesterday's check-in is still outstanding; once
+          // it's filled in (or before day 2, when there is no previous day) the
+          // check-in would be for a day that isn't due, so it's disabled.
+          // `disabled:opacity-60` overrides the base button's `disabled:opacity-100`
+          // so a disabled secondary CTA reads as inactive, not just re-labelled.
+          disabled={!previousDayDue || !onCheckIn}
+          className="disabled:opacity-60"
           onClick={onCheckIn}
         >
-          {checkInDue ? t('dashboard.cta.checkInDue') : t('dashboard.cta.checkInTomorrow')}
+          {previousDayDue ? t('dashboard.cta.checkInDue') : t('dashboard.cta.checkInTomorrow')}
         </Button>
       }
       nav={<TabBar active="home" />}

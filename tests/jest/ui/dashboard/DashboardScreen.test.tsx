@@ -68,7 +68,7 @@ describe('DashboardScreen', () => {
     expect(screen.getAllByRole('img')).toHaveLength(7)
   })
 
-  it('enables the CTA and shows the backfill banner once a check-in is due', () => {
+  it('enables the CTA and shows the backfill banner once yesterday is due', () => {
     render(
       <I18nProvider>
         <DashboardScreen
@@ -76,6 +76,10 @@ describe('DashboardScreen', () => {
             ...DAY_1,
             studyDay: 3,
             pendingAction: 'checkin_due',
+            // Day 2 is yesterday (studyDay 3 − 1) and still missing → CTA active.
+            days: DAY_1.days.map((day) =>
+              day.studyDay === 2 ? { ...day, state: 'missing' as const, backfillable: true } : day,
+            ),
             missingDays: ['2026-09-02T00:00:00.000Z'],
           }}
           onCheckIn={() => undefined}
@@ -87,6 +91,81 @@ describe('DashboardScreen', () => {
     // Naming the day is the point — "fill in the missing days" told the user
     // neither which day nor how many.
     expect(screen.getByText('Nemáte vyplněný st 2')).not.toBeNull()
+  })
+
+  it('keeps the CTA inert when yesterday is filled but an older day is still missing', () => {
+    render(
+      <I18nProvider>
+        <DashboardScreen
+          dashboard={{
+            ...DAY_1,
+            studyDay: 4,
+            pendingAction: 'checkin_due',
+            // Day 3 (yesterday) is filled; only day 1 further back is missing —
+            // that's backfilled by tapping its cell, not by the primary CTA.
+            days: DAY_1.days.map((day) => {
+              if (day.studyDay === 1)
+                return { ...day, state: 'missing' as const, backfillable: true }
+              if (day.studyDay === 2 || day.studyDay === 3)
+                return {
+                  ...day,
+                  state: 'completed' as const,
+                  played: false,
+                  timeMin: 0,
+                  stakesCzk: 0,
+                }
+              return day
+            }),
+            missingDays: ['2026-09-01T00:00:00.000Z'],
+          }}
+          onCheckIn={() => undefined}
+        />
+      </I18nProvider>,
+    )
+    const cta = screen.getByRole('button', { name: 'Check-in bude zítra' })
+    expect((cta as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('keeps the CTA inert on day 7 when yesterday (day 6) is filled and 5 older days are missing', () => {
+    // Mirrors the reported screenshot: Den 7, days 1–5 missing, day 6 filled,
+    // day 7 is today. The primary CTA must be disabled — those 5 gaps are
+    // backfilled from their cells, not by "Vyplnit check-in".
+    render(
+      <I18nProvider>
+        <DashboardScreen
+          dashboard={{
+            ...DAY_1,
+            studyDay: 7,
+            pendingAction: 'checkin_due',
+            days: DAY_1.days.map((day) => {
+              if (day.studyDay >= 1 && day.studyDay <= 5)
+                return { ...day, state: 'missing' as const, backfillable: true }
+              if (day.studyDay === 6)
+                return {
+                  ...day,
+                  state: 'completed' as const,
+                  played: true,
+                  timeMin: 30,
+                  stakesCzk: 100,
+                }
+              return day // day 7 stays future (today)
+            }),
+            missingDays: [
+              '2026-09-01T00:00:00.000Z',
+              '2026-09-02T00:00:00.000Z',
+              '2026-09-03T00:00:00.000Z',
+              '2026-09-04T00:00:00.000Z',
+              '2026-09-05T00:00:00.000Z',
+            ],
+          }}
+          onCheckIn={() => undefined}
+        />
+      </I18nProvider>,
+    )
+    const cta = screen.getByRole('button', { name: 'Check-in bude zítra' })
+    expect((cta as HTMLButtonElement).disabled).toBe(true)
+    // The old, pre-fix behaviour rendered the enabled "Vyplnit check-in" here.
+    expect(screen.queryByRole('button', { name: 'Vyplnit check-in' })).toBeNull()
   })
 
   it('confirms when nothing is missing, instead of showing no banner at all', () => {
