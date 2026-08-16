@@ -29,10 +29,16 @@ export interface ProgrammeSummary {
 const DAY_MS = 86_400_000
 const BACKFILL_WINDOW_DAYS = 5
 
-/** UTC parts, because the DTO's dates are timestamps pinned to UTC midnight. */
+/**
+ * Midnight UTC for the calendar day named by an ISO string's date component
+ * (`YYYY-MM-DD`). Both the DTO's UTC-midnight timestamps and the offset-bearing
+ * `now` (`clientNow`, local `+hh:mm`) carry their calendar day in those first ten
+ * characters, so reading them directly avoids the near-midnight drift that
+ * parsing the offset-bearing instant to a UTC date would introduce (it would
+ * land a day early for any viewer east of UTC in the local-evening window).
+ */
 function utcNoon(date: string): Date {
-  const d = new Date(date)
-  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+  return new Date(`${date.slice(0, 10)}T00:00:00.000Z`)
 }
 
 /** Monday = 0 … Sunday = 6, matching the grid's column order. */

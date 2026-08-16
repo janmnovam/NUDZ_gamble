@@ -58,8 +58,17 @@ function addDays(date: string, delta: number): string {
   return d.toISOString().slice(0, 10)
 }
 
+/**
+ * The **local** calendar date (`YYYY-MM-DD`), matching how the app derives
+ * "today" from the offset-bearing `clientNow()` (src/ui/clock.ts). Using the
+ * UTC date here instead would backdate `interventionStartDate` by a day for any
+ * viewer east of UTC during the local-evening window, shifting every study day
+ * by one — which is exactly what breaks the reference scenarios near midnight.
+ */
 function todayDate(): string {
-  return new Date().toISOString().slice(0, 10)
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${String(d.getFullYear())}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 export async function seedScenario(scenario: Scenario): Promise<void> {

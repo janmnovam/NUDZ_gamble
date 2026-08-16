@@ -91,7 +91,11 @@ function addDays(date: string, delta: number): string {
 }
 
 function todayDate(): string {
-  return new Date().toISOString().slice(0, 10)
+  // Local calendar date, mirroring src/dev/seed.ts (and the app's clientNow):
+  // a UTC date here would drift a day from the seeded study calendar near midnight.
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${String(d.getFullYear())}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 }
 
 function buildScenario(today: number, days: DaySpec[]): Scenario {
