@@ -51,6 +51,14 @@ export interface DomainConfig {
    * time-of-day input is what testers use to dial the clock up to this slot).
    */
   readonly REMINDER_TIMES: readonly string[]
+  /**
+   * Wall-clock slots ("HH:mm", 24h) for the last-chance week-boundary
+   * notification — an independent channel from `REMINDER_TIMES` (its own
+   * slot and its own `lastFiredAt`) so the review reminder fires first and
+   * this one an hour later, keeping the demo's dial-up moment predictable.
+   * See `getLastChanceDue`.
+   */
+  readonly LAST_CHANCE_REMINDER_TIMES: readonly string[]
 }
 
 /**
@@ -69,4 +77,5 @@ export const DEFAULT_CONFIG: DomainConfig = {
   EDIT_WINDOW_DAYS: 7,
   BACKFILL_WINDOW_DAYS: 5,
   REMINDER_TIMES: ['15:30'],
+  LAST_CHANCE_REMINDER_TIMES: ['16:30'],
 }
