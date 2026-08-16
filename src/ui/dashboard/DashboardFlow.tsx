@@ -5,6 +5,8 @@ import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { TimeMachineModal } from '@ui/admin/TimeMachineModal.tsx'
 import { useMultiTap } from '@ui/admin/useMultiTap.ts'
 import { Screen } from '@ui/components/Screen.tsx'
+import { errorMessageKey } from '@ui/errors/errorMessage.ts'
+import { type TranslationKey } from '@ui/i18n/types.ts'
 import { TabBar } from '@ui/components/TabBar.tsx'
 import { DashboardScreen } from '@ui/dashboard/DashboardScreen.tsx'
 import { DEMO_USER_ID } from '@/app/constants.ts'
@@ -13,7 +15,9 @@ import { useDashboardService } from '@ui/app/AppContext.ts'
 import { clientNow } from '@ui/clock.ts'
 
 type LoadState =
-  { status: 'loading' } | { status: 'ready'; dashboard: DashboardResponse } | { status: 'failed' }
+  | { status: 'loading' }
+  | { status: 'ready'; dashboard: DashboardResponse }
+  | { status: 'failed'; message: TranslationKey }
 
 interface DashboardFlowProps {
   onCheckIn?: () => void
@@ -48,7 +52,7 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
       if (cancelled) return
       if (res.error || !res.data) {
         console.error('[dashboard] getDashboard failed', res.error)
-        setState({ status: 'failed' })
+        setState({ status: 'failed', message: errorMessageKey(res.error) })
         return
       }
       setState({ status: 'ready', dashboard: res.data })
@@ -65,7 +69,7 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
     return (
       <Screen nav={<TabBar active="home" />}>
         <p className="type-body text-muted m-auto text-center">
-          {state.status === 'loading' ? t('common.loading') : t('common.error')}
+          {state.status === 'loading' ? t('common.loading') : t(state.message)}
         </p>
       </Screen>
     )

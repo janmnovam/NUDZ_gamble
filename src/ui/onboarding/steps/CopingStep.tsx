@@ -15,10 +15,13 @@ interface CopingStepProps {
   onCustomCopingChange: (value: CopingDto) => void
   onFinish: () => void
   onBack: () => void
+  /** Message from a rejected submit — shown above the CTA, not just logged. */
+  error?: string
 }
 
 /** Onboarding step 5 — coping strategies (Figma "05 Copingová strategie"). */
 export function CopingStep({
+  error,
   strategies,
   selected,
   onSelectedChange,
@@ -45,6 +48,11 @@ export function CopingStep({
       contentClassName="gap-4"
       footer={
         <div className="flex flex-col items-center gap-2">
+          {error === undefined ? null : (
+            <p role="alert" className="type-body-sm text-status-exceeded text-center">
+              {error}
+            </p>
+          )}
           <Button size="md" fullWidth onClick={onFinish} disabled={count === 0}>
             {t('onboarding.coping.cta')}
           </Button>

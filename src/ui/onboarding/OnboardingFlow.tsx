@@ -12,6 +12,8 @@ import type { CopingDto, SuggestedLimitsResponse } from '@/app/dto/onboarding.ts
 import type { CopingSuggestionDto } from '@/app/dto/coping.ts'
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import { clientNow } from '@ui/clock.ts'
+import { useTranslation } from '@ui/i18n/context.ts'
+import { errorMessageKey } from '@ui/errors/errorMessage.ts'
 
 const TOTAL_STEPS = 6
 
@@ -30,6 +32,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const rememberInterventionStart = useAdminStore((s) => s.setInterventionStartDate)
   const submittingRef = useRef(false)
 
+  const { t } = useTranslation()
   const [step, setStep] = useState(0)
   const [refTimeMinutes, setRefTimeMinutes] = useState(0)
   const [refStakesCzk, setRefStakesCzk] = useState(0)
@@ -39,6 +42,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [copingStrategies, setCopingStrategies] = useState<CopingSuggestionDto[]>([])
   const [copingSelected, setCopingSelected] = useState<CopingSuggestionDto[]>([])
   const [customCoping, setCustomCoping] = useState<CopingDto | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [interventionStartDate, setInterventionStartDate] = useState<Date | null>(null)
 
   // Load the predefined coping suggestions once; map each to the domain-shaped
@@ -97,14 +101,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       if (res.error || !res.data) {
         submittingRef.current = false
         console.error('Onboarding completion failed', res.error)
+        setSubmitError(t(errorMessageKey(res.error)))
         return
       }
+      setSubmitError(null)
       setInterventionStartDate(new Date(res.data.interventionStartDate))
       rememberInterventionStart(res.data.interventionStartDate)
       goNext()
     } catch (error) {
       submittingRef.current = false
       console.error('Onboarding completion failed', error)
+      setSubmitError(t(errorMessageKey(null)))
     }
   }
 
@@ -157,6 +164,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             void finishSetup()
           }}
           onBack={goBack}
+          {...(submitError === null ? {} : { error: submitError })}
         />
       )
     case 5:

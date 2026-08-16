@@ -4,6 +4,8 @@ import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useReviewService } from '@ui/app/AppContext.ts'
 import { clientNow } from '@ui/clock.ts'
 import { useTranslation } from '@ui/i18n/context.ts'
+import { errorMessageKey } from '@ui/errors/errorMessage.ts'
+import { type TranslationKey } from '@ui/i18n/types.ts'
 import { toFinalSummaryViewModel } from '@ui/review/toFinalSummaryViewModel.ts'
 import { toProgrammeSummary, type ProgrammeSummary } from '@ui/review/toProgrammeSummary.ts'
 import { weekdayAbbrev } from '@ui/lib/date.ts'
@@ -12,7 +14,7 @@ import type { FinalSummaryViewModel } from '@ui/review/types.ts'
 export type FinalSummaryState =
   | { status: 'loading' }
   | { status: 'ready'; summary: FinalSummaryViewModel; programme: ProgrammeSummary }
-  | { status: 'failed' }
+  | { status: 'failed'; message: TranslationKey }
 
 /** Loads the four-week summary from `ReviewService` and labels it for the screens. */
 export function useFinalSummary(): FinalSummaryState {
@@ -28,7 +30,7 @@ export function useFinalSummary(): FinalSummaryState {
       if (cancelled) return
       if (res.error || !res.data) {
         console.error('[reports] getFinalSummary failed', res.error)
-        setState({ status: 'failed' })
+        setState({ status: 'failed', message: errorMessageKey(res.error) })
         return
       }
       setState({

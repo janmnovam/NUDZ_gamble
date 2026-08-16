@@ -40,7 +40,7 @@ function ReportsSection() {
     return (
       <Screen>
         <p className="type-body text-muted m-auto text-center">
-          {summary.status === 'loading' ? t('common.loading') : t('common.error')}
+          {summary.status === 'loading' ? t('common.loading') : t(summary.message)}
         </p>
       </Screen>
     )

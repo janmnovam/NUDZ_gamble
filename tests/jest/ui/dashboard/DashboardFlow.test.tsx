@@ -51,7 +51,7 @@ describe('DashboardFlow', () => {
     expect(screen.getByText('zbývá 8 h z 8 h')).not.toBeNull()
   })
 
-  it('falls back to an error message when the service returns an error', async () => {
+  it('names the reason when the service returns a known error', async () => {
     // The flow logs the failure; silence it so the run stays readable.
     const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined)
     renderFlow({
@@ -59,8 +59,20 @@ describe('DashboardFlow', () => {
         Promise.resolve(fail({ type: 'not_found', code: 'DASHBOARD_NO_LIMIT', trace: 'test' })),
     })
 
-    expect(await screen.findByText('Něco se nepovedlo.')).not.toBeNull()
+    // "Something went wrong" tells the user nothing they can act on.
+    expect(await screen.findByText('Pro tento týden zatím nejsou nastavené limity.')).not.toBeNull()
     expect(logged).toHaveBeenCalled()
+    logged.mockRestore()
+  })
+
+  it('falls back to a generic message for an unrecognised error', async () => {
+    const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+    renderFlow({
+      getDashboard: () =>
+        Promise.resolve(fail({ type: 'internal', code: 'SOMETHING_NEW', trace: 'test' })),
+    })
+
+    expect(await screen.findByText('Něco se nepovedlo. Zkus to prosím znovu.')).not.toBeNull()
     logged.mockRestore()
   })
 
