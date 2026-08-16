@@ -53,4 +53,24 @@ describe('CopingStep', () => {
 
     expect(onSelectedChange).toHaveBeenCalledWith([STRATEGIES[0]])
   })
+
+  it('does not treat whitespace as a custom coping strategy', () => {
+    render(
+      <I18nProvider>
+        <CopingStep
+          strategies={[]}
+          selected={[]}
+          onSelectedChange={() => undefined}
+          customCoping={{ label: '   ', type: 'custom' }}
+          onCustomCopingChange={() => undefined}
+          onFinish={() => undefined}
+          onBack={() => undefined}
+        />
+      </I18nProvider>,
+    )
+
+    expect(
+      screen.getByRole('button', { name: 'Dokončit nastavení' }).hasAttribute('disabled'),
+    ).toBe(true)
+  })
 })
