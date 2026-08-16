@@ -11,8 +11,8 @@ interface ReviewShellProps {
 
 export function ReviewShell({ children, footerLabel, onExport }: ReviewShellProps) {
   return (
-    <div className="pt-safe bg-canvas mx-auto flex min-h-dvh w-full max-w-md flex-col">
-      <div className="flex flex-1 flex-col overflow-y-auto px-4 pt-2 pb-4">{children}</div>
+    <div className="pt-safe bg-canvas mx-auto flex h-dvh w-full max-w-md flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 pt-2 pb-4">{children}</div>
       {/* Same split as <Screen>: the CTA carries its own spacing and the tab
           bar sits flush on the bottom edge, owning only the safe-area inset.
           Padding the whole block instead lifts the bar off the edge. */}

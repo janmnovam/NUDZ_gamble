@@ -53,11 +53,28 @@ export function Screen({ children, header, footer, nav, contentClassName }: Scre
   }, [keyboardInset])
 
   return (
-    <div className="pt-safe bg-canvas mx-auto flex min-h-dvh w-full max-w-md flex-col">
+    <div
+      className={cn(
+        'pt-safe bg-canvas mx-auto flex w-full max-w-md flex-col',
+        // With a nav to pin, the shell needs a definite height so the content
+        // can shrink and scroll inside it. Without one, keep `min-h-dvh` so the
+        // window stays the scroller for the keyboard handling above.
+        nav ? 'h-dvh' : 'min-h-dvh',
+      )}
+    >
       {header}
       <div
         ref={scrollRef}
-        className={cn('flex flex-1 flex-col overflow-y-auto p-4', contentClassName ?? 'gap-5')}
+        className={cn(
+          'flex flex-1 flex-col overflow-y-auto p-4',
+          // A flex child defaults to `min-height: auto`, so without this it
+          // refuses to shrink below its content and pushes the nav off the
+          // bottom on short viewports. Only applied when there is a nav to
+          // pin: elsewhere the window must stay the scroller for the
+          // keyboard handling above.
+          nav ? 'min-h-0' : null,
+          contentClassName ?? 'gap-5',
+        )}
         style={keyboardInset > 0 ? { paddingBottom: keyboardInset + KEYBOARD_GAP } : undefined}
       >
         {children}
