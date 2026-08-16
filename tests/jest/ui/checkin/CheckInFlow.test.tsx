@@ -51,6 +51,7 @@ describe('CheckInFlow', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Ano\s+hrál jsem/ }))
     expect(screen.getByText('Kolik jste vsadil/a?')).toBeTruthy()
+    expect(screen.getByText('Vsazená částka')).toBeTruthy()
 
     const continueButton = screen.getByRole('button', { name: 'Pokračovat' })
     expect(continueButton.hasAttribute('disabled')).toBe(true)

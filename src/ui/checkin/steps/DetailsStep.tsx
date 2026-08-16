@@ -85,7 +85,7 @@ export function DetailsStep({
       <h2 className="type-h2 text-ink">{t('checkin.stakes.title')}</h2>
 
       <Card className="flex flex-col gap-1.5" padding="px-4 py-3">
-        <p className="type-label text-muted">{t('checkin.stakes.weekLabel')}</p>
+        <p className="type-label text-muted">{t('checkin.stakes.cardLabel')}</p>
         <MoneyField
           value={stakes}
           onChange={onStakesChange}

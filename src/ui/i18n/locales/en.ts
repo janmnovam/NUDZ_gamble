@@ -47,6 +47,7 @@ export const en: Record<TranslationKey, string> = {
   'checkin.time.hoursUnitFull': 'hours',
   'checkin.time.minutesUnitFull': 'minutes',
   'checkin.stakes.title': 'How much did you stake?',
+  'checkin.stakes.cardLabel': 'Amount staked',
   'checkin.stakes.fieldLabel': 'Stakes',
   'checkin.stakes.weekLabel': 'Stakes this week',
   'checkin.stakes.currency': 'Kč',

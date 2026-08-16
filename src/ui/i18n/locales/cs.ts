@@ -51,6 +51,7 @@ export const cs = {
   'checkin.time.hoursUnitFull': 'hodin',
   'checkin.time.minutesUnitFull': 'minut',
   'checkin.stakes.title': 'Kolik jste vsadil/a?',
+  'checkin.stakes.cardLabel': 'Vsazená částka',
   'checkin.stakes.fieldLabel': 'Sázky',
   'checkin.stakes.weekLabel': 'Sázky za týden',
   'checkin.stakes.currency': 'Kč',
