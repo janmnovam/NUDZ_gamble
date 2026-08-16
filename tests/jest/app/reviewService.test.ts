@@ -160,17 +160,45 @@ describe('ReviewServiceImpl', () => {
     const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
     const summary = await service.getFinalSummary(USER_ID, time)
     expect(summary.weeks).toHaveLength(4)
-    expect(summary.weeks[0]).toEqual({
+    expect(summary.weeks[0]).toMatchObject({
       weekNo: 1,
       timeStatus: 'OK',
       stakesStatus: 'POZOR',
       overall: 'POZOR',
     })
-    expect(summary.weeks[1]).toEqual({
+    expect(summary.weeks[1]).toMatchObject({
       weekNo: 2,
       timeStatus: 'OK',
       stakesStatus: 'OK',
       overall: 'OK',
     })
+  })
+
+  it('getFinalSummary carries the usage the statuses were derived from', async () => {
+    const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
+    const summary = await service.getFinalSummary(USER_ID, time)
+
+    // Without these the screens could only show a verdict, not the numbers behind it.
+    expect(summary.weeks[0]?.time.limit).toBeGreaterThan(0)
+    expect(summary.weeks[0]?.stakes.used).toBeGreaterThan(0)
+  })
+
+  it('getFinalSummary marks days without a record as missing, never as zeros', async () => {
+    const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
+    const summary = await service.getFinalSummary(USER_ID, time)
+    const week1 = summary.weeks[0]
+
+    expect(week1?.days).toHaveLength(7)
+    expect(week1?.days.map((d) => d.studyDay)).toEqual([1, 2, 3, 4, 5, 6, 7])
+    expect(week1?.filledDays).toBe(week1?.days.filter((d) => d.state === 'completed').length)
+    // A week with gaps must not report itself as fully filled.
+    expect(week1?.filledDays).toBeLessThan(7)
+  })
+
+  it('getFinalSummary reports the programme day it was read on', async () => {
+    const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
+    const summary = await service.getFinalSummary(USER_ID, time)
+
+    expect(summary.studyDay).toBeGreaterThan(28)
   })
 })

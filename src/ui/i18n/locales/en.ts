@@ -54,11 +54,13 @@ export const en: Record<TranslationKey, string> = {
   'nav.tabs.coping': 'Strategies',
   'nav.tabs.reports': 'Reports',
   'review.final.overline': 'Monthly summary · {day}',
+  'review.final.day': 'DAY {day}',
   'review.final.title': 'Reports',
   'review.final.limitsDoneTitle': 'Limits are no longer set',
   'review.final.limitsDoneBody':
     'The tracking period has ended. You can export the data and take it to a specialist.',
   'review.week.label': 'Week {week}',
+  'review.week.locked': 'Not available yet',
   'review.week.closedTitle': 'Week {week} is closed',
   'review.week.closedBody': 'Records are read-only.',
   'review.week.summaryOverline': 'Week {week} summary',

@@ -58,11 +58,13 @@ export const cs = {
   'nav.tabs.coping': 'Strategie',
   'nav.tabs.reports': 'Přehledy',
   'review.final.overline': 'Měsíční souhrn · {day}',
+  'review.final.day': 'DEN {day}',
   'review.final.title': 'Přehledy',
   'review.final.limitsDoneTitle': 'Limity už se nenastavují',
   'review.final.limitsDoneBody':
     'Sledování skončilo. Data si můžete vyexportovat a vzít je s sebou k odborníkovi.',
   'review.week.label': 'Týden {week}',
+  'review.week.locked': 'Zatím nedostupné',
   'review.week.closedTitle': 'Týden {week} je uzavřený',
   'review.week.closedBody': 'Záznamy jsou jen ke čtení.',
   'review.week.summaryOverline': 'Souhrn týdne {week}',

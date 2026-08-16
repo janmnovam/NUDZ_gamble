@@ -10,6 +10,7 @@ const TEST_SUMMARY: FinalSummaryViewModel = {
   weeks: [
     {
       weekNo: 1,
+      locked: false,
       status: 'PREKROCENO',
       timeUsedLabel: 'test time used',
       timeLimitLabel: 'test time limit',

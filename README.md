@@ -4,9 +4,14 @@ PWA for harm reduction in gambling — DigiWELL Hackathon 2026.
 
 **Install:** open https://janmnovam.github.io/NUDZ_gamble/ in a compatible browser, then use the install/share icon in the address bar or menu and select "Install" or "Add to Home Screen".
 
-> **Status: technology bootstrap only.** The toolchain, build, PWA shell and the three
-> test runners are wired up and green. No intervention logic has been implemented yet;
-> `src/domain/` is intentionally empty.
+# Features
+ 
+App helps users track and limit time and money spent on gambling, over a 4-week program.
+ 
+- **Onboarding** — set a reference week (usual time/money spent), set limits for week 1, pick coping strategies.
+- **Daily check-in** — log if you gambled yesterday, how long, how much. Reminder notification each day.
+- **Dashboard** — shows current week status (OK / Exceeded), time and money used vs. limits, weekly calendar.
+- **Reports** — weekly and final summaries, data export.
 
 ## Stack
 

@@ -60,7 +60,10 @@ export function WeekSummaryScreen({ week, onBack, onExport }: WeekSummaryScreenP
             <p className="type-overline text-faint">
               {t('review.week.summaryOverline', { week: week.weekNo })}
             </p>
-            <StatusChip status={week.status} className="self-start" />
+            {/* A locked week is never opened, so this is defensive only. */}
+            {week.status === undefined ? null : (
+              <StatusChip status={week.status} className="self-start" />
+            )}
           </div>
 
           <SummaryRow

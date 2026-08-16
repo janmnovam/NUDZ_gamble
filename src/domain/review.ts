@@ -5,7 +5,12 @@
  * The camelCase VMs here match the app-layer DTOs field-for-field, so the
  * service returns them directly (no rename mapper needed, unlike the dashboard).
  */
-import { calendarDate, createStudyCalendar, type StudyCalendar } from '@domain/clock.ts'
+import {
+  calendarDate,
+  createStudyCalendar,
+  type StudyCalendar,
+  type StudyDay,
+} from '@domain/clock.ts'
 import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
 import { canReview, isWeekClosed } from '@domain/guards.ts'
 import { classifyStatus, isWithinCap, suggestLimit, worseStatus } from '@domain/limits.ts'
@@ -41,14 +46,36 @@ export interface ReviewVM {
   suggestedNextLimits: { timeMinutes: number; stakesAmount: number }
 }
 
+/** One day of a closed week. `missing` is a gap in the record, never a zero. */
+export interface FinalSummaryDayVM {
+  /** 1..28 — the day's position in the programme. */
+  studyDay: StudyDay
+  date: ISOCalendarTimestamp
+  state: 'completed' | 'missing'
+}
+
 export interface FinalSummaryWeekVM {
   weekNo: number
+  /** Cumulative usage against that week's limit; 0 limit when none was set. */
+  time: { used: number; limit: number }
+  stakes: { used: number; limit: number }
   timeStatus: Status
   stakesStatus: Status
   overall: Status
+  /** Always 7 entries, in study-day order. */
+  days: FinalSummaryDayVM[]
+  /** How many of the week's 7 days have a record. */
+  filledDays: number
+  /**
+   * Whether the week's seven days have all passed. A week still ahead carries
+   * no verdict — its statuses are computed against no data and mean nothing.
+   */
+  elapsed: boolean
 }
 
 export interface FinalSummaryVM {
+  /** The programme day the summary is being read on — 29 once it has finished. */
+  studyDay: StudyDay
   weeks: FinalSummaryWeekVM[]
 }
 
@@ -199,8 +226,13 @@ export async function completeReview(input: CompleteReviewInput, deps: ReviewDep
 
 export async function getFinalSummary(deps: ReviewDeps): Promise<FinalSummaryVM> {
   const config = deps.config ?? DEFAULT_CONFIG
+  const profile = await deps.profiles.get(deps.userId)
+  if (!profile) throw new Error(`review: no profile for ${deps.userId}`)
+
+  const calendar = createStudyCalendar(profile.interventionStartDate, deps.time, config)
   const checkIns = await deps.checkIns.listByUser(deps.userId)
   const limits = await deps.limits.listByUser(deps.userId)
+  const recorded = new Set(checkIns.map((c) => calendarDate(c.behaviorDate)))
 
   const weeks: FinalSummaryWeekVM[] = []
   for (let w = 1; w <= TOTAL_WEEKS; w += 1) {
@@ -208,12 +240,31 @@ export async function getFinalSummary(deps: ReviewDeps): Promise<FinalSummaryVM>
     const limit = limits.find((l) => l.weekNo === w)
     const timeStatus = classifyStatus(totals.timeMin, limit?.weeklyLimitTimeMin ?? 0, config)
     const stakesStatus = classifyStatus(totals.stakesCzk, limit?.weeklyLimitStakesCzk ?? 0, config)
+
+    // A closed week has no `future` days left, so each day is either recorded
+    // or a gap — "missing" here means NA, never a zero-filled day.
+    const days: FinalSummaryDayVM[] = []
+    for (let day = calendar.firstDay(w); day <= calendar.lastDay(w); day += 1) {
+      const date = calendar.dateOf(day)
+      days.push({
+        studyDay: day,
+        date,
+        state: recorded.has(calendarDate(date)) ? 'completed' : 'missing',
+      })
+    }
+
     weeks.push({
       weekNo: w,
+      time: { used: totals.timeMin, limit: limit?.weeklyLimitTimeMin ?? 0 },
+      stakes: { used: totals.stakesCzk, limit: limit?.weeklyLimitStakesCzk ?? 0 },
       timeStatus,
       stakesStatus,
       overall: worseStatus(timeStatus, stakesStatus),
+      days,
+      filledDays: days.filter((d) => d.state === 'completed').length,
+      elapsed: calendar.isWeekElapsed(w),
     })
   }
-  return { weeks }
+
+  return { studyDay: calendar.currentDay(), weeks }
 }

@@ -32,6 +32,15 @@ export function useContactService() {
   return app.contacts
 }
 
+/** The check-in inbound port, wired to the data layer. Throws outside <AppProvider>. */
+export function useCheckInService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useCheckInService must be used within an <AppProvider>')
+  }
+  return app.checkIn
+}
+
 /** The dashboard inbound port, wired to the data layer. Throws outside <AppProvider>. */
 export function useDashboardService() {
   const app = useContext(AppContext)
@@ -48,4 +57,13 @@ export function useExportService() {
     throw new Error('useExportService must be used within an <AppProvider>')
   }
   return app.export
+}
+
+/** The review inbound port, wired to the data layer. Throws outside <AppProvider>. */
+export function useReviewService() {
+  const app = useContext(AppContext)
+  if (!app) {
+    throw new Error('useReviewService must be used within an <AppProvider>')
+  }
+  return app.review
 }
