@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 
 import { createApp, type App } from '@/core/index.ts'
 import { AppContext } from '@ui/app/AppContext.ts'
-import { uiClock } from '@ui/clock.ts'
 
 interface AppProviderProps {
   children: ReactNode
@@ -15,6 +14,6 @@ interface AppProviderProps {
  * reaches for `createApp`) and provides its inbound services to the tree.
  */
 export function AppProvider({ children, app }: AppProviderProps) {
-  const [value] = useState<App>(() => app ?? createApp(uiClock))
+  const [value] = useState<App>(() => app ?? createApp())
   return <AppContext value={value}>{children}</AppContext>
 }

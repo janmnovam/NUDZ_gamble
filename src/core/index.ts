@@ -67,7 +67,6 @@ export interface DataLayer {
 
 export { AppDatabase, db } from '@data/db.ts'
 export { DexieRepository } from '@data/repository.ts'
-export type { Clock } from '@domain/ports.ts'
 export {
   createStudyCalendar,
   dateOf,

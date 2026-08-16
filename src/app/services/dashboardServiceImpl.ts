@@ -7,10 +7,9 @@ import type { DashboardResponse, DashboardService } from '@/app/ports/dashboardS
 import { DEMO_USER_ID } from '@/app/constants.ts'
 import { toDashboardResponse } from '@/app/mappers/dashboardMapper.ts'
 import { buildDashboardVM } from '@domain/dashboard.ts'
-import type { UserId } from '@domain/model.ts'
+import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import type {
   CheckInRepository,
-  Clock,
   LimitRepository,
   ProfileRepository,
   ReviewRepository,
@@ -23,7 +22,6 @@ export interface DashboardServiceDeps {
   // Not yet read by `buildDashboardVM` — `reviewable_weeks` stays hardcoded
   // empty until ReviewRepository/ReviewService are wired (architecture.md TODO #4/#7).
   reviews: ReviewRepository
-  time: Clock
   /** The single demo user these records belong to. */
   userId?: UserId
 }
@@ -37,13 +35,13 @@ export class DashboardServiceImpl implements DashboardService {
     this.userId = deps.userId ?? DEMO_USER_ID
   }
 
-  async getDashboard(): Promise<DashboardResponse> {
+  async getDashboard(time: ISOTimestamp): Promise<DashboardResponse> {
     const vm = await buildDashboardVM({
       userId: this.userId,
       profileRepo: this.deps.profiles,
       limitRepo: this.deps.limits,
       checkInRepo: this.deps.checkIns,
-      time: this.deps.time,
+      time,
     })
     return toDashboardResponse(vm)
   }

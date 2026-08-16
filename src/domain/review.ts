@@ -13,13 +13,13 @@ import type {
   CheckIn,
   ISOCalendarTimestamp,
   ISODate,
+  ISOTimestamp,
   Limit,
   Review,
   UserId,
 } from '@domain/model.ts'
 import type {
   CheckInRepository,
-  Clock,
   LimitRepository,
   ProfileRepository,
   ReviewRepository,
@@ -64,8 +64,8 @@ export interface ReviewDeps {
   limits: LimitRepository
   checkIns: CheckInRepository
   reviews: ReviewRepository
-  /** Time source; "today" is the calendar date of `time()` (see `calendarDate`). */
-  time: Clock
+  /** Caller-supplied instant; "today" is its calendar date (see `calendarDate`). */
+  time: ISOTimestamp
   newId: () => string
   config?: DomainConfig
 }
@@ -127,7 +127,7 @@ export async function getPendingReview(deps: ReviewDeps): Promise<ReviewVM | nul
   const timeLimit = limit?.weeklyLimitTimeMin ?? 0
   const stakesLimit = limit?.weeklyLimitStakesCzk ?? 0
   const totals = weekTotals(checkIns, week)
-  const today = calendarDate(deps.time())
+  const today = calendarDate(deps.time)
 
   return {
     weekNo: week,
@@ -169,7 +169,7 @@ export async function completeReview(input: CompleteReviewInput, deps: ReviewDep
     current?.weeklyLimitTimeMin !== input.nextLimits.timeMinutes ||
     current.weeklyLimitStakesCzk !== input.nextLimits.stakesAmount
 
-  const at = deps.time()
+  const at = deps.time
 
   // ponytail: two non-transactional writes — a crash between them leaves next
   // week's limit set without a review row. Acceptable for a local single-user

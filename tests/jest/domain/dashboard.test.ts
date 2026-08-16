@@ -54,7 +54,7 @@ function fakeDeps(params: { checkIns: CheckIn[]; today: string }): DashboardDeps
     profileRepo,
     limitRepo,
     checkInRepo,
-    time: () => `${params.today}T12:00:00.000Z`,
+    time: `${params.today}T12:00:00.000Z`,
   }
 }
 

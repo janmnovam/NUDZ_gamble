@@ -3,14 +3,14 @@
  * adapters, `createApp()` builds the inbound services on top of them — the single
  * place the UI reaches for a ready-to-call service.
  *
- * The wall clock is **not** read here: `createApp` receives the `time` clock from
- * the UI (the FE owns "now"), keeping core/data/domain time-ignorant. Onboarding
- * and coping already take the instant per request; the remaining services still
- * take the injected `time` clock until they move to per-request time too. "Today"
- * is derived from the instant, so there is no separate today source.
+ * The wall clock is **not** read here, and no clock is injected: every
+ * time-dependent method takes the instant as a `time` argument the FE passes per
+ * request (it calls `clientNow()` at the call site). "Today" is derived from that
+ * instant, so core/data/domain stay entirely time-ignorant.
  *
- *   const app = createApp(uiClock)
- *   await app.onboarding.complete(request, time)
+ *   const app = createApp()
+ *   await app.onboarding.complete(request, clientNow())
+ *   await app.dashboard.getDashboard(clientNow())
  */
 import { OnboardingServiceImpl } from '@/app/services/onboardingServiceImpl.ts'
 import { CopingStrategyServiceImpl } from '@/app/services/copingStrategyServiceImpl.ts'
@@ -27,7 +27,6 @@ import type { ReviewService } from '@/app/ports/reviewService.ts'
 import type { ReminderService } from '@/app/ports/reminderService.ts'
 import type { ExportService } from '@/app/ports/exportService.ts'
 import { newId } from '@data/ids.ts'
-import type { Clock } from '@domain/ports.ts'
 import { type DataLayer, createDataLayer } from '@/core/index.ts'
 
 /** The inbound services the UI calls, wired to a data layer. */
@@ -41,7 +40,7 @@ export interface App {
   export: ExportService
 }
 
-export function createApp(time: Clock, data: DataLayer = createDataLayer()): App {
+export function createApp(data: DataLayer = createDataLayer()): App {
   return {
     onboarding: new OnboardingServiceImpl({
       repo: data.onboarding,
@@ -56,27 +55,23 @@ export function createApp(time: Clock, data: DataLayer = createDataLayer()): App
       checkInEdits: data.checkInEdits,
       limits: data.limits,
       profiles: data.profiles,
-      time,
     }),
     dashboard: new DashboardServiceImpl({
       profiles: data.profiles,
       limits: data.limits,
       checkIns: data.checkIns,
       reviews: data.reviews,
-      time,
     }),
     review: new ReviewServiceImpl({
       profiles: data.profiles,
       limits: data.limits,
       checkIns: data.checkIns,
       reviews: data.reviews,
-      time,
       newId,
     }),
     reminder: new ReminderServiceImpl({
       checkIns: data.checkIns,
       profiles: data.profiles,
-      time,
     }),
     export: new ExportServiceImpl({
       checkIns: data.checkIns,

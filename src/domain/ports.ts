@@ -21,9 +21,6 @@ import type {
   UserId,
 } from '@domain/model.ts'
 
-/** Current time as an ISO 8601 timestamp; injectable so callers (and tests) control time. */
-export type Clock = () => ISOTimestamp
-
 export interface ProfileRepository {
   save(profile: Profile): Promise<void>
   get(userId: UserId): Promise<Profile | undefined>

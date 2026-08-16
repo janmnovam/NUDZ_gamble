@@ -65,15 +65,14 @@ function makeService(params: { checkIns: CheckIn[]; today: string; noProfile?: b
     limits,
     checkIns,
     reviews,
-    time: () => `${params.today}T12:00:00.000Z`,
     userId: USER_ID,
   }
-  return new DashboardServiceImpl(deps)
+  return { service: new DashboardServiceImpl(deps), time: `${params.today}T12:00:00.000Z` }
 }
 
 describe('DashboardServiceImpl.getDashboard', () => {
   it('maps the CLAUDE.md reference scenario to the camelCase DTO, missing day included', async () => {
-    const service = makeService({
+    const { service, time } = makeService({
       today: '2026-09-05',
       checkIns: [
         checkIn({
@@ -98,7 +97,7 @@ describe('DashboardServiceImpl.getDashboard', () => {
       ],
     })
 
-    const res = await service.getDashboard()
+    const res = await service.getDashboard(time)
 
     expect(res.studyDay).toBe(5)
     expect(res.weekNo).toBe(1)
@@ -131,7 +130,7 @@ describe('DashboardServiceImpl.getDashboard', () => {
   })
 
   it('rejects when no profile has been onboarded yet', async () => {
-    const service = makeService({ today: '2026-09-05', checkIns: [], noProfile: true })
-    await expect(service.getDashboard()).rejects.toThrow(/no profile/)
+    const { service, time } = makeService({ today: '2026-09-05', checkIns: [], noProfile: true })
+    await expect(service.getDashboard(time)).rejects.toThrow(/no profile/)
   })
 })

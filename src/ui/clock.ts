@@ -10,7 +10,6 @@
  * warning; see `dateOf` in `@domain/clock.ts`).
  */
 import type { ISOTimestamp } from '@domain/model.ts'
-import type { Clock } from '@domain/ports.ts'
 
 export function clientNow(): ISOTimestamp {
   const d = new Date()
@@ -25,12 +24,3 @@ export function clientNow(): ISOTimestamp {
   ).padStart(3, '0')}`
   return `${date}T${time}${offset}`
 }
-
-/**
- * The FE wall clock as the `Clock` the not-yet-refactored services still expect
- * (checkin / dashboard / review / reminder), passed to `createApp`. It reads the
- * offset-bearing `clientNow`, so the study calendar derives the user's local day.
- * Temporary bridge until those services take the instant per request like
- * onboarding / coping already do.
- */
-export const uiClock: Clock = clientNow

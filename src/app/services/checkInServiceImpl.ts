@@ -11,7 +11,6 @@ import type {
 import type {
   CheckInEditRepository,
   CheckInRepository,
-  Clock,
   LimitRepository,
   ProfileRepository,
 } from '@domain/ports.ts'
@@ -21,7 +20,6 @@ export interface CheckInServiceDeps {
   checkInEdits: CheckInEditRepository
   limits: LimitRepository
   profiles: ProfileRepository
-  time: Clock
 }
 
 export class CheckInServiceImpl implements CheckInService {

@@ -7,8 +7,8 @@ import { dayStateOf, type DayState } from '@domain/checkin.ts'
 import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
 import { resolvePendingAction, type PendingAction } from '@domain/guards.ts'
 import { classifyStatus, worseStatus } from '@domain/limits.ts'
-import type { CheckIn, ISOCalendarTimestamp, ISODate, UserId } from '@domain/model.ts'
-import type { Clock, CheckInRepository, LimitRepository, ProfileRepository } from '@domain/ports.ts'
+import type { CheckIn, ISOCalendarTimestamp, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
+import type { CheckInRepository, LimitRepository, ProfileRepository } from '@domain/ports.ts'
 
 export interface AxisView {
   used: number
@@ -94,8 +94,8 @@ export interface DashboardDeps {
   profileRepo: ProfileRepository
   limitRepo: LimitRepository
   checkInRepo: CheckInRepository
-  /** Time source; "today" is the calendar date of `time()` (see `calendarDate`). */
-  time: Clock
+  /** Caller-supplied instant; "today" is its calendar date (see `calendarDate`). */
+  time: ISOTimestamp
   config?: DomainConfig
 }
 
@@ -112,7 +112,7 @@ export async function buildDashboardVM(deps: DashboardDeps): Promise<DashboardVM
   }
 
   const calendar = createStudyCalendar(profile.interventionStartDate, deps.time, config)
-  const today = calendarDate(deps.time())
+  const today = calendarDate(deps.time)
   const studyDay = calendar.currentDay()
   // Before day 1, currentDay() is <= 0 and weekNo() throws — clamp to week 1
   // (its days all classify as `future` against `today`, so this reads as the

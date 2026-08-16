@@ -5,6 +5,7 @@ import { Screen } from '@ui/components/Screen.tsx'
 import { DashboardScreen } from '@ui/dashboard/DashboardScreen.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import { useDashboardService } from '@ui/app/AppContext.ts'
+import { clientNow } from '@ui/clock.ts'
 
 type LoadState =
   { status: 'loading' } | { status: 'ready'; dashboard: DashboardResponse } | { status: 'failed' }
@@ -24,7 +25,7 @@ export function DashboardFlow() {
   useEffect(() => {
     let cancelled = false
 
-    void dashboardService.getDashboard().then(
+    void dashboardService.getDashboard(clientNow()).then(
       (dashboard) => {
         if (!cancelled) setState({ status: 'ready', dashboard })
       },
