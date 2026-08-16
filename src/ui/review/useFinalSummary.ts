@@ -19,24 +19,23 @@ export function useFinalSummary(): FinalSummaryState {
   useEffect(() => {
     let cancelled = false
 
-    void review.getFinalSummary(DEMO_USER_ID, clientNow()).then(
-      (response) => {
-        if (cancelled) return
-        setState({
-          status: 'ready',
-          summary: toFinalSummaryViewModel(response, locale, {
-            hourUnit: t('dashboard.unitHour'),
-            minuteUnit: t('dashboard.unitMinute'),
-            currency: t('dashboard.currency'),
-            programmeDay: (studyDay) => t('review.final.day', { day: studyDay }),
-          }),
-        })
-      },
-      (error: unknown) => {
-        console.error('[reports] getFinalSummary failed', error)
-        if (!cancelled) setState({ status: 'failed' })
-      },
-    )
+    void review.getFinalSummary(DEMO_USER_ID, clientNow()).then((res) => {
+      if (cancelled) return
+      if (res.error || !res.data) {
+        console.error('[reports] getFinalSummary failed', res.error)
+        setState({ status: 'failed' })
+        return
+      }
+      setState({
+        status: 'ready',
+        summary: toFinalSummaryViewModel(res.data, locale, {
+          hourUnit: t('dashboard.unitHour'),
+          minuteUnit: t('dashboard.unitMinute'),
+          currency: t('dashboard.currency'),
+          programmeDay: (studyDay) => t('review.final.day', { day: studyDay }),
+        }),
+      })
+    })
 
     return () => {
       cancelled = true

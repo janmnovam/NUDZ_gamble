@@ -44,15 +44,15 @@ export function DashboardFlow({ onCheckIn }: DashboardFlowProps = {}) {
     let cancelled = false
 
     const time = simulatedTime ?? clientNow()
-    void dashboardService.getDashboard(DEMO_USER_ID, time).then(
-      (dashboard) => {
-        if (!cancelled) setState({ status: 'ready', dashboard })
-      },
-      (error: unknown) => {
-        console.error('[dashboard] getDashboard failed', error)
-        if (!cancelled) setState({ status: 'failed' })
-      },
-    )
+    void dashboardService.getDashboard(DEMO_USER_ID, time).then((res) => {
+      if (cancelled) return
+      if (res.error || !res.data) {
+        console.error('[dashboard] getDashboard failed', res.error)
+        setState({ status: 'failed' })
+        return
+      }
+      setState({ status: 'ready', dashboard: res.data })
+    })
 
     return () => {
       cancelled = true

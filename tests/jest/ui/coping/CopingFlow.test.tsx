@@ -4,6 +4,7 @@ import { jest } from '@jest/globals'
 import type { CopingStrategyDto } from '@/app/dto/coping.ts'
 import type { ContactService } from '@/app/ports/contactService.ts'
 import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
+import { ok } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
 import { CopingFlow } from '@ui/coping/CopingFlow.tsx'
@@ -27,27 +28,31 @@ const STRATEGIES: CopingStrategyDto[] = [
 ]
 
 function createService() {
-  const toggle = jest.fn(() => Promise.resolve())
+  const toggle = jest.fn(() => Promise.resolve(ok(undefined)))
   const create = jest.fn(() =>
-    Promise.resolve({
-      id: 'custom-2',
-      label: 'Projdu se',
-      type: 'custom' as const,
-      active: true,
-      priority: 3,
-    }),
+    Promise.resolve(
+      ok({
+        id: 'custom-2',
+        label: 'Projdu se',
+        type: 'custom' as const,
+        active: true,
+        priority: 3,
+      }),
+    ),
   )
   const service: CopingStrategyService = {
     getSuggestions: () =>
-      Promise.resolve([
-        {
-          id: 'change_environment',
-          label: 'Na chvíli změním prostředí',
-          type: 'default',
-          summary: 'Vytvořím si krátký odstup.',
-        },
-      ]),
-    list: () => Promise.resolve(STRATEGIES),
+      Promise.resolve(
+        ok([
+          {
+            id: 'change_environment',
+            label: 'Na chvíli změním prostředí',
+            type: 'default',
+            summary: 'Vytvořím si krátký odstup.',
+          },
+        ]),
+      ),
+    list: () => Promise.resolve(ok(STRATEGIES)),
     create,
     toggle,
   }

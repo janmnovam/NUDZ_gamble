@@ -11,6 +11,7 @@ import type {
   CheckInService,
 } from '@/app/ports/checkInService.ts'
 import type { CheckInFeedbackDto } from '@/app/dto/checkin.ts'
+import { type Result, run } from '@/app/result.ts'
 import {
   submitCheckIn as buildRecord,
   validateCheckIn,
@@ -18,6 +19,7 @@ import {
 } from '@domain/checkin.ts'
 import { buildCheckInFeedback } from '@domain/feedback.ts'
 import { calendarDate, createStudyCalendar, type StudyCalendar } from '@domain/clock.ts'
+import { DomainError } from '@domain/errors.ts'
 import type { CheckIn, ISOCalendarTimestamp, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
 import type {
   CheckInEditRepository,
@@ -56,16 +58,16 @@ export class CheckInServiceImpl implements CheckInService {
     req: CheckInRequest,
     userId: UserId,
     time: ISOTimestamp,
-  ): Promise<CheckInResultResponse> {
-    return this.write(req, userId, time, false)
+  ): Promise<Result<CheckInResultResponse>> {
+    return run(() => this.write(req, userId, time, false))
   }
 
   editCheckIn(
     req: CheckInRequest,
     userId: UserId,
     time: ISOTimestamp,
-  ): Promise<CheckInResultResponse> {
-    return this.write(req, userId, time, true)
+  ): Promise<Result<CheckInResultResponse>> {
+    return run(() => this.write(req, userId, time, true))
   }
 
   private async write(
@@ -75,7 +77,8 @@ export class CheckInServiceImpl implements CheckInService {
     requireExisting: boolean,
   ): Promise<CheckInResultResponse> {
     const profile = await this.deps.profiles.get(userId)
-    if (!profile) throw new Error(`checkin: no profile for ${userId}`)
+    if (!profile)
+      throw new DomainError('not_found', 'CHECKIN_NO_PROFILE', `checkin: no profile for ${userId}`)
 
     const calendar = createStudyCalendar(profile.interventionStartDate, time)
     const today = calendarDate(time)
@@ -103,7 +106,11 @@ export class CheckInServiceImpl implements CheckInService {
       (c) => calendarDate(c.behaviorDate) === calendarDate(req.behaviorDate),
     )
     if (requireExisting && !existing) {
-      throw new Error('checkin: nothing to edit for that day')
+      throw new DomainError(
+        'not_found',
+        'CHECKIN_NOTHING_TO_EDIT',
+        'checkin: nothing to edit for that day',
+      )
     }
 
     const record = buildRecord(userId, draft, behaviorWeek, time, this.deps.newId, existing)

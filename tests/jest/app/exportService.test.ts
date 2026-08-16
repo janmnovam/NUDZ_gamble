@@ -73,7 +73,10 @@ function makeService(): ExportServiceImpl {
 
 describe('ExportServiceImpl.exportDataZip', () => {
   it('bundles profile.csv, check_in.csv, limit.csv and coping_strategy.csv into one ZIP archive', async () => {
-    const zip = await makeService().exportDataZip(USER_ID, '2026-09-01T12:00:00.000Z')
+    const res = await makeService().exportDataZip(USER_ID, '2026-09-01T12:00:00.000Z')
+    expect(res.error).toBeNull()
+    const zip = res.data
+    if (!zip) throw new Error('expected zip data')
 
     const view = new DataView(zip.buffer, zip.byteOffset, zip.byteLength)
     expect(view.getUint32(0, true)).toBe(0x04034b50) // first local file header

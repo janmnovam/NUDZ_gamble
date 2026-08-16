@@ -77,15 +77,15 @@ export function CopingFlow() {
   useEffect(() => {
     let cancelled = false
 
-    void copingService.list(DEMO_USER_ID, clientNow()).then(
-      (strategies) => {
-        if (!cancelled) setState({ status: 'ready', strategies })
-      },
-      (error: unknown) => {
-        console.error('[coping] list failed', error)
-        if (!cancelled) setState({ status: 'failed' })
-      },
-    )
+    void copingService.list(DEMO_USER_ID, clientNow()).then((res) => {
+      if (cancelled) return
+      if (res.error || !res.data) {
+        console.error('[coping] list failed', res.error)
+        setState({ status: 'failed' })
+        return
+      }
+      setState({ status: 'ready', strategies: res.data })
+    })
 
     return () => {
       cancelled = true
@@ -101,8 +101,10 @@ export function CopingFlow() {
     ]).then(([suggestionsResult, contactsResult]) => {
       if (suggestionsResult.status === 'rejected') {
         console.error('[coping] suggestions failed', suggestionsResult.reason)
+      } else if (suggestionsResult.value.error || !suggestionsResult.value.data) {
+        console.error('[coping] suggestions failed', suggestionsResult.value.error)
       } else if (!cancelled) {
-        setSuggestions(suggestionsResult.value)
+        setSuggestions(suggestionsResult.value.data)
       }
 
       if (contactsResult.status === 'rejected') {
@@ -122,21 +124,17 @@ export function CopingFlow() {
   }
 
   const handleToggle = (copingStrategyId: string, active: boolean) => {
-    copingService
-      .toggle(copingStrategyId, active, DEMO_USER_ID, clientNow())
-      .then(reload)
-      .catch((error: unknown) => {
-        console.error('[coping] toggle failed', error)
-      })
+    void copingService.toggle(copingStrategyId, active, DEMO_USER_ID, clientNow()).then((res) => {
+      if (res.error) console.error('[coping] toggle failed', res.error)
+      else reload()
+    })
   }
 
   const handleAdd = (label: string) => {
-    copingService
-      .create({ label }, DEMO_USER_ID, clientNow())
-      .then(reload)
-      .catch((error: unknown) => {
-        console.error('[coping] create failed', error)
-      })
+    void copingService.create({ label }, DEMO_USER_ID, clientNow()).then((res) => {
+      if (res.error) console.error('[coping] create failed', res.error)
+      else reload()
+    })
   }
 
   if (state.status !== 'ready') {

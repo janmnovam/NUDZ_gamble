@@ -6,6 +6,7 @@ import type { CheckInRequest } from '@/app/dto/checkin.ts'
 import type { DashboardResponse } from '@/app/dto/dashboard.ts'
 import type { CheckInService } from '@/app/ports/checkInService.ts'
 import type { DashboardService } from '@/app/ports/dashboardService.ts'
+import { ok } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
@@ -62,7 +63,7 @@ const DAY_2_DASHBOARD: DashboardResponse = {
 }
 
 function success(req: CheckInRequest) {
-  return {
+  return ok({
     ok: true,
     checkIn: {
       checkInId: 'ci-1',
@@ -84,12 +85,12 @@ function success(req: CheckInRequest) {
       copingReminder: null,
       incompleteWeek: false,
     },
-  } as const
+  } as const)
 }
 
 function defaultDashboardService(): DashboardService {
   return {
-    getDashboard: () => Promise.resolve(DASHBOARD),
+    getDashboard: () => Promise.resolve(ok(DASHBOARD)),
   }
 }
 
@@ -193,7 +194,7 @@ describe('CheckInRoute', () => {
         editCheckIn: () => Promise.reject(new Error('unused')),
       },
       dashboard: {
-        getDashboard: () => Promise.resolve(NO_MISSING_DASHBOARD),
+        getDashboard: () => Promise.resolve(ok(NO_MISSING_DASHBOARD)),
       },
     })
 
@@ -217,7 +218,7 @@ describe('CheckInRoute', () => {
     let dashboardCall = 0
     const getDashboard = jest.fn<DashboardService['getDashboard']>(() => {
       dashboardCall += 1
-      return Promise.resolve(dashboardCall === 1 ? WAITING_DASHBOARD : DAY_2_DASHBOARD)
+      return Promise.resolve(ok(dashboardCall === 1 ? WAITING_DASHBOARD : DAY_2_DASHBOARD))
     })
     const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
       Promise.resolve(success(req)),
@@ -249,7 +250,9 @@ describe('CheckInRoute', () => {
   it('uses the admin simulated time when opening from the dashboard', async () => {
     const simulatedTime = '2026-09-04T10:00:00+02:00'
     useAdminStore.setState({ simulatedTime })
-    const getDashboard = jest.fn<DashboardService['getDashboard']>(() => Promise.resolve(DASHBOARD))
+    const getDashboard = jest.fn<DashboardService['getDashboard']>(() =>
+      Promise.resolve(ok(DASHBOARD)),
+    )
     const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
       Promise.resolve(success(req)),
     )

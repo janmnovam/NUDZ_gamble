@@ -10,6 +10,7 @@ import type {
   ReviewResponse,
   ReviewService,
 } from '@/app/ports/reviewService.ts'
+import { type Result, run } from '@/app/result.ts'
 import {
   completeReview,
   getFinalSummary,
@@ -51,15 +52,19 @@ export class ReviewServiceImpl implements ReviewService {
     }
   }
 
-  getPendingReview(userId: UserId, time: ISOTimestamp): Promise<ReviewResponse | null> {
-    return getPendingReview(this.domainDeps(userId, time))
+  getPendingReview(userId: UserId, time: ISOTimestamp): Promise<Result<ReviewResponse | null>> {
+    return run(() => getPendingReview(this.domainDeps(userId, time)))
   }
 
-  completeReview(req: CompleteReviewRequest, userId: UserId, time: ISOTimestamp): Promise<void> {
-    return completeReview(req, this.domainDeps(userId, time))
+  completeReview(
+    req: CompleteReviewRequest,
+    userId: UserId,
+    time: ISOTimestamp,
+  ): Promise<Result<void>> {
+    return run(() => completeReview(req, this.domainDeps(userId, time)))
   }
 
-  getFinalSummary(userId: UserId, time: ISOTimestamp): Promise<FinalSummaryResponse> {
-    return getFinalSummary(this.domainDeps(userId, time))
+  getFinalSummary(userId: UserId, time: ISOTimestamp): Promise<Result<FinalSummaryResponse>> {
+    return run(() => getFinalSummary(this.domainDeps(userId, time)))
   }
 }

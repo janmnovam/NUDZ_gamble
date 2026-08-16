@@ -1,4 +1,5 @@
 import { calendarTimestamp, dateOf, nextDate } from '@domain/clock.ts'
+import { DomainError } from '@domain/errors.ts'
 import { isWithinCap } from '@domain/limits.ts'
 import {
   type CopingStrategy,
@@ -48,13 +49,25 @@ export async function completeOnboarding(
   deps: OnboardingDeps,
 ): Promise<void> {
   if (input.coping.length < 1) {
-    throw new Error('onboarding: at least one coping strategy is required')
+    throw new DomainError(
+      'validation',
+      'ONBOARDING_NO_COPING',
+      'onboarding: at least one coping strategy is required',
+    )
   }
   if (!isWithinCap(input.limitTimeMin, input.referenceTimeMin)) {
-    throw new Error('onboarding: time limit exceeds the 90% cap')
+    throw new DomainError(
+      'validation',
+      'ONBOARDING_TIME_CAP',
+      'onboarding: time limit exceeds the 90% cap',
+    )
   }
   if (!isWithinCap(input.limitStakesCzk, input.referenceStakesCzk)) {
-    throw new Error('onboarding: stakes limit exceeds the 90% cap')
+    throw new DomainError(
+      'validation',
+      'ONBOARDING_STAKES_CAP',
+      'onboarding: stakes limit exceeds the 90% cap',
+    )
   }
 
   const at = deps.time

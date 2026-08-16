@@ -3,6 +3,7 @@
  * method body is TODO. See docs/architecture.md §ReminderService.
  */
 import type { ReminderResponse, ReminderService } from '@/app/ports/reminderService.ts'
+import { type Result, run } from '@/app/result.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import type { CheckInRepository, ProfileRepository } from '@domain/ports.ts'
 
@@ -18,9 +19,9 @@ export class ReminderServiceImpl implements ReminderService {
     this.deps = deps
   }
 
-  getDueReminder(_userId: UserId, _time: ISOTimestamp): Promise<ReminderResponse | null> {
-    return Promise.reject(
-      new Error('ReminderService.getDueReminder: not implemented (wiring only)'),
-    )
+  getDueReminder(_userId: UserId, _time: ISOTimestamp): Promise<Result<ReminderResponse | null>> {
+    return run(() => {
+      throw new Error('ReminderService.getDueReminder: not implemented (wiring only)')
+    })
   }
 }

@@ -26,18 +26,17 @@ export function useExportDownload() {
     running.current = true
     setStatus('running')
 
-    void exportService.exportDataZip(DEMO_USER_ID, clientNow()).then(
-      (bytes) => {
-        downloadBytes(bytes, exportFilename(new Date()), 'application/zip')
-        running.current = false
-        setStatus('idle')
-      },
-      (error: unknown) => {
-        console.error('[export] exportDataZip failed', error)
+    void exportService.exportDataZip(DEMO_USER_ID, clientNow()).then((res) => {
+      if (res.error || !res.data) {
+        console.error('[export] exportDataZip failed', res.error)
         running.current = false
         setStatus('failed')
-      },
-    )
+        return
+      }
+      downloadBytes(res.data, exportFilename(new Date()), 'application/zip')
+      running.current = false
+      setStatus('idle')
+    })
   }, [exportService])
 
   return { exportData, status }

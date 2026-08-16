@@ -5,6 +5,7 @@
  */
 import type { DashboardResponse, DashboardService } from '@/app/ports/dashboardService.ts'
 import { toDashboardResponse } from '@/app/mappers/dashboardMapper.ts'
+import { type Result, run } from '@/app/result.ts'
 import { buildDashboardVM } from '@domain/dashboard.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import type {
@@ -30,14 +31,16 @@ export class DashboardServiceImpl implements DashboardService {
     this.deps = deps
   }
 
-  async getDashboard(userId: UserId, time: ISOTimestamp): Promise<DashboardResponse> {
-    const vm = await buildDashboardVM({
-      userId,
-      profileRepo: this.deps.profiles,
-      limitRepo: this.deps.limits,
-      checkInRepo: this.deps.checkIns,
-      time,
+  getDashboard(userId: UserId, time: ISOTimestamp): Promise<Result<DashboardResponse>> {
+    return run(async () => {
+      const vm = await buildDashboardVM({
+        userId,
+        profileRepo: this.deps.profiles,
+        limitRepo: this.deps.limits,
+        checkInRepo: this.deps.checkIns,
+        time,
+      })
+      return toDashboardResponse(vm)
     })
-    return toDashboardResponse(vm)
   }
 }

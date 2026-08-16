@@ -1,5 +1,6 @@
 import { DashboardServiceImpl } from '@/app/services/dashboardServiceImpl.ts'
 import type { DashboardServiceDeps } from '@/app/services/dashboardServiceImpl.ts'
+import type { Result } from '@/app/result.ts'
 import type { CheckIn, Limit, Profile, Review } from '@domain/model.ts'
 import type {
   CheckInRepository,
@@ -9,6 +10,13 @@ import type {
 } from '@domain/ports.ts'
 
 const USER_ID = 'demo-user'
+
+/** Unwrap a service `Result`, failing the test if it carried an envelope error. */
+function data<T>(r: Result<T>): T {
+  if (r.error) throw new Error(`unexpected error envelope: ${r.error.type}:${r.error.code}`)
+  if (r.data === null) throw new Error('expected data, got null')
+  return r.data
+}
 
 function checkIn(overrides: Partial<CheckIn>): CheckIn {
   return {
@@ -96,7 +104,7 @@ describe('DashboardServiceImpl.getDashboard', () => {
       ],
     })
 
-    const res = await service.getDashboard(USER_ID, time)
+    const res = data(await service.getDashboard(USER_ID, time))
 
     expect(res.studyDay).toBe(5)
     expect(res.weekNo).toBe(1)
@@ -130,6 +138,9 @@ describe('DashboardServiceImpl.getDashboard', () => {
 
   it('rejects when no profile has been onboarded yet', async () => {
     const { service, time } = makeService({ today: '2026-09-05', checkIns: [], noProfile: true })
-    await expect(service.getDashboard(USER_ID, time)).rejects.toThrow(/no profile/)
+    const res = await service.getDashboard(USER_ID, time)
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('not_found')
+    expect(res.error?.code).toBe('DASHBOARD_NO_PROFILE')
   })
 })

@@ -1,5 +1,13 @@
 import { ReviewServiceImpl, type ReviewServiceDeps } from '@/app/services/reviewServiceImpl.ts'
+import { ok, type Result } from '@/app/result.ts'
 import type { CheckIn, Limit, Profile, Review } from '@domain/model.ts'
+
+/** Unwrap a service `Result`, failing the test if it carried an envelope error. */
+function data<T>(r: Result<T>): T {
+  if (r.error) throw new Error(`unexpected error envelope: ${r.error.type}:${r.error.code}`)
+  if (r.data === null) throw new Error('expected data, got null')
+  return r.data
+}
 import type {
   CheckInRepository,
   LimitRepository,
@@ -93,25 +101,27 @@ describe('ReviewServiceImpl', () => {
 
   it('surfaces the elapsed, unreviewed week with totals, missing days, suggested limits', async () => {
     const { service, time } = makeService({ today: '2026-09-08', checkIns: week1CheckIns })
-    await expect(service.getPendingReview(USER_ID, time)).resolves.toEqual({
-      weekNo: 1,
-      time: { used: 350, limit: 480, status: 'OK' },
-      stakes: { used: 6_500, limit: 8_000, status: 'POZOR' },
-      missingDays: [
-        '2026-09-02T00:00:00.000Z',
-        '2026-09-03T00:00:00.000Z',
-        '2026-09-04T00:00:00.000Z',
-        '2026-09-05T00:00:00.000Z',
-        '2026-09-06T00:00:00.000Z',
-        '2026-09-07T00:00:00.000Z',
-      ],
-      suggestedNextLimits: { timeMinutes: 480, stakesAmount: 8_000 },
-    })
+    await expect(service.getPendingReview(USER_ID, time)).resolves.toEqual(
+      ok({
+        weekNo: 1,
+        time: { used: 350, limit: 480, status: 'OK' },
+        stakes: { used: 6_500, limit: 8_000, status: 'POZOR' },
+        missingDays: [
+          '2026-09-02T00:00:00.000Z',
+          '2026-09-03T00:00:00.000Z',
+          '2026-09-04T00:00:00.000Z',
+          '2026-09-05T00:00:00.000Z',
+          '2026-09-06T00:00:00.000Z',
+          '2026-09-07T00:00:00.000Z',
+        ],
+        suggestedNextLimits: { timeMinutes: 480, stakesAmount: 8_000 },
+      }),
+    )
   })
 
   it('returns null while the current week has not elapsed', async () => {
     const { service, time } = makeService({ today: '2026-09-04', checkIns: week1CheckIns })
-    await expect(service.getPendingReview(USER_ID, time)).resolves.toBeNull()
+    await expect(service.getPendingReview(USER_ID, time)).resolves.toEqual(ok(null))
   })
 
   it('completeReview writes a review + next week limit and closes the week', async () => {
@@ -138,27 +148,28 @@ describe('ReviewServiceImpl', () => {
       weeklyLimitTimeMin: 460,
       weeklyLimitStakesCzk: 7_500,
     })
-    await expect(service.getPendingReview(USER_ID, time)).resolves.toBeNull()
+    await expect(service.getPendingReview(USER_ID, time)).resolves.toEqual(ok(null))
   })
 
-  it('completeReview rejects next limits above the 90% cap', async () => {
+  it('reports a validation error for next limits above the 90% cap', async () => {
     const { service, time } = makeService({ today: '2026-09-08', checkIns: week1CheckIns })
-    await expect(
-      service.completeReview(
-        {
-          reviewWeekNo: 1,
-          nextLimits: { timeMinutes: 541, stakesAmount: 7_500 },
-          incomplete: false,
-        },
-        USER_ID,
-        time,
-      ),
-    ).rejects.toThrow(/cap/)
+    const res = await service.completeReview(
+      {
+        reviewWeekNo: 1,
+        nextLimits: { timeMinutes: 541, stakesAmount: 7_500 },
+        incomplete: false,
+      },
+      USER_ID,
+      time,
+    )
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('validation')
+    expect(res.error?.code).toBe('REVIEW_TIME_CAP')
   })
 
   it('getFinalSummary reports per-week statuses without setting limits', async () => {
     const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
-    const summary = await service.getFinalSummary(USER_ID, time)
+    const summary = data(await service.getFinalSummary(USER_ID, time))
     expect(summary.weeks).toHaveLength(4)
     expect(summary.weeks[0]).toMatchObject({
       weekNo: 1,
@@ -176,7 +187,7 @@ describe('ReviewServiceImpl', () => {
 
   it('getFinalSummary carries the usage the statuses were derived from', async () => {
     const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
-    const summary = await service.getFinalSummary(USER_ID, time)
+    const summary = data(await service.getFinalSummary(USER_ID, time))
 
     // Without these the screens could only show a verdict, not the numbers behind it.
     expect(summary.weeks[0]?.time.limit).toBeGreaterThan(0)
@@ -185,7 +196,7 @@ describe('ReviewServiceImpl', () => {
 
   it('getFinalSummary marks days without a record as missing, never as zeros', async () => {
     const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
-    const summary = await service.getFinalSummary(USER_ID, time)
+    const summary = data(await service.getFinalSummary(USER_ID, time))
     const week1 = summary.weeks[0]
 
     expect(week1?.days).toHaveLength(7)
@@ -197,7 +208,7 @@ describe('ReviewServiceImpl', () => {
 
   it('getFinalSummary reports the programme day it was read on', async () => {
     const { service, time } = makeService({ today: '2026-10-01', checkIns: week1CheckIns })
-    const summary = await service.getFinalSummary(USER_ID, time)
+    const summary = data(await service.getFinalSummary(USER_ID, time))
 
     expect(summary.studyDay).toBeGreaterThan(28)
   })

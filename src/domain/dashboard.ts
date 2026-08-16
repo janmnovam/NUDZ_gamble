@@ -5,6 +5,7 @@
 import { calendarDate, createStudyCalendar, type StudyDay, type WeekNo } from '@domain/clock.ts'
 import { dayStateOf, type DayState } from '@domain/checkin.ts'
 import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
+import { DomainError } from '@domain/errors.ts'
 import { resolvePendingAction, type PendingAction } from '@domain/guards.ts'
 import { classifyStatus, worseStatus } from '@domain/limits.ts'
 import type { CheckIn, ISOCalendarTimestamp, ISODate, ISOTimestamp, UserId } from '@domain/model.ts'
@@ -108,7 +109,11 @@ export async function buildDashboardVM(deps: DashboardDeps): Promise<DashboardVM
   const config = deps.config ?? DEFAULT_CONFIG
   const profile = await deps.profileRepo.get(deps.userId)
   if (!profile) {
-    throw new Error(`buildDashboardVM: no profile for user ${deps.userId}`)
+    throw new DomainError(
+      'not_found',
+      'DASHBOARD_NO_PROFILE',
+      `buildDashboardVM: no profile for user ${deps.userId}`,
+    )
   }
 
   const calendar = createStudyCalendar(profile.interventionStartDate, deps.time, config)
@@ -122,7 +127,11 @@ export async function buildDashboardVM(deps: DashboardDeps): Promise<DashboardVM
   const limits = await deps.limitRepo.listByUser(deps.userId)
   const limit = limits.find((l) => l.weekNo === weekNo)
   if (!limit) {
-    throw new Error(`buildDashboardVM: no limit set for week ${String(weekNo)}`)
+    throw new DomainError(
+      'not_found',
+      'DASHBOARD_NO_LIMIT',
+      `buildDashboardVM: no limit set for week ${String(weekNo)}`,
+    )
   }
 
   const checkIns = await deps.checkInRepo.listByUser(deps.userId)

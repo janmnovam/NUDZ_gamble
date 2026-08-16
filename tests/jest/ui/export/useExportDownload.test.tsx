@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { jest } from '@jest/globals'
 
 import type { ExportService } from '@/app/ports/exportService.ts'
+import { fail, ok, type Result } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
 import { useExportDownload } from '@ui/export/useExportDownload.ts'
@@ -45,7 +46,7 @@ describe('useExportDownload', () => {
 
   it('offers the archive as a dated .zip download', async () => {
     const button = renderHarness({
-      exportDataZip: () => Promise.resolve(new Uint8Array([1, 2, 3])),
+      exportDataZip: () => Promise.resolve(ok(new Uint8Array([1, 2, 3]))),
     })
     fireEvent.click(button)
 
@@ -56,17 +57,17 @@ describe('useExportDownload', () => {
   })
 
   it('ignores a second tap while an export is already running', async () => {
-    let resolve: ((bytes: Uint8Array) => void) | undefined
+    let resolve: ((result: Result<Uint8Array>) => void) | undefined
     const button = renderHarness({
       exportDataZip: () =>
-        new Promise<Uint8Array>((r) => {
+        new Promise<Result<Uint8Array>>((r) => {
           resolve = r
         }),
     })
 
     fireEvent.click(button)
     fireEvent.click(button)
-    resolve?.(new Uint8Array([1]))
+    resolve?.(ok(new Uint8Array([1])))
 
     await waitFor(() => {
       expect(clicked).toHaveLength(1)
@@ -75,7 +76,10 @@ describe('useExportDownload', () => {
 
   it('reports a failure instead of offering a broken file', async () => {
     const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined)
-    const button = renderHarness({ exportDataZip: () => Promise.reject(new Error('nope')) })
+    const button = renderHarness({
+      exportDataZip: () =>
+        Promise.resolve(fail({ type: 'internal', code: 'INTERNAL', trace: 'test' })),
+    })
     fireEvent.click(button)
 
     await waitFor(() => {

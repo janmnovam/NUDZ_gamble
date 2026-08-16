@@ -11,6 +11,7 @@ import type {
   ReferenceWeekRequest,
   SuggestedLimitsResponse,
 } from '@/app/dto/onboarding.ts'
+import type { Result } from '@/app/result.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 
 export interface OnboardingService {
@@ -19,7 +20,7 @@ export interface OnboardingService {
    * this before showing the onboarding wizard, so a returning user lands on
    * the dashboard instead of going through onboarding again.
    */
-  getStatus(userId: UserId, time: ISOTimestamp): Promise<OnboardingStatusResponse>
+  getStatus(userId: UserId, time: ISOTimestamp): Promise<Result<OnboardingStatusResponse>>
 
   /**
    * Derive the auto-suggested weekly limits (80% of the reference) plus the
@@ -29,7 +30,7 @@ export interface OnboardingService {
     req: ReferenceWeekRequest,
     userId: UserId,
     time: ISOTimestamp,
-  ): Promise<SuggestedLimitsResponse>
+  ): Promise<Result<SuggestedLimitsResponse>>
 
   /**
    * Finalize onboarding: persist profile + week-1 limit + coping atomically.
@@ -42,5 +43,5 @@ export interface OnboardingService {
     req: OnboardingProfileRequest,
     userId: UserId,
     time: ISOTimestamp,
-  ): Promise<OnboardingProfileResponse>
+  ): Promise<Result<OnboardingProfileResponse>>
 }

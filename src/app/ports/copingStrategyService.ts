@@ -8,14 +8,15 @@ import type {
   CopingSuggestionDto,
   CreateCopingStrategyRequest,
 } from '@/app/dto/coping.ts'
+import type { Result } from '@/app/result.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 
 export interface CopingStrategyService {
   /** The predefined coping suggestions (Dr. Kazmer's list) for the onboarding picker. */
-  getSuggestions(userId: UserId, time: ISOTimestamp): Promise<CopingSuggestionDto[]>
+  getSuggestions(userId: UserId, time: ISOTimestamp): Promise<Result<CopingSuggestionDto[]>>
 
   /** The user's own coping strategies (default + custom), by priority. */
-  list(userId: UserId, time: ISOTimestamp): Promise<CopingStrategyDto[]>
+  list(userId: UserId, time: ISOTimestamp): Promise<Result<CopingStrategyDto[]>>
 
   /**
    * Add a custom coping strategy, appended after all existing ones.
@@ -26,7 +27,7 @@ export interface CopingStrategyService {
     req: CreateCopingStrategyRequest,
     userId: UserId,
     time: ISOTimestamp,
-  ): Promise<CopingStrategyDto>
+  ): Promise<Result<CopingStrategyDto>>
 
   /**
    * Toggle a strategy active/inactive. Rejects an unknown id. `time` is the
@@ -37,5 +38,5 @@ export interface CopingStrategyService {
     active: boolean,
     userId: UserId,
     time: ISOTimestamp,
-  ): Promise<void>
+  ): Promise<Result<void>>
 }

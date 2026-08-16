@@ -17,6 +17,7 @@ import type {
   SuggestedLimitsResponse,
 } from '@/app/dto/onboarding.ts'
 import { toOnboardingInput, toOnboardingProfileResponse } from '@/app/mappers/onboardingMapper.ts'
+import { type Result, run } from '@/app/result.ts'
 import { calendarTimestamp, dateOf, nextDate } from '@domain/clock.ts'
 import { limitPercentView, maxLimit, suggestLimit } from '@domain/limits.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
@@ -37,45 +38,51 @@ export class OnboardingServiceImpl implements OnboardingService {
     this.deps = deps
   }
 
-  async getStatus(userId: UserId, _time: ISOTimestamp): Promise<OnboardingStatusResponse> {
-    const profile = await this.deps.profiles.get(userId)
-    return {
-      userId,
-      completed: profile !== undefined,
-      completedAt: profile?.onboardingCompletedAt ?? null,
-    }
+  getStatus(userId: UserId, _time: ISOTimestamp): Promise<Result<OnboardingStatusResponse>> {
+    return run(async () => {
+      const profile = await this.deps.profiles.get(userId)
+      return {
+        userId,
+        completed: profile !== undefined,
+        completedAt: profile?.onboardingCompletedAt ?? null,
+      }
+    })
   }
 
   getSuggestedLimits(
     req: ReferenceWeekRequest,
     _userId: UserId,
     _time: ISOTimestamp,
-  ): Promise<SuggestedLimitsResponse> {
-    const { suggestedPct, maxPct } = limitPercentView()
-    return Promise.resolve({
-      timeMinutes: suggestLimit(req.timeMinutes),
-      stakesAmount: suggestLimit(req.stakesAmount),
-      timePercent: suggestedPct,
-      stakePercent: suggestedPct,
-      timeCapMinutes: maxLimit(req.timeMinutes),
-      stakesCapAmount: maxLimit(req.stakesAmount),
-      capPercent: maxPct,
+  ): Promise<Result<SuggestedLimitsResponse>> {
+    return run(() => {
+      const { suggestedPct, maxPct } = limitPercentView()
+      return {
+        timeMinutes: suggestLimit(req.timeMinutes),
+        stakesAmount: suggestLimit(req.stakesAmount),
+        timePercent: suggestedPct,
+        stakePercent: suggestedPct,
+        timeCapMinutes: maxLimit(req.timeMinutes),
+        stakesCapAmount: maxLimit(req.stakesAmount),
+        capPercent: maxPct,
+      }
     })
   }
 
-  async complete(
+  complete(
     req: OnboardingProfileRequest,
     userId: UserId,
     time: ISOTimestamp,
-  ): Promise<OnboardingProfileResponse> {
-    const input = toOnboardingInput(req, userId)
-    await completeOnboarding(input, {
-      repo: this.deps.repo,
-      time,
-      newId: this.deps.newId,
+  ): Promise<Result<OnboardingProfileResponse>> {
+    return run(async () => {
+      const input = toOnboardingInput(req, userId)
+      await completeOnboarding(input, {
+        repo: this.deps.repo,
+        time,
+        newId: this.deps.newId,
+      })
+      // Same value the domain just persisted: the day after the instant's local date.
+      const interventionStartDate = calendarTimestamp(nextDate(dateOf(time)))
+      return toOnboardingProfileResponse(req, interventionStartDate)
     })
-    // Same value the domain just persisted: the day after the instant's local date.
-    const interventionStartDate = calendarTimestamp(nextDate(dateOf(time)))
-    return toOnboardingProfileResponse(req, interventionStartDate)
   }
 }

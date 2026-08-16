@@ -44,8 +44,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // Load the predefined coping suggestions once; map each to the domain-shaped
   useEffect(() => {
     let active = true
-    void coping.getSuggestions(DEMO_USER_ID, clientNow()).then((suggestions) => {
-      if (active) setCopingStrategies(suggestions)
+    void coping.getSuggestions(DEMO_USER_ID, clientNow()).then((res) => {
+      if (active && res.data) setCopingStrategies(res.data)
     })
     return () => {
       active = false
@@ -61,8 +61,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         DEMO_USER_ID,
         clientNow(),
       )
-      .then((limits) => {
-        if (active) setSuggestedLimits(limits)
+      .then((res) => {
+        if (active) setSuggestedLimits(res.data)
       })
     return () => {
       active = false
@@ -94,8 +94,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         DEMO_USER_ID,
         clientNow(),
       )
-      setInterventionStartDate(new Date(res.interventionStartDate))
-      rememberInterventionStart(res.interventionStartDate)
+      if (res.error || !res.data) {
+        submittingRef.current = false
+        console.error('Onboarding completion failed', res.error)
+        return
+      }
+      setInterventionStartDate(new Date(res.data.interventionStartDate))
+      rememberInterventionStart(res.data.interventionStartDate)
       goNext()
     } catch (error) {
       submittingRef.current = false

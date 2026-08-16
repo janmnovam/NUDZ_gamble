@@ -1,4 +1,5 @@
 import { CheckInServiceImpl, type CheckInServiceDeps } from '@/app/services/checkInServiceImpl.ts'
+import type { Result } from '@/app/result.ts'
 import type { CheckIn, CheckInEdit, CopingStrategy, Limit, Profile } from '@domain/model.ts'
 import type {
   CheckInEditRepository,
@@ -7,6 +8,13 @@ import type {
   LimitRepository,
   ProfileRepository,
 } from '@domain/ports.ts'
+
+/** Unwrap a service `Result`, failing the test if it carried an envelope error. */
+function payload<T>(r: Result<T>): T {
+  if (r.error) throw new Error(`unexpected error envelope: ${r.error.type}:${r.error.code}`)
+  if (r.data === null) throw new Error('expected data, got null')
+  return r.data
+}
 
 const USER_ID = 'demo-user'
 const START = '2026-09-01T00:00:00.000Z' // week 1 = 09-01..09-07
@@ -91,7 +99,7 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
 
   it('creates a record + a "created" audit row and returns feedback', async () => {
     const { service, checkInStore, editStore } = makeService()
-    const res = await service.submitCheckIn(req, USER_ID, TIME)
+    const res = payload(await service.submitCheckIn(req, USER_ID, TIME))
     expect(res.ok).toBe(true)
     if (!res.ok) return
     expect(res.checkIn).toMatchObject({
@@ -109,7 +117,7 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
   it('upserts on the same day: second submit edits, no duplicate, updatedAt set', async () => {
     const { service, checkInStore, editStore } = makeService()
     await service.submitCheckIn(req, USER_ID, TIME)
-    const res = await service.submitCheckIn({ ...req, timeMin: 200 }, USER_ID, TIME)
+    const res = payload(await service.submitCheckIn({ ...req, timeMin: 200 }, USER_ID, TIME))
     expect(res.ok).toBe(true)
     if (!res.ok) return
     expect(checkInStore).toHaveLength(1)
@@ -122,16 +130,18 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
 
   it('persists a not-played row as zeros', async () => {
     const { service, checkInStore } = makeService()
-    const res = await service.submitCheckIn(
-      {
-        behaviorDate: '2026-09-03T00:00:00.000Z',
-        played: false,
-        timeMin: 0,
-        stakesCzk: 0,
-        winningsCzk: 0,
-      },
-      USER_ID,
-      TIME,
+    const res = payload(
+      await service.submitCheckIn(
+        {
+          behaviorDate: '2026-09-03T00:00:00.000Z',
+          played: false,
+          timeMin: 0,
+          stakesCzk: 0,
+          winningsCzk: 0,
+        },
+        USER_ID,
+        TIME,
+      ),
     )
     expect(res.ok).toBe(true)
     expect(checkInStore[0]).toMatchObject({ played: false, timeMin: 0, stakesCzk: 0 })
@@ -139,10 +149,12 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
 
   it('rejects a future behaviorDate with a field error and writes nothing', async () => {
     const { service, checkInStore, editStore } = makeService()
-    const res = await service.submitCheckIn(
-      { ...req, behaviorDate: '2026-09-04T00:00:00.000Z' },
-      USER_ID,
-      TIME,
+    const res = payload(
+      await service.submitCheckIn(
+        { ...req, behaviorDate: '2026-09-04T00:00:00.000Z' },
+        USER_ID,
+        TIME,
+      ),
     )
     expect(res.ok).toBe(false)
     if (res.ok) return
@@ -154,10 +166,12 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
   it('refuses a prior (closed) week visibly via a field error', async () => {
     // today still 09-04 (week 1); ask for a week-0 date before the programme.
     const { service, checkInStore } = makeService()
-    const res = await service.submitCheckIn(
-      { ...req, behaviorDate: '2026-08-30T00:00:00.000Z' },
-      USER_ID,
-      TIME,
+    const res = payload(
+      await service.submitCheckIn(
+        { ...req, behaviorDate: '2026-08-30T00:00:00.000Z' },
+        USER_ID,
+        TIME,
+      ),
     )
     expect(res.ok).toBe(false)
     if (res.ok) return
@@ -179,7 +193,7 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
       },
     ]
     const { service } = makeService({ coping })
-    const res = await service.submitCheckIn({ ...req, stakesCzk: 6_600 }, USER_ID, TIME)
+    const res = payload(await service.submitCheckIn({ ...req, stakesCzk: 6_600 }, USER_ID, TIME))
     expect(res.ok).toBe(true)
     if (!res.ok) return
     expect(res.feedback.overall).toBe('POZOR')
@@ -188,20 +202,21 @@ describe('CheckInServiceImpl.submitCheckIn', () => {
 })
 
 describe('CheckInServiceImpl.editCheckIn', () => {
-  it('throws when there is no record for that day', async () => {
+  it('returns a not_found error when there is no record for that day', async () => {
     const { service } = makeService()
-    await expect(
-      service.editCheckIn(
-        {
-          behaviorDate: '2026-09-03T00:00:00.000Z',
-          played: true,
-          timeMin: 10,
-          stakesCzk: 10,
-          winningsCzk: 0,
-        },
-        USER_ID,
-        TIME,
-      ),
-    ).rejects.toThrow(/nothing to edit/)
+    const res = await service.editCheckIn(
+      {
+        behaviorDate: '2026-09-03T00:00:00.000Z',
+        played: true,
+        timeMin: 10,
+        stakesCzk: 10,
+        winningsCzk: 0,
+      },
+      USER_ID,
+      TIME,
+    )
+    expect(res.data).toBeNull()
+    expect(res.error?.type).toBe('not_found')
+    expect(res.error?.code).toBe('CHECKIN_NOTHING_TO_EDIT')
   })
 })

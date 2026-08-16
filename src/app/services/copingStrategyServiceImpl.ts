@@ -13,7 +13,9 @@ import type {
 } from '@/app/dto/coping.ts'
 import type { CopingStrategyService } from '@/app/ports/copingStrategyService.ts'
 import { toCopingStrategyDto, toCopingSuggestionDto } from '@/app/mappers/copingMapper.ts'
+import { type Result, run } from '@/app/result.ts'
 import { normalizeCopingLabel, nextCopingPriority } from '@domain/coping.ts'
+import { DomainError } from '@domain/errors.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import type { CopingStrategyRepository } from '@domain/ports.ts'
 
@@ -28,44 +30,56 @@ export class CopingStrategyServiceImpl implements CopingStrategyService {
     this.deps = deps
   }
 
-  async getSuggestions(_userId: UserId, _time: ISOTimestamp): Promise<CopingSuggestionDto[]> {
-    const defaults = await this.deps.repo.loadDefaults()
-    return defaults.map(toCopingSuggestionDto)
+  getSuggestions(_userId: UserId, _time: ISOTimestamp): Promise<Result<CopingSuggestionDto[]>> {
+    return run(async () => {
+      const defaults = await this.deps.repo.loadDefaults()
+      return defaults.map(toCopingSuggestionDto)
+    })
   }
 
-  async list(userId: UserId, _time: ISOTimestamp): Promise<CopingStrategyDto[]> {
-    const strategies = await this.deps.repo.listByUser(userId)
-    return strategies.map(toCopingStrategyDto)
+  list(userId: UserId, _time: ISOTimestamp): Promise<Result<CopingStrategyDto[]>> {
+    return run(async () => {
+      const strategies = await this.deps.repo.listByUser(userId)
+      return strategies.map(toCopingStrategyDto)
+    })
   }
 
-  async create(
+  create(
     req: CreateCopingStrategyRequest,
     userId: UserId,
     time: ISOTimestamp,
-  ): Promise<CopingStrategyDto> {
-    const label = normalizeCopingLabel(req.label)
-    const existing = await this.deps.repo.listByUser(userId)
-    const created = await this.deps.repo.create(
-      {
-        userId,
-        label,
-        type: 'custom',
-        priority: nextCopingPriority(existing),
-      },
-      time,
-    )
-    return toCopingStrategyDto(created)
+  ): Promise<Result<CopingStrategyDto>> {
+    return run(async () => {
+      const label = normalizeCopingLabel(req.label)
+      const existing = await this.deps.repo.listByUser(userId)
+      const created = await this.deps.repo.create(
+        {
+          userId,
+          label,
+          type: 'custom',
+          priority: nextCopingPriority(existing),
+        },
+        time,
+      )
+      return toCopingStrategyDto(created)
+    })
   }
 
-  async toggle(
+  toggle(
     copingStrategyId: string,
     active: boolean,
     _userId: UserId,
     time: ISOTimestamp,
-  ): Promise<void> {
-    if (copingStrategyId.trim().length === 0) {
-      throw new Error('coping: copingStrategyId must not be empty')
-    }
-    await this.deps.repo.setActive(copingStrategyId, active, time)
+  ): Promise<Result<void>> {
+    return run(async () => {
+      if (copingStrategyId.trim().length === 0) {
+        throw new DomainError(
+          'validation',
+          'COPING_EMPTY_ID',
+          'coping: copingStrategyId must not be empty',
+        )
+      }
+      await this.deps.repo.setActive(copingStrategyId, active, time)
+    })
   }
 }

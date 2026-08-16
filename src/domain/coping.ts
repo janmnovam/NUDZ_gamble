@@ -3,12 +3,13 @@
  * (create/toggle/list) reuses these so the app-layer service stays a thin
  * DTO/repo wrapper.
  */
+import { DomainError } from '@domain/errors.ts'
 
 /** Trims and validates a user-supplied label. Throws on empty/whitespace-only input. */
 export function normalizeCopingLabel(label: string): string {
   const trimmed = label.trim()
   if (trimmed.length === 0) {
-    throw new Error('coping: label must not be empty')
+    throw new DomainError('validation', 'COPING_EMPTY_LABEL', 'coping: label must not be empty')
   }
   return trimmed
 }

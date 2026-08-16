@@ -3,6 +3,7 @@ import { jest } from '@jest/globals'
 
 import type { DashboardResponse } from '@/app/dto/dashboard.ts'
 import type { DashboardService } from '@/app/ports/dashboardService.ts'
+import { fail, ok, type Result } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
 import { AppProvider } from '@ui/app/AppProvider.tsx'
 import { DashboardFlow } from '@ui/dashboard/DashboardFlow.tsx'
@@ -38,22 +39,25 @@ function renderFlow(dashboard: DashboardService) {
 describe('DashboardFlow', () => {
   it('shows a loading state until the service resolves', () => {
     // A promise that never settles keeps the flow in its initial state.
-    renderFlow({ getDashboard: () => new Promise<DashboardResponse>(() => undefined) })
+    renderFlow({ getDashboard: () => new Promise<Result<DashboardResponse>>(() => undefined) })
 
     expect(screen.getByText('Načítám…')).not.toBeNull()
   })
 
   it('renders the dashboard once the service resolves', async () => {
-    renderFlow({ getDashboard: () => Promise.resolve(DASHBOARD) })
+    renderFlow({ getDashboard: () => Promise.resolve(ok(DASHBOARD)) })
 
     expect(await screen.findByText('Den 1')).not.toBeNull()
     expect(screen.getByText('zbývá 8 h z 8 h')).not.toBeNull()
   })
 
-  it('falls back to an error message when the service rejects', async () => {
+  it('falls back to an error message when the service returns an error', async () => {
     // The flow logs the failure; silence it so the run stays readable.
     const logged = jest.spyOn(console, 'error').mockImplementation(() => undefined)
-    renderFlow({ getDashboard: () => Promise.reject(new Error('no limit set for week 2')) })
+    renderFlow({
+      getDashboard: () =>
+        Promise.resolve(fail({ type: 'not_found', code: 'DASHBOARD_NO_LIMIT', trace: 'test' })),
+    })
 
     expect(await screen.findByText('Něco se nepovedlo.')).not.toBeNull()
     expect(logged).toHaveBeenCalled()
@@ -61,7 +65,7 @@ describe('DashboardFlow', () => {
   })
 
   it('does not render the screen while loading', async () => {
-    renderFlow({ getDashboard: () => Promise.resolve(DASHBOARD) })
+    renderFlow({ getDashboard: () => Promise.resolve(ok(DASHBOARD)) })
 
     expect(screen.queryByText('Celkový stav')).toBeNull()
     await waitFor(() => {

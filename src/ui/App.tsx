@@ -61,15 +61,12 @@ function AppRoutes() {
   // dashboard, everyone else starts onboarding. Runs while `view` is 'loading'.
   useEffect(() => {
     let active = true
-    void onboarding
-      .getStatus(DEMO_USER_ID, clientNow())
-      .then((status) => {
-        if (active) navigate(status.completed ? 'dashboard' : 'onboarding')
-      })
-      .catch(() => {
-        // On a read failure, fall back to onboarding rather than a stuck splash.
-        if (active) navigate('onboarding')
-      })
+    void onboarding.getStatus(DEMO_USER_ID, clientNow()).then((res) => {
+      if (!active) return
+      // On a read failure, `data` is null → fall back to onboarding rather than a stuck splash.
+      if (res.error) console.error('[app] getStatus failed', res.error)
+      navigate(res.data?.completed ? 'dashboard' : 'onboarding')
+    })
     return () => {
       active = false
     }

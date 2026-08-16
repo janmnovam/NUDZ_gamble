@@ -72,14 +72,20 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
     let active = true
 
     const loadDashboardForCheckIn = async () => {
-      const dashboard = await dashboardService.getDashboard(DEMO_USER_ID, baseTime)
+      const dashboardRes = await dashboardService.getDashboard(DEMO_USER_ID, baseTime)
+      if (dashboardRes.error || !dashboardRes.data) {
+        throw new Error(dashboardRes.error?.code ?? 'dashboard unavailable')
+      }
+      const dashboard = dashboardRes.data
       const behaviorDay = behaviorDayForCheckIn(dashboard)
       if (behaviorDay) return { dashboard, behaviorDay, time: baseTime }
 
       const manualTime = nextManualTestTime(dashboard, interventionStartDate)
       if (manualTime === null || manualTime === baseTime) return null
 
-      const manualDashboard = await dashboardService.getDashboard(DEMO_USER_ID, manualTime)
+      const manualRes = await dashboardService.getDashboard(DEMO_USER_ID, manualTime)
+      if (manualRes.error || !manualRes.data) return null
+      const manualDashboard = manualRes.data
       const manualBehaviorDay = behaviorDayForCheckIn(manualDashboard)
       if (!manualBehaviorDay) return null
 
@@ -159,11 +165,16 @@ export function CheckInRoute({ onComplete, onCancel }: CheckInRouteProps) {
           )
           .then((response) => {
             submittingRef.current = false
-            if (response.ok) {
+            if (response.error || !response.data) {
+              console.error('[checkin] submitCheckIn failed', response.error)
+              setState({ status: 'failed' })
+              return
+            }
+            if (response.data.ok) {
               onComplete()
               return
             }
-            console.error('[checkin] submitCheckIn validation failed', response.errors)
+            console.error('[checkin] submitCheckIn validation failed', response.data.errors)
             setState({ status: 'failed' })
           })
           .catch((error: unknown) => {
