@@ -67,9 +67,9 @@ function createService() {
         ok([
           {
             id: 'change_environment',
-            label: 'Na chvíli změním prostředí',
+            label: 'Na chvíli odejdu od hraní',
             type: 'default',
-            summary: 'Vytvořím si krátký odstup.',
+            summary: 'Zavřu stránku nebo aplikaci, odložím zařízení nebo se přesunu jinam.',
           },
         ]),
       ),
@@ -128,17 +128,19 @@ describe('CopingFlow strategy-library integration', () => {
       throw new Error('Obě sekce knihovny musí být vykreslené')
     }
 
-    expect(within(selectedSection).getByText('Na chvíli změním prostředí')).not.toBeNull()
-    expect(within(selectedSection).getByText('Vytvořím si krátký odstup.')).not.toBeNull()
+    expect(within(selectedSection).getByText('Na chvíli odejdu od hraní')).not.toBeNull()
+    expect(
+      within(selectedSection).getByText(
+        'Zavřu stránku nebo aplikaci, odložím zařízení nebo se přesunu jinam.',
+      ),
+    ).not.toBeNull()
     expect(within(otherSection).getByText('Zavolám kamarádovi')).not.toBeNull()
     expect(screen.getByRole('tab', { name: 'Kontakty' })).not.toBeNull()
-    // Catalog strategies have no detail loaded (`NO_CATALOG_DETAILS`), so they stay unopenable;
-    // custom strategies are openable now that `onUpdateCustomStrategy` is wired.
     expect(
-      screen.queryByRole('button', {
-        name: 'Otevřít detail strategie „Na chvíli změním prostředí“',
+      screen.getByRole('button', {
+        name: 'Otevřít detail strategie „Na chvíli odejdu od hraní“',
       }),
-    ).toBeNull()
+    ).not.toBeNull()
     expect(
       screen.getByRole('button', { name: 'Otevřít detail strategie „Zavolám kamarádovi“' }),
     ).not.toBeNull()
@@ -160,12 +162,29 @@ describe('CopingFlow strategy-library integration', () => {
     expect(screen.getByText('800 350 000 · pondělí až pátek, 10:00–18:00')).not.toBeNull()
   })
 
+  it('opens a catalogue strategy detail assembled from its stable suggestion code', async () => {
+    const { service } = createService()
+    renderFlow(service)
+
+    fireEvent.click(
+      await screen.findByRole('button', {
+        name: 'Otevřít detail strategie „Na chvíli odejdu od hraní“',
+      }),
+    )
+
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Na chvíli odejdu od hraní' }),
+    ).not.toBeNull()
+    expect(screen.getByText('DOSTUPNÁ ALTERNATIVA')).not.toBeNull()
+    expect(screen.getAllByRole('button', { name: 'Zpět do knihovny' })).toHaveLength(2)
+  })
+
   it('keeps the strategy library available when optional contact enrichment fails', async () => {
     const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
     const { service } = createService()
     renderFlow(service, { list: () => Promise.reject(new Error('contacts unavailable')) })
 
-    expect(await screen.findByText('Na chvíli změním prostředí')).not.toBeNull()
+    expect(await screen.findByText('Na chvíli odejdu od hraní')).not.toBeNull()
     expect(screen.queryByRole('tab', { name: 'Kontakty' })).toBeNull()
     expect(consoleError).toHaveBeenCalledWith('[coping] contacts failed', expect.any(Error))
 
@@ -179,7 +198,7 @@ describe('CopingFlow strategy-library integration', () => {
     await screen.findByRole('heading', { level: 1, name: 'Knihovna strategií' })
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'Další možnosti pro strategii „Na chvíli změním prostředí“',
+        name: 'Další možnosti pro strategii „Na chvíli odejdu od hraní“',
       }),
     )
     fireEvent.click(screen.getByRole('button', { name: 'Odebrat z Vybraných' }))
