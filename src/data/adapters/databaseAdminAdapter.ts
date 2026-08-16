@@ -20,14 +20,19 @@ export class DatabaseAdminAdapter implements DatabaseAdmin {
   async clearUserData(userId: UserId): Promise<void> {
     const { db } = this
     // Every user-scoped store indexes `user_id`; contacts is global and omitted.
-    await Promise.all([
-      db.profile.where('user_id').equals(userId).delete(),
-      db.coping_strategy.where('user_id').equals(userId).delete(),
-      db.limits.where('user_id').equals(userId).delete(),
-      db.check_ins.where('user_id').equals(userId).delete(),
-      db.reviews.where('user_id').equals(userId).delete(),
-      db.usage_events.where('user_id').equals(userId).delete(),
-      db.check_in_edits.where('user_id').equals(userId).delete(),
-    ])
+    const userTables = [
+      db.profile,
+      db.coping_strategy,
+      db.limits,
+      db.check_ins,
+      db.reviews,
+      db.usage_events,
+      db.check_in_edits,
+    ]
+    // One rw transaction so a user's "delete my data" is all-or-nothing:
+    // a mid-way failure rolls back rather than leaving a partial delete.
+    await db.transaction('rw', userTables, () =>
+      Promise.all(userTables.map((table) => table.where('user_id').equals(userId).delete())),
+    )
   }
 }

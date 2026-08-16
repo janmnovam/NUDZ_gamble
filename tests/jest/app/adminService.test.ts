@@ -5,15 +5,29 @@ import { AppDatabase, createApp, createDataLayer, type DataLayer } from '@/core'
 import type { DatabaseAdmin } from '@domain/ports.ts'
 
 describe('AdminServiceImpl.dropUserData', () => {
-  it('delegates to the DatabaseAdmin port with the given userId', async () => {
+  it('delegates to the DatabaseAdmin port with the given userId and resolves ok', async () => {
     const clearUserData = jest.fn<(userId: string) => Promise<void>>().mockResolvedValue(undefined)
     const databaseAdmin = { clearUserData } as unknown as DatabaseAdmin
     const service = new AdminServiceImpl({ databaseAdmin })
 
-    await service.dropUserData('demo-user')
+    const result = await service.dropUserData('demo-user')
 
+    expect(result.error).toBeNull()
     expect(clearUserData).toHaveBeenCalledTimes(1)
     expect(clearUserData).toHaveBeenCalledWith('demo-user')
+  })
+
+  it('resolves to an internal error envelope (never throws) when the drop fails', async () => {
+    const clearUserData = jest
+      .fn<(userId: string) => Promise<void>>()
+      .mockRejectedValue(new Error('boom'))
+    const databaseAdmin = { clearUserData } as unknown as DatabaseAdmin
+    const service = new AdminServiceImpl({ databaseAdmin })
+
+    const result = await service.dropUserData('demo-user')
+
+    expect(result.data).toBeNull()
+    expect(result.error?.type).toBe('internal')
   })
 
   it("drops the user's data but keeps the global contacts directory when wired through createApp", async () => {
@@ -31,8 +45,9 @@ describe('AdminServiceImpl.dropUserData', () => {
     await data.contacts.seed()
     expect(await db.profile.count()).toBe(1)
 
-    await app.admin.dropUserData('demo-user')
+    const result = await app.admin.dropUserData('demo-user')
 
+    expect(result.error).toBeNull()
     expect(await db.profile.count()).toBe(0)
     expect(await db.contacts.count()).toBeGreaterThan(0)
 
