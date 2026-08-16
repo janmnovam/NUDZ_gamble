@@ -24,6 +24,12 @@ function alreadyInstalled(): boolean {
   return standaloneDisplay || iosStandalone
 }
 
+function isPhone(): boolean {
+  // Phone-only: Android Chrome tags phone UAs with "Mobile" (tablets omit it),
+  // plus iPhone/iPod. Desktop and most tablets are deliberately excluded.
+  return /android.*mobile|iphone|ipod|mobile safari/i.test(navigator.userAgent)
+}
+
 function isIosSafari(): boolean {
   const ua = navigator.userAgent
   const isIos = /iphone|ipad|ipod/i.test(ua)
@@ -59,6 +65,8 @@ export function InstallPrompt() {
       seen = false
     }
     if (seen || alreadyInstalled()) return
+    // Install prompt is phone-only — desktop users are not nudged.
+    if (!isPhone()) return
 
     const onBeforeInstall = (event: Event) => {
       event.preventDefault() // stop Chrome's mini-infobar; we drive it ourselves
