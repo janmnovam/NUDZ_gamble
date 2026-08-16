@@ -150,9 +150,9 @@ describe('getLastChanceDue', () => {
     const filled = ['01', '02', '03', '04', '05', '06'].map((d) =>
       checkIn({ behaviorDate: `2026-09-${d}T00:00:00.000Z` }),
     )
-    expect(
-      getLastChanceDue({ profile: profile(), checkIns: filled, time: LAST_DAY_WEEK1 }),
-    ).toBe(false)
+    expect(getLastChanceDue({ profile: profile(), checkIns: filled, time: LAST_DAY_WEEK1 })).toBe(
+      false,
+    )
   })
 
   it('is false when it is not the last day of the week, even with missing days', () => {
