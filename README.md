@@ -164,8 +164,8 @@ Icons in `public/` are generated for this repository and carry no third-party li
 
 - A hidden feature that lets QA/testing set a specific intervention date.
 - This allows testing specific time periods without waiting for real time to pass.
-- It's hidden behind the version number shown on the Dashboard screen.
-- QA/testing must tap the version number exactly 5 times to reveal the Debug mode GUI.
+- It's hidden behind "Den 1" number shown on the Home screen.
+- QA/testing must tap the version number exactly 7 times to reveal the Debug mode GUI.
 
 ## Exporting data from app
 
