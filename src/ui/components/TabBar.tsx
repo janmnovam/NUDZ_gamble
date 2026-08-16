@@ -46,7 +46,11 @@ export function TabBar({ active: activeKey = 'reports' }: TabBarProps = {}) {
         const reachable = !active && target !== undefined
         const content = (
           <>
-            {active ? <span className="bg-brand h-[3px] w-14 rounded-t-full" /> : null}
+            {/* Always rendered so switching tabs doesn't shift icons/labels. */}
+            <span
+              aria-hidden
+              className={cn('h-[3px] w-14 rounded-t-full', active ? 'bg-brand' : 'bg-transparent')}
+            />
             <Icon
               className={cn('size-6', active ? 'text-brand' : 'text-muted')}
               strokeWidth={1.9}
