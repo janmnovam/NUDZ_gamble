@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState } from 'react'
 
+import { DEMO_USER_ID } from '@/app/constants.ts'
 import { useExportService } from '@ui/app/AppContext.ts'
+import { clientNow } from '@ui/clock.ts'
 import { downloadBytes, exportFilename } from '@ui/lib/download.ts'
 
 export type ExportStatus = 'idle' | 'running' | 'failed'
@@ -24,7 +26,7 @@ export function useExportDownload() {
     running.current = true
     setStatus('running')
 
-    void exportService.exportDataZip().then(
+    void exportService.exportDataZip(DEMO_USER_ID, clientNow()).then(
       (bytes) => {
         downloadBytes(bytes, exportFilename(new Date()), 'application/zip')
         running.current = false
