@@ -1164,12 +1164,15 @@ the step machine in the flow.
 
 ### Design source
 
-The UI follows a Figma file agreed with the team and the clinicians —
-**`Hackathon2026Figma.fig`**. It is **not in this repository**; the working copy currently
-lives in one person's `~/Downloads`, which means it is a single point of failure. It should
-be moved somewhere shared (or committed under `docs/design/`) before submission. The
-dashboard and the reports screens were built frame-by-frame from it, so it is the reference
-for any visual question this document does not answer.
+The UI follows a Figma file agreed with the team and the clinicians, committed at
+[`docs/design/Hackathon2026Figma.fig`](design/Hackathon2026Figma.fig). The dashboard and
+the reports screens were built frame-by-frame from it, so it is the reference for any
+visual question this document does not answer.
+
+It is a **binary snapshot**, not a live link: Git will not merge two edits to it, so treat
+it as a checkpoint of the agreed design rather than the working surface. Re-export and
+commit it when the design changes materially — and if it ever needs real revision history,
+that is the moment to move it to Git LFS.
 
 ### i18n
 
