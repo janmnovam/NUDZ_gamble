@@ -177,8 +177,8 @@ export const en: Record<TranslationKey, string> = {
   'onboarding.done.row.reference': 'Reference week',
   'onboarding.done.row.limits': 'Week 1 limits',
   'onboarding.done.row.coping': 'Coping strategies',
-  'onboarding.done.banner.title': 'We start tomorrow, {date}',
-  'onboarding.done.banner.body': "Every day counts — don't forget to log your progress tomorrow.",
+  'onboarding.done.banner.title': 'We start today, {date}',
+  'onboarding.done.banner.body': 'Today is day 1. You’ll log it tomorrow — and so on for 28 days.',
   'onboarding.done.cta': 'Got it',
 
   'dashboard.title': 'Day {day}',

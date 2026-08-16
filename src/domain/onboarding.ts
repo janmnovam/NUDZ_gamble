@@ -1,4 +1,4 @@
-import { calendarTimestamp, dateOf, nextDate } from '@domain/clock.ts'
+import { calendarTimestamp, dateOf } from '@domain/clock.ts'
 import { DomainError } from '@domain/errors.ts'
 import { isWithinCap } from '@domain/limits.ts'
 import {
@@ -75,7 +75,10 @@ export async function completeOnboarding(
   const profile: Profile = {
     userId: input.userId,
     onboardingCompletedAt: at,
-    interventionStartDate: calendarTimestamp(nextDate(dateOf(at))),
+    // Day 1 is the day onboarding is completed, so the first check-in comes the
+    // very next morning. Starting it tomorrow instead left a dead day: the app
+    // announced "Den 1" with nothing to do and no check-in for two more days.
+    interventionStartDate: calendarTimestamp(dateOf(at)),
     referenceTimeMin: input.referenceTimeMin,
     referenceStakesCzk: input.referenceStakesCzk,
   }

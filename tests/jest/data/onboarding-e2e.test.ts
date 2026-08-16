@@ -34,7 +34,7 @@ describe('onboarding end to end', () => {
     })
 
     const profile = await data.profiles.get('A001')
-    expect(profile?.interventionStartDate).toBe('2026-09-02T00:00:00.000Z')
+    expect(profile?.interventionStartDate).toBe('2026-09-01T00:00:00.000Z')
 
     const limits = await data.limits.listByUser('A001')
     expect(limits).toHaveLength(1)

@@ -181,8 +181,8 @@ export const cs = {
   'onboarding.done.row.reference': 'Referenční týden',
   'onboarding.done.row.limits': 'Limity na týden 1',
   'onboarding.done.row.coping': 'Copingové strategie',
-  'onboarding.done.banner.title': 'Začínáme zítra, {date}',
-  'onboarding.done.banner.body': 'Každý den se počítá, nezapomeň si zítra zapsat svůj pokrok.',
+  'onboarding.done.banner.title': 'Začínáme dnes, {date}',
+  'onboarding.done.banner.body': 'Dnešek je den 1. Zítra si ho přijdeš zapsat — a tak dál 28 dní.',
   'onboarding.done.cta': 'Rozumím',
 
   'dashboard.title': 'Den {day}',
