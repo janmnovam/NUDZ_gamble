@@ -4,7 +4,7 @@
  */
 import type { ReminderService } from '@/app/ports/reminderService.ts'
 import { type Result, run } from '@/app/result.ts'
-import { getDueReminder, type ReminderResponse } from '@domain/reminder.ts'
+import { getDueReminder, getLastChanceDue, type ReminderResponse } from '@domain/reminder.ts'
 import type { ISOTimestamp, UserId } from '@domain/model.ts'
 import type { CheckInRepository, ProfileRepository, ReviewRepository } from '@domain/ports.ts'
 
@@ -30,6 +30,15 @@ export class ReminderServiceImpl implements ReminderService {
         this.deps.reviews.listByUser(userId),
       ])
       return getDueReminder({ profile, checkIns, reviews, time })
+    })
+  }
+
+  getLastChance(userId: UserId, time: ISOTimestamp): Promise<Result<boolean>> {
+    return run(async () => {
+      const profile = await this.deps.profiles.get(userId)
+      if (!profile) return false
+      const checkIns = await this.deps.checkIns.listByUser(userId)
+      return getLastChanceDue({ profile, checkIns, time })
     })
   }
 }

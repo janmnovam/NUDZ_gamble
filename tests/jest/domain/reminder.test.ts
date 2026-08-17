@@ -1,4 +1,4 @@
-import { getDueReminder, isReminderTimeDue } from '@domain/reminder.ts'
+import { getDueReminder, getLastChanceDue, isReminderTimeDue } from '@domain/reminder.ts'
 import type { CheckIn, Profile, Review } from '@domain/model.ts'
 
 const USER_ID = 'A001'
@@ -128,6 +128,71 @@ describe('getDueReminder', () => {
       time: '2026-09-30T08:00:00+02:00',
     })
     expect(result).toBeNull()
+  })
+})
+
+describe('getLastChanceDue', () => {
+  const LAST_DAY_WEEK1 = '2026-09-07T21:00:00+02:00' // day 7, evening
+
+  it('is true on the last day of the week when a day is still missing', () => {
+    // days 1–6 checkable; only day 1 filled, so day 2 (and others) are missing
+    expect(
+      getLastChanceDue({
+        profile: profile(),
+        checkIns: [checkIn({ behaviorDate: '2026-09-01T00:00:00.000Z' })],
+        time: LAST_DAY_WEEK1,
+      }),
+    ).toBe(true)
+  })
+
+  it('is false on the last day when every checkable day of the week is filled', () => {
+    // days 1–6 all filled (day 7 itself is "future" on day 7, never counts as missing)
+    const filled = ['01', '02', '03', '04', '05', '06'].map((d) =>
+      checkIn({ behaviorDate: `2026-09-${d}T00:00:00.000Z` }),
+    )
+    expect(getLastChanceDue({ profile: profile(), checkIns: filled, time: LAST_DAY_WEEK1 })).toBe(
+      false,
+    )
+  })
+
+  it('is false when it is not the last day of the week, even with missing days', () => {
+    expect(
+      getLastChanceDue({
+        profile: profile(),
+        checkIns: [],
+        time: '2026-09-05T21:00:00+02:00', // day 5, missing days but not the last day
+      }),
+    ).toBe(false)
+  })
+
+  it('is true on day 28 (last day of the final week) with a missing day', () => {
+    expect(
+      getLastChanceDue({
+        profile: profile(),
+        checkIns: [],
+        time: '2026-09-28T21:00:00+02:00', // day 28
+      }),
+    ).toBe(true)
+  })
+
+  it('is false during the final summary (day 29+)', () => {
+    expect(
+      getLastChanceDue({
+        profile: profile(),
+        checkIns: [],
+        time: '2026-09-29T21:00:00+02:00', // day 29
+      }),
+    ).toBe(false)
+  })
+
+  it('is false before day 1 has started', () => {
+    expect(
+      getLastChanceDue({
+        profile: profile(),
+        checkIns: [],
+        time: '2026-08-31T21:00:00+02:00',
+      }),
+    ).toBe(false)
   })
 })
 

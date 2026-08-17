@@ -92,6 +92,45 @@ export function getDueReminder({
   return null
 }
 
+export interface GetLastChanceDueParams {
+  profile: Profile
+  checkIns: readonly CheckIn[]
+  time: ISOTimestamp
+  config?: DomainConfig
+}
+
+/**
+ * The last-chance nudge (independent of `getDueReminder`): is `time` the final
+ * day of the current study week (day 7/14/21/28), and is at least one earlier
+ * day of that week still missing a check-in? Tomorrow the week closes and those
+ * records lock (CLAUDE.md: backfill only for the current week), so this is the
+ * user's last chance to edit them. `false` before day 1 and once the programme
+ * is over. The current day itself is always `future` (its check-in is done the
+ * next day), so it never counts as missing here.
+ */
+export function getLastChanceDue({
+  profile,
+  checkIns,
+  time,
+  config = DEFAULT_CONFIG,
+}: GetLastChanceDueParams): boolean {
+  const calendar = createStudyCalendar(profile.interventionStartDate, time, config)
+  const studyDay = calendar.currentDay()
+  if (studyDay <= 0 || calendar.isFinalSummary()) return false
+
+  const weekNo = calendar.weekNo(studyDay)
+  if (studyDay !== calendar.lastDay(weekNo)) return false
+
+  const today = calendarDate(time)
+  const checkInsByDate = new Map(checkIns.map((c) => [c.behaviorDate, c]))
+  for (let day = calendar.firstDay(weekNo); day <= calendar.lastDay(weekNo); day += 1) {
+    const behaviorDate = calendar.dateOf(day)
+    const state = dayStateOf({ behaviorDate, today, checkIn: checkInsByDate.get(behaviorDate) })
+    if (state === 'missing') return true
+  }
+  return false
+}
+
 export interface IsReminderTimeDueParams {
   /** "HH:mm", 24h, local wall-clock — `config.ts`'s `REMINDER_TIMES` by default. */
   times: readonly string[]

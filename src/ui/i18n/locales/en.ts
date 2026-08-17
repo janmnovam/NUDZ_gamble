@@ -226,6 +226,9 @@ export const en: Record<TranslationKey, string> = {
   'notification.reminder.body': 'Please fill in the record for {date}.',
   'notification.reminder.review.title': 'Your weekly review is waiting',
   'notification.reminder.review.body': 'Please set your limits for week {week}.',
+  'notification.lastChance.title': 'Last chance for your weekly review.',
+  'notification.lastChance.body':
+    'Tomorrow the review for the past programme week closes automatically. Today is your last chance to edit your records and complete the review.',
 
   'coping.title': 'Your Coping',
   'coping.lead': "Your coping strategies. Turn off one you're not using, or add your own.",
