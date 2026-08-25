@@ -55,6 +55,14 @@ export function WeekReviewFlow() {
         navigate('dashboard')
         return
       }
+      // A week can't be closed while its last day's check-in is still fillable
+      // (doc 09): on the overlap day that day is "yesterday", due at the same
+      // moment as this review. Route there first; on completion the dashboard
+      // gate returns here, and with nothing left to fill the limit form shows.
+      if (res.data.blockingCheckInDay !== null) {
+        navigate('checkin', { behaviorDate: res.data.blockingCheckInDay })
+        return
+      }
       setTimeMinutes(res.data.suggestedNextLimits.timeMinutes)
       setStakesAmount(res.data.suggestedNextLimits.stakesAmount)
       setState({ status: 'ready', review: res.data })

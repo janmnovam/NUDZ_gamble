@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 
+import { CheckInPage } from './pom/CheckInPage'
 import { DashboardPage } from './pom/DashboardPage'
 import { OnboardingPage } from './pom/OnboardingPage'
 import { ReportsPage } from './pom/ReportsPage'
@@ -17,6 +18,7 @@ let onboarding: OnboardingPage
 let dashboard: DashboardPage
 let reports: ReportsPage
 let review: ReviewPage
+let checkin: CheckInPage
 let timeMachine: TimeMachine
 
 test.beforeEach(async ({ page }) => {
@@ -24,6 +26,7 @@ test.beforeEach(async ({ page }) => {
   dashboard = new DashboardPage(page)
   reports = new ReportsPage(page)
   review = new ReviewPage(page)
+  checkin = new CheckInPage(page)
   timeMachine = new TimeMachine(page)
 
   await onboarding.resetStorage()
@@ -53,8 +56,10 @@ test('A2 · the programme overview opens as a month grid', async () => {
 })
 
 test('A3 · a reviewed week opens its read-only detail', async () => {
-  // Close week 1 by completing its review at the start of week 2.
+  // Close week 1 by completing its review at the start of week 2. Day 7's
+  // check-in is due first and blocks the review until filled, so answer it.
   await timeMachine.confirm(8)
+  await checkin.answerNotPlayed()
   await review.save()
   await dashboard.expectVisible()
 

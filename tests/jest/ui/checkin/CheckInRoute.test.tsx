@@ -195,6 +195,44 @@ describe('CheckInRoute', () => {
     )
   })
 
+  it('loads context from the target day’s week when the current week has no limit yet', async () => {
+    // The overlap day: "now" is day 8, whose week has no limit until its review
+    // runs, so getDashboard at now throws DASHBOARD_NO_LIMIT. The day-7 backfill
+    // (surfaced by the review gate) must load its context from week 1 — which
+    // does have a limit — instead of failing on the current week.
+    useAdminStore.setState({ simulatedTime: '2026-09-08T09:00:00.000Z' })
+    const week1 = { ...DASHBOARD, studyDay: 7 }
+    const getDashboard = jest.fn<DashboardService['getDashboard']>((_userId, time) =>
+      Promise.resolve(
+        time.startsWith('2026-09-07')
+          ? ok(week1)
+          : fail({ type: 'not_found', code: 'DASHBOARD_NO_LIMIT', trace: 'test' }),
+      ),
+    )
+    const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
+      Promise.resolve(success(req)),
+    )
+    const { onComplete } = renderRoute({
+      checkIn: { submitCheckIn, editCheckIn: () => Promise.reject(new Error('unused')) },
+      dashboard: { getDashboard },
+      behaviorDate: '2026-09-07T00:00:00.000Z',
+    })
+
+    fireEvent.click(await screen.findByRole('button', { name: /Ne\s+nehrál jsem/ }))
+
+    await waitFor(() => {
+      expect(onComplete).toHaveBeenCalled()
+    })
+    // Context loaded as-of the target day's week…
+    expect(getDashboard).toHaveBeenCalledWith(USER_ID, '2026-09-07T00:00:00.000Z')
+    // …but the record is submitted with the real day-8 instant (correct eligibility).
+    expect(submitCheckIn).toHaveBeenCalledWith(
+      expect.objectContaining({ behaviorDate: '2026-09-07T00:00:00.000Z', played: false }),
+      USER_ID,
+      '2026-09-08T09:00:00.000Z',
+    )
+  })
+
   it('opens the previous day for temporary manual testing when no check-in is due', async () => {
     const submitCheckIn = jest.fn<CheckInService['submitCheckIn']>((req) =>
       Promise.resolve(success(req)),

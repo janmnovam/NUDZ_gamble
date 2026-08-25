@@ -17,6 +17,8 @@ export interface ReviewResponse {
   time: ReviewAxisDto
   stakes: ReviewAxisDto
   missingDays: ISOCalendarTimestamp[]
+  /** The week's last day when it's still an unfilled, fillable check-in — must be filled before this review closes the week; else `null`. */
+  blockingCheckInDay: ISOCalendarTimestamp | null
   suggestedNextLimits: { timeMinutes: number; stakesAmount: number }
 }
 

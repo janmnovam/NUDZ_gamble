@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 
+import { CheckInPage } from './pom/CheckInPage'
 import { DashboardPage } from './pom/DashboardPage'
 import { OnboardingPage } from './pom/OnboardingPage'
 import { ReviewPage } from './pom/ReviewPage'
@@ -15,12 +16,14 @@ import { TimeMachine } from './pom/TimeMachine'
 let onboarding: OnboardingPage
 let dashboard: DashboardPage
 let review: ReviewPage
+let checkin: CheckInPage
 let timeMachine: TimeMachine
 
 test.beforeEach(async ({ page }) => {
   onboarding = new OnboardingPage(page)
   dashboard = new DashboardPage(page)
   review = new ReviewPage(page)
+  checkin = new CheckInPage(page)
   timeMachine = new TimeMachine(page)
 
   await onboarding.resetStorage()
@@ -49,6 +52,10 @@ test('wipes data and returns to onboarding', async () => {
 test('prompts for next-week limits when a new week has none set', async ({ page }) => {
   // Jump into week 2, whose limits are not set yet (only week 1 was, at onboarding).
   await timeMachine.confirm(8)
+
+  // Day 7's check-in is still due and blocks closing week 1, so it comes first;
+  // answer it (no-play) to reach the review.
+  await checkin.answerNotPlayed()
 
   // Instead of a broken dashboard, the user is prompted for the new week's limits.
   await expect(review.title).toBeVisible()
