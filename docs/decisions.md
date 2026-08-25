@@ -62,3 +62,38 @@ pro tvar exportu, ne jako zákaz jediného dopočítaného příznaku.
 věci se nesmí splést — dopočítat chybějící dny nulami by zkreslilo data.
 
 Kód: `buildExportBundle` (`src/domain/export.ts`), `exportMapper.ts`, `exportServiceImpl.ts`.
+
+---
+
+## 2026-08-25 — Týdenní review nejdřív vyzve doplnit poslední den týdne
+
+**Zadání říká:** Review se otevře po dnech 7/14/21 i s chybějícími check-iny; má být
+dokončitelné, i když check-iny chybí (uloží se jako `incomplete`). Původně jsme to tak
+i měli — review se otevřelo hned na začátku nového týdne, i když check-in za poslední den
+předchozího týdne ještě chyběl.
+
+**Rozhodli jsme:** V překryvový den (den 8/15/22) přijde nový týdenní limit až **po**
+doplnění posledního dne uzavíraného týdne (den 7/14/21), pokud je ten den ještě
+doplnitelný. Review flow na ten check-in nejdřív přesměruje a formulář limitů ukáže
+teprve potom. Blokuje **jen poslední den** týdne; dřívější díry v týdnu neblokují.
+
+**Proč:** Poslední den týdne je „včerejšek" přesně ve chvíli, kdy se review otevře, takže
+jeho check-in je běžně splatný ve stejný okamžik. Původní chování otevřelo review jako
+tvrdý redirect (nový týden nemá dashboard, dokud review nenastaví limit) — uživatel byl
+nucen review dokončit, čímž se týden uzavřel (`isWeekClosed`) a poslední den se zamknul
+(`locked_week`) dřív, než ho stihl vyplnit. Ztráta dat za den, který šlo ještě doplnit.
+Nahlásil to uživatel jako bug: „nemůžeme přece uzavřít týden, dokud nemáme vše vyplněno".
+
+**Důsledek:** `getPendingReview` vystavuje `blockingCheckInDay` (poslední den týdne, když
+je nevyplněný a stále v 5denním okně, jinak `null`). `WeekReviewFlow` na něj přesměruje na
+check-in; po vyplnění se vrátí přes dashboard zpět a ukáže limity. Jakmile den vyplní
+nebo vypadne z okna, přestane blokovat — pak se review dokončí jako `incomplete`, takže
+„dokončitelné s chybějícími check-iny" ze zadání platí pro dny, které už doplnit nejdou
+(NA). Dřívější díry v okně se při uzavření pořád zamknou — vědomě: gate cílí jen na den
+7/14/21, aby demo přes stroj času (skok na den 8 s prázdným týdnem) nevynutilo pět
+doplnění po sobě.
+
+Kód: `getPendingReview` (`src/domain/review.ts`), DTO `ReviewResponse`
+(`src/app/dto/review.ts`), `WeekReviewFlow` (`src/ui/review/WeekReviewFlow.tsx`). Guard
+`canEditCheckIn` (`src/domain/guards.ts`) zůstal beze změny — backfill okno i `locked_week`
+platí dál.

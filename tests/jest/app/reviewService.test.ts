@@ -2,10 +2,10 @@ import { ReviewServiceImpl, type ReviewServiceDeps } from '@/app/services/review
 import { ok, type Result } from '@/app/result.ts'
 import type { CheckIn, Limit, Profile, Review } from '@domain/model.ts'
 
-/** Unwrap a service `Result`, failing the test if it carried an envelope error. */
-function data<T>(r: Result<T>): T {
+/** Unwrap a service `Result`, failing the test if it carried an envelope error or null data. */
+function data<T>(r: Result<T>): NonNullable<T> {
   if (r.error) throw new Error(`unexpected error envelope: ${r.error.type}:${r.error.code}`)
-  if (r.data === null) throw new Error('expected data, got null')
+  if (r.data === null || r.data === undefined) throw new Error('expected data, got null')
   return r.data
 }
 import type {
@@ -115,6 +115,9 @@ describe('ReviewServiceImpl', () => {
           '2026-09-06T00:00:00.000Z',
           '2026-09-07T00:00:00.000Z',
         ],
+        // The week's last day (07, "yesterday" on day 8) is unfilled and still
+        // fillable, so it blocks the review until filled. Earlier gaps don't.
+        blockingCheckInDay: '2026-09-07T00:00:00.000Z',
         suggestedNextLimits: { timeMinutes: 480, stakesAmount: 8_000 },
       }),
     )
@@ -123,6 +126,40 @@ describe('ReviewServiceImpl', () => {
   it('returns null while the current week has not elapsed', async () => {
     const { service, time } = makeService({ today: '2026-09-04', checkIns: week1CheckIns })
     await expect(service.getPendingReview(USER_ID, time)).resolves.toEqual(ok(null))
+  })
+
+  it('blocks the review on day 7 when it is the sole gap at review time (day 8)', async () => {
+    // The reported case: days 1–6 checked in on their own mornings, day 7 still
+    // due when the week-1 review opens. The review must send the user to fill
+    // day 7 before it can close the week.
+    const daysOneToSix = [1, 2, 3, 4, 5, 6].map((d) =>
+      checkIn({ behaviorDate: `2026-09-0${String(d)}T00:00:00.000Z` }),
+    )
+    const { service, time } = makeService({ today: '2026-09-08', checkIns: daysOneToSix })
+    const review = data(await service.getPendingReview(USER_ID, time))
+    expect(review.missingDays).toEqual(['2026-09-07T00:00:00.000Z'])
+    expect(review.blockingCheckInDay).toBe('2026-09-07T00:00:00.000Z')
+  })
+
+  it('does not block on an earlier gap once the last day itself is filled (day 8)', async () => {
+    // Only the week's last day gates the review. Day 7 filled, day 6 still an
+    // in-window gap — the review proceeds (day 6 stays NA), so no block.
+    const withoutDaySix = [1, 2, 3, 4, 5, 7].map((d) =>
+      checkIn({ behaviorDate: `2026-09-0${String(d)}T00:00:00.000Z` }),
+    )
+    const { service, time } = makeService({ today: '2026-09-08', checkIns: withoutDaySix })
+    const review = data(await service.getPendingReview(USER_ID, time))
+    expect(review.missingDays).toEqual(['2026-09-06T00:00:00.000Z'])
+    expect(review.blockingCheckInDay).toBeNull()
+  })
+
+  it('stops blocking once the last day has aged out of the window (day 13)', async () => {
+    // On day 13 the 5-day window reaches back only to day 8; day 7 is NA now, so
+    // it no longer blocks — the review can close the week as incomplete.
+    const { service, time } = makeService({ today: '2026-09-13', checkIns: week1CheckIns })
+    const review = data(await service.getPendingReview(USER_ID, time))
+    expect(review.missingDays).toContain('2026-09-07T00:00:00.000Z')
+    expect(review.blockingCheckInDay).toBeNull()
   })
 
   it('completeReview writes a review + next week limit and closes the week', async () => {

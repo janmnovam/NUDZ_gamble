@@ -14,7 +14,7 @@ import {
 import { DEFAULT_CONFIG, type DomainConfig, type Status } from '@domain/config.ts'
 import { ERROR_CODES } from '@domain/errorCodes.ts'
 import { DomainError, ERROR_TYPES } from '@domain/errors.ts'
-import { canReview, isWeekClosed } from '@domain/guards.ts'
+import { canEditCheckIn, canReview, isWeekClosed } from '@domain/guards.ts'
 import { classifyStatus, isWithinCap, suggestLimit, worseStatus } from '@domain/limits.ts'
 import type {
   CheckIn,
@@ -45,6 +45,16 @@ export interface ReviewVM {
   time: AxisSummary
   stakes: AxisSummary
   missingDays: ISOCalendarTimestamp[]
+  /**
+   * The week's last day (7/14/21) when it is still an unfilled, fillable
+   * check-in — the day that comes due at the same moment this review opens
+   * (it's "yesterday" on the overlap day). A week can't be closed while it's
+   * outstanding, so the review flow routes here first (doc 09). `null` once
+   * it's filled or has aged out of the backfill window (then it's NA and
+   * doesn't block — the review saves `incomplete`). Earlier gaps in the week
+   * don't block; only this last day does.
+   */
+  blockingCheckInDay: ISOCalendarTimestamp | null
   suggestedNextLimits: { timeMinutes: number; stakesAmount: number }
 }
 
@@ -176,6 +186,22 @@ export async function getPendingReview(deps: ReviewDeps): Promise<ReviewVM | nul
   const totals = weekTotals(checkIns, week)
   const today = calendarDate(deps.time)
 
+  const missingDays = missingDaysForWeek(calendar, week, today, checkIns)
+  // The week's last day (7/14/21) is "yesterday" when the review first opens, so
+  // its check-in is due at the same moment. A week can't be closed with that day
+  // still fillable (doc 09) — surface it so the review flow routes there first.
+  // A pending review's week is by definition not yet closed (canReview requires
+  // it), so this reduces to the rolling window. Earlier gaps don't block.
+  const lastDayNo = calendar.lastDay(week)
+  const lastDate = calendar.dateOf(lastDayNo)
+  const lastDayFillable =
+    missingDays.some((d) => calendarDate(d) === calendarDate(lastDate)) &&
+    canEditCheckIn(
+      { studyDayDiff: calendar.currentDay() - lastDayNo, weekClosed: false },
+      config,
+    ) === 'allowed'
+  const blockingCheckInDay = lastDayFillable ? lastDate : null
+
   return {
     weekNo: week,
     time: {
@@ -188,7 +214,8 @@ export async function getPendingReview(deps: ReviewDeps): Promise<ReviewVM | nul
       limit: stakesLimit,
       status: classifyStatus(totals.stakesCzk, stakesLimit, config),
     },
-    missingDays: missingDaysForWeek(calendar, week, today, checkIns),
+    missingDays,
+    blockingCheckInDay,
     suggestedNextLimits: {
       timeMinutes: suggestLimit(profile.referenceTimeMin, config),
       stakesAmount: suggestLimit(profile.referenceStakesCzk, config),

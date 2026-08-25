@@ -109,7 +109,8 @@ export function CheckInRoute({ onComplete, onCancel, behaviorDate }: CheckInRout
     let active = true
 
     const loadDashboardForCheckIn = async () => {
-      const dashboardRes = await dashboardService.getDashboard(userId, baseTime)
+      const contextTime = behaviorDate ?? baseTime
+      const dashboardRes = await dashboardService.getDashboard(userId, contextTime)
       if (dashboardRes.error || !dashboardRes.data) {
         throw new Error(dashboardRes.error?.code ?? 'dashboard unavailable')
       }
@@ -166,9 +167,10 @@ export function CheckInRoute({ onComplete, onCancel, behaviorDate }: CheckInRout
 
   const labels = useMemo(() => {
     if (state.status !== 'ready') return null
-    // "Did you gamble yesterday?" only reads right when the day is actually
-    // yesterday; a backfill names the day instead ("...v úterý 18?").
-    const isYesterday = state.dashboard.studyDay - state.behaviorDay.studyDay === 1
+    const dayMs = 86_400_000
+    const behaviorMidnight = Date.parse(`${state.behaviorDay.date.slice(0, 10)}T00:00:00.000Z`)
+    const todayMidnight = Date.parse(`${state.time.slice(0, 10)}T00:00:00.000Z`)
+    const isYesterday = Math.round((todayMidnight - behaviorMidnight) / dayMs) === 1
     return {
       programDayLabel: `Den ${String(state.behaviorDay.studyDay)} Vašeho programu`,
       weekLabel: `Týden ${String(state.behaviorWeekNo)} - Den ${String(

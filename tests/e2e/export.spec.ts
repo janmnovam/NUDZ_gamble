@@ -155,7 +155,8 @@ test.describe('B · check-in rows', () => {
 
 test.describe('C · limit history', () => {
   test('C1 · each week keeps its own limit row (previous limits are not overwritten)', async () => {
-    await timeMachine.confirm(8) // week-1 review
+    await timeMachine.confirm(8) // week-1 review — day 7's check-in is due first
+    await checkin.answerNotPlayed() // fill the blocking last day to reach the review
     await review.adjustTimeHours(-2) // next week 8 h → 6 h
     await review.setStakes(5_000)
     await review.save()
