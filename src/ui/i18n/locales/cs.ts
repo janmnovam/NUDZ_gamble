@@ -232,6 +232,8 @@ export const cs = {
   'notification.reminder.body': 'Doplňte prosím záznam za {date}.',
   'notification.reminder.review.title': 'Týdenní shrnutí čeká',
   'notification.reminder.review.body': 'Nastavte prosím limity pro týden {week}.',
+  'notification.reminder.review.finalBody':
+    'Sledování skončilo. Uzavřete poslední týden a podívejte se na závěrečný souhrn.',
   'notification.lastChance.title': 'Poslední šance na týdenní review.',
   'notification.lastChance.body':
     'Zítra se automaticky uzavře review za minulý týden programu. Dnes máte poslední možnost upravit záznamy a review si uzavřít.',
@@ -261,6 +263,10 @@ export const cs = {
   'review.cta': 'Uložit limity',
   'review.cap.title': 'Limity se nepřepisují',
   'review.cap.body': 'Každý týden má vlastní záznam — předchozí limity zůstávají uložené.',
+  'review.closing.title': 'Sledování je u konce',
+  'review.closing.lead':
+    'Čtvrtý týden skončil a s ním celé 28denní sledování. Uzavřete ho a podívejte se na závěrečný souhrn.',
+  'review.closing.cta': 'Zobrazit závěrečný souhrn',
 
   'install.title': 'Nainstalovat aplikaci',
   'install.body': 'Přidejte si Hlídej.se na plochu — rychlý přístup a připomínky přímo v telefonu.',

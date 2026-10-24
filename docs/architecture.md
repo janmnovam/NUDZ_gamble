@@ -604,7 +604,7 @@ would otherwise be computed against no data and read as a result.
 { "kind": "checkin_due", "behaviorDate": "2026-09-02T00:00:00.000Z" }
 ```
 
-`review_due` is the earliest elapsed-but-unreviewed week (same `canReview`/`isWeekClosed` guards the review flow itself uses) and stays due past the final-summary boundary until the review is actually completed. `checkin_due` — the earliest missing day in the current study week — only surfaces once there's no open review left to nudge about. Neither the domain nor this port emits a `final_summary` reminder; that screen has no notification copy of its own today.
+`review_due` is the earliest elapsed-but-unreviewed week (same `canReview`/`isWeekClosed` guards the review flow itself uses) and stays due past the final-summary boundary until the review is actually completed. Week 4's review sets no limits — it only closes the week (`isFinalWeek`; see docs/decisions.md 2026-10-24), and its notification uses its own copy. `checkin_due` — the earliest missing day in the current study week — only surfaces once there's no open review left to nudge about. Neither the domain nor this port emits a `final_summary` reminder; that screen has no notification copy of its own today.
 
 
 ### NotificationService

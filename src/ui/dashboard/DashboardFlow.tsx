@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 import { type DashboardResponse } from '@/app/dto/dashboard.ts'
+import { DEFAULT_CONFIG } from '@domain/config.ts'
 import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { TimeMachineModal } from '@ui/admin/TimeMachineModal.tsx'
 import { useMultiTap } from '@ui/admin/useMultiTap.ts'
@@ -10,7 +11,7 @@ import { type TranslationKey } from '@ui/i18n/types.ts'
 import { TabBar } from '@ui/components/TabBar.tsx'
 import { DashboardScreen } from '@ui/dashboard/DashboardScreen.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
-import { useDashboardService } from '@ui/app/AppContext.ts'
+import { useDashboardService, useReviewService } from '@ui/app/AppContext.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
 import { useAppView } from '@ui/app/appView.ts'
 import { clientNow } from '@ui/clock.ts'
@@ -40,6 +41,7 @@ export function DashboardFlow({ onCheckIn, onBackfillDay }: DashboardFlowProps =
   const { t } = useTranslation()
   // Injected by <AppProvider>, which is also how tests supply a fake.
   const dashboardService = useDashboardService()
+  const reviewService = useReviewService()
   const programmeState = useFinalSummary()
   const navigate = useAppView((s) => s.navigate)
   const userId = useCurrentUser((s) => s.userId)
@@ -63,6 +65,16 @@ export function DashboardFlow({ onCheckIn, onBackfillDay }: DashboardFlowProps =
       if (cancelled) return
       if (res.data) {
         setState({ status: 'ready', dashboard: res.data })
+        // Past day 28 there is no new week whose missing limit would trip the
+        // gate below, so the final week's close-out review would never surface:
+        // route to it explicitly while it is still pending.
+        if (res.data.studyDay > DEFAULT_CONFIG.PROGRAMME_DAYS) {
+          void reviewService.getPendingReview(userId, time).then((pending) => {
+            // Only the final week: an older unreviewed week has its own gate
+            // (no limit), and its form would write a limit for a week long gone.
+            if (!cancelled && pending.data?.isFinalWeek) navigate('review')
+          })
+        }
         return
       }
       // The current week has no limits set yet (a new week has started): prompt
@@ -79,7 +91,7 @@ export function DashboardFlow({ onCheckIn, onBackfillDay }: DashboardFlowProps =
     return () => {
       cancelled = true
     }
-  }, [dashboardService, navigate, userId, simulatedTime])
+  }, [dashboardService, reviewService, navigate, userId, simulatedTime])
 
   if (state.status !== 'ready') {
     // The nav stays even when the dashboard can't load: without it a failure

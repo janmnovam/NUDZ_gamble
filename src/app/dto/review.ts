@@ -19,12 +19,15 @@ export interface ReviewResponse {
   missingDays: ISOCalendarTimestamp[]
   /** The week's last day when it's still an unfilled, fillable check-in — must be filled before this review closes the week; else `null`. */
   blockingCheckInDay: ISOCalendarTimestamp | null
+  /** Week 4: the review only closes the week — no next-week limits to set. */
+  isFinalWeek: boolean
   suggestedNextLimits: { timeMinutes: number; stakesAmount: number }
 }
 
 export interface CompleteReviewRequest {
   reviewWeekNo: number
-  nextLimits: { timeMinutes: number; stakesAmount: number }
+  /** Required for weeks 1–3; omitted for the final week, which sets no limits. */
+  nextLimits?: { timeMinutes: number; stakesAmount: number }
   incomplete: boolean
 }
 

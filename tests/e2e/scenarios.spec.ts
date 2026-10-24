@@ -52,6 +52,7 @@ interface Scenario {
   referenceStakesCzk: number
   limits: SeedLimit[]
   checkIns: SeedCheckIn[]
+  reviews?: { weekNo: number }[]
 }
 
 declare global {
@@ -201,7 +202,11 @@ const SCENARIO_4_DAYS: DaySpec[] = [
   { day: 28, timeMin: 0, stakesCzk: 0 },
   { day: 29, timeMin: 0, stakesCzk: 0 },
 ]
-const SCENARIO_4 = buildScenario(29, SCENARIO_4_DAYS)
+// Weeks 1–3 were closed by their reviews; week 4's close-out is still open on day 29.
+const SCENARIO_4: Scenario = {
+  ...buildScenario(29, SCENARIO_4_DAYS),
+  reviews: [{ weekNo: 1 }, { weekNo: 2 }, { weekNo: 3 }],
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -376,6 +381,13 @@ test('Scénář 3 — den 22: week 4 opens after a run of no-play days', async (
 
 test('Scénář 4 — den 29: final summary day, week 4 closes over both limits', async ({ page }) => {
   await seed(page, SCENARIO_4)
+
+  // Week 4 has no next week: its review is a close-out with no limit form, and
+  // confirming it opens the final summary. Then home shows week 4's strip.
+  await expect(page.getByRole('heading', { name: 'Sledování je u konce' })).toBeVisible()
+  await expect(page.getByText('Nové limity na další týden')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Zobrazit závěrečný souhrn' }).click()
+  await page.getByRole('button', { name: 'Domů' }).click()
 
   // Regression coverage for the buildDashboardVM fix (src/domain/dashboard.ts):
   // day 29 has no week 5 to look a limit up for, so this reads week 4's

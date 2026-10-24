@@ -1,4 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { jest } from '@jest/globals'
 
 import type { ReviewResponse } from '@/app/dto/review.ts'
 import type { ReviewService } from '@/app/ports/reviewService.ts'
@@ -17,18 +18,22 @@ function review(over: Partial<ReviewResponse>): ReviewResponse {
     stakes: { used: 6_500, limit: 8_000, status: 'POZOR' },
     missingDays: [],
     blockingCheckInDay: null,
+    isFinalWeek: false,
     suggestedNextLimits: { timeMinutes: 480, stakesAmount: 8_000 },
     ...over,
   }
 }
 
 // Only the review seam matters here, so a narrowed cast keeps the fake focused.
-function renderFlow(getPendingReview: ReviewService['getPendingReview']) {
+function renderFlow(
+  getPendingReview: ReviewService['getPendingReview'],
+  completeReview: ReviewService['completeReview'] = () => Promise.resolve(ok(undefined)),
+) {
   useCurrentUser.setState({ userId: 'test-user' })
   useAppView.setState({ view: 'review', checkinBehaviorDate: null })
   render(
     <I18nProvider>
-      <AppProvider app={{ review: { getPendingReview } } as unknown as App}>
+      <AppProvider app={{ review: { getPendingReview, completeReview } } as unknown as App}>
         <WeekReviewFlow />
       </AppProvider>
     </I18nProvider>,
@@ -55,6 +60,26 @@ describe('WeekReviewFlow', () => {
     })
     expect(useAppView.getState().checkinBehaviorDate).toBe('2026-09-07T00:00:00.000Z')
     expect(screen.queryByText('Nové limity na další týden')).toBeNull()
+  })
+
+  it('closes the final week without limits and opens the final summary', async () => {
+    const completeReview = jest.fn<ReviewService['completeReview']>(() =>
+      Promise.resolve(ok(undefined)),
+    )
+    renderFlow(
+      () => Promise.resolve(ok(review({ weekNo: 4, isFinalWeek: true, missingDays: [] }))),
+      completeReview,
+    )
+
+    expect(await screen.findByText('Sledování je u konce')).not.toBeNull()
+    expect(screen.queryByText('Nové limity na další týden')).toBeNull()
+
+    fireEvent.click(screen.getByText('Zobrazit závěrečný souhrn'))
+
+    await waitFor(() => {
+      expect(useAppView.getState().view).toBe('reports')
+    })
+    expect(completeReview.mock.calls[0]?.[0]).toEqual({ reviewWeekNo: 4, incomplete: false })
   })
 
   it('returns to the dashboard when nothing is pending', async () => {

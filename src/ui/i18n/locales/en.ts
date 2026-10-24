@@ -226,6 +226,8 @@ export const en: Record<TranslationKey, string> = {
   'notification.reminder.body': 'Please fill in the record for {date}.',
   'notification.reminder.review.title': 'Your weekly review is waiting',
   'notification.reminder.review.body': 'Please set your limits for week {week}.',
+  'notification.reminder.review.finalBody':
+    'Tracking has ended. Close the last week and see your final summary.',
   'notification.lastChance.title': 'Last chance for your weekly review.',
   'notification.lastChance.body':
     'Tomorrow the review for the past programme week closes automatically. Today is your last chance to edit your records and complete the review.',
@@ -254,6 +256,10 @@ export const en: Record<TranslationKey, string> = {
   'review.cta': 'Save limits',
   'review.cap.title': 'Limits are not overwritten',
   'review.cap.body': 'Each week keeps its own record — your previous limits stay saved.',
+  'review.closing.title': 'Tracking is over',
+  'review.closing.lead':
+    'Week four has ended, and with it the whole 28-day tracking period. Close it and see your final summary.',
+  'review.closing.cta': 'See final summary',
 
   'install.title': 'Install the app',
   'install.body': 'Add Hlídej.se to your home screen for quick access and reminders.',

@@ -55,6 +55,12 @@ export interface ReviewVM {
    * don't block; only this last day does.
    */
   blockingCheckInDay: ISOCalendarTimestamp | null
+  /**
+   * Week 4 — the programme's last week. Its review only closes the week: there
+   * is no next week, so no limits are set (spec: final summary "bez nastavování
+   * limitů"). `suggestedNextLimits` is then meaningless and ignored.
+   */
+  isFinalWeek: boolean
   suggestedNextLimits: { timeMinutes: number; stakesAmount: number }
 }
 
@@ -106,7 +112,8 @@ export interface FinalSummaryVM {
 
 export interface CompleteReviewInput {
   reviewWeekNo: number
-  nextLimits: { timeMinutes: number; stakesAmount: number }
+  /** Required for weeks 1–3; omitted (and ignored) for the final week, which sets no limits. */
+  nextLimits?: { timeMinutes: number; stakesAmount: number }
   incomplete: boolean
 }
 
@@ -216,6 +223,7 @@ export async function getPendingReview(deps: ReviewDeps): Promise<ReviewVM | nul
     },
     missingDays,
     blockingCheckInDay,
+    isFinalWeek: week === TOTAL_WEEKS,
     suggestedNextLimits: {
       timeMinutes: suggestLimit(profile.referenceTimeMin, config),
       stakesAmount: suggestLimit(profile.referenceStakesCzk, config),
@@ -233,41 +241,50 @@ export async function completeReview(input: CompleteReviewInput, deps: ReviewDep
       `review: no profile for ${deps.userId}`,
     )
 
-  if (!isWithinCap(input.nextLimits.timeMinutes, profile.referenceTimeMin, config)) {
-    throw new DomainError(
-      ERROR_TYPES.VALIDATION,
-      ERROR_CODES.review.TIME_CAP,
-      'review: next time limit exceeds the 90% cap',
-    )
-  }
-  if (!isWithinCap(input.nextLimits.stakesAmount, profile.referenceStakesCzk, config)) {
-    throw new DomainError(
-      ERROR_TYPES.VALIDATION,
-      ERROR_CODES.review.STAKES_CAP,
-      'review: next stakes limit exceeds the 90% cap',
-    )
-  }
-
-  const limits = await deps.limits.listByUser(deps.userId)
-  const current = limits.find((l) => l.weekNo === input.reviewWeekNo)
-  // Undefined `current` ⇒ the first comparison is `undefined !== number` ⇒ true
-  // (changed) and short-circuits, so the plain `current.` on the right is safe.
-  const limitChanged =
-    current?.weeklyLimitTimeMin !== input.nextLimits.timeMinutes ||
-    current.weeklyLimitStakesCzk !== input.nextLimits.stakesAmount
-
   const at = deps.time
+  const isFinalWeek = input.reviewWeekNo >= TOTAL_WEEKS
+  let limitChanged = false
 
-  // ponytail: two non-transactional writes — a crash between them leaves next
-  // week's limit set without a review row. Acceptable for a local single-user
-  // PWA; upgrade to an atomic repo (like OnboardingRepository) if it matters.
-  if (input.reviewWeekNo < TOTAL_WEEKS) {
+  if (!isFinalWeek) {
+    const { nextLimits } = input
+    if (!nextLimits)
+      throw new DomainError(
+        ERROR_TYPES.VALIDATION,
+        ERROR_CODES.review.NEXT_LIMITS_REQUIRED,
+        `review: week ${String(input.reviewWeekNo)} needs next week's limits`,
+      )
+    if (!isWithinCap(nextLimits.timeMinutes, profile.referenceTimeMin, config)) {
+      throw new DomainError(
+        ERROR_TYPES.VALIDATION,
+        ERROR_CODES.review.TIME_CAP,
+        'review: next time limit exceeds the 90% cap',
+      )
+    }
+    if (!isWithinCap(nextLimits.stakesAmount, profile.referenceStakesCzk, config)) {
+      throw new DomainError(
+        ERROR_TYPES.VALIDATION,
+        ERROR_CODES.review.STAKES_CAP,
+        'review: next stakes limit exceeds the 90% cap',
+      )
+    }
+
+    const limits = await deps.limits.listByUser(deps.userId)
+    const current = limits.find((l) => l.weekNo === input.reviewWeekNo)
+    // Undefined `current` ⇒ the first comparison is `undefined !== number` ⇒ true
+    // (changed) and short-circuits, so the plain `current.` on the right is safe.
+    limitChanged =
+      current?.weeklyLimitTimeMin !== nextLimits.timeMinutes ||
+      current.weeklyLimitStakesCzk !== nextLimits.stakesAmount
+
+    // ponytail: two non-transactional writes — a crash between them leaves next
+    // week's limit set without a review row. Acceptable for a local single-user
+    // PWA; upgrade to an atomic repo (like OnboardingRepository) if it matters.
     const nextLimit: Limit = {
       limitId: deps.newId(),
       userId: deps.userId,
       weekNo: input.reviewWeekNo + 1,
-      weeklyLimitTimeMin: input.nextLimits.timeMinutes,
-      weeklyLimitStakesCzk: input.nextLimits.stakesAmount,
+      weeklyLimitTimeMin: nextLimits.timeMinutes,
+      weeklyLimitStakesCzk: nextLimits.stakesAmount,
       limitSetAt: at,
     }
     await deps.limits.save(nextLimit)

@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { jest } from '@jest/globals'
 
 import type { DashboardResponse } from '@/app/dto/dashboard.ts'
-import type { FinalSummaryResponse } from '@/app/dto/review.ts'
+import type { FinalSummaryResponse, ReviewResponse } from '@/app/dto/review.ts'
 import type { DashboardService } from '@/app/ports/dashboardService.ts'
 import { fail, ok, type Result } from '@/app/result.ts'
 import type { App } from '@/core/index.ts'
@@ -54,7 +54,10 @@ const PROGRAMME: FinalSummaryResponse = {
 }
 
 // Only the dashboard seam matters here, so a narrowed cast keeps the fake focused.
-function renderFlow(dashboard: DashboardService) {
+function renderFlow(
+  dashboard: DashboardService,
+  getPendingReview: () => Promise<Result<ReviewResponse | null>> = () => Promise.resolve(ok(null)),
+) {
   useCurrentUser.setState({ userId: 'test-user' })
   render(
     <I18nProvider>
@@ -62,7 +65,7 @@ function renderFlow(dashboard: DashboardService) {
         app={
           {
             dashboard,
-            review: { getFinalSummary: () => Promise.resolve(ok(PROGRAMME)) },
+            review: { getFinalSummary: () => Promise.resolve(ok(PROGRAMME)), getPendingReview },
           } as unknown as App
         }
       >
@@ -114,6 +117,55 @@ describe('DashboardFlow', () => {
     await waitFor(() => {
       expect(useAppView.getState().view).toBe('review')
     })
+  })
+
+  it('routes to the final-week close-out once the programme is over', async () => {
+    // Past day 28 no new week lacks a limit, so the no-limit gate never fires;
+    // the still-open week-4 review must be surfaced explicitly or it never closes.
+    useAppView.setState({ view: 'dashboard' })
+    const pending: ReviewResponse = {
+      weekNo: 4,
+      time: { used: 0, limit: 480, status: 'OK' },
+      stakes: { used: 0, limit: 8000, status: 'OK' },
+      missingDays: [],
+      blockingCheckInDay: null,
+      isFinalWeek: true,
+      suggestedNextLimits: { timeMinutes: 480, stakesAmount: 8000 },
+    }
+    renderFlow({ getDashboard: () => Promise.resolve(ok({ ...DASHBOARD, studyDay: 30 })) }, () =>
+      Promise.resolve(ok(pending)),
+    )
+
+    await waitFor(() => {
+      expect(useAppView.getState().view).toBe('review')
+    })
+  })
+
+  it('does not route an older unreviewed week to its limit form after day 28', async () => {
+    useAppView.setState({ view: 'dashboard' })
+    const pending: ReviewResponse = {
+      weekNo: 1,
+      time: { used: 0, limit: 480, status: 'OK' },
+      stakes: { used: 0, limit: 8000, status: 'OK' },
+      missingDays: [],
+      blockingCheckInDay: null,
+      isFinalWeek: false,
+      suggestedNextLimits: { timeMinutes: 480, stakesAmount: 8000 },
+    }
+    renderFlow({ getDashboard: () => Promise.resolve(ok({ ...DASHBOARD, studyDay: 30 })) }, () =>
+      Promise.resolve(ok(pending)),
+    )
+
+    expect(await screen.findByText('Den 30')).not.toBeNull()
+    expect(useAppView.getState().view).toBe('dashboard')
+  })
+
+  it('stays on the dashboard after day 28 once week 4 is closed', async () => {
+    useAppView.setState({ view: 'dashboard' })
+    renderFlow({ getDashboard: () => Promise.resolve(ok({ ...DASHBOARD, studyDay: 30 })) })
+
+    expect(await screen.findByText('Den 30')).not.toBeNull()
+    expect(useAppView.getState().view).toBe('dashboard')
   })
 
   it('falls back to a generic message for an unrecognised error', async () => {
