@@ -23,7 +23,8 @@ type LoadState =
  * no limits yet, so we prompt for them (previous limits pre-filled) before the
  * dashboard — which otherwise cannot render a week with no limit. On save the
  * limits are written and we return to the dashboard; if another earlier week is
- * still unreviewed, the dashboard gate routes back here for it.
+ * still unreviewed, the dashboard gate routes back here for it. The final week
+ * (4) sets no limits: confirming just closes it and opens the final summary.
  */
 export function WeekReviewFlow() {
   const { t } = useTranslation()
@@ -78,12 +79,14 @@ export function WeekReviewFlow() {
     setSubmitting(true)
     setErrorMessage(null)
     const time = simulatedTime ?? clientNow()
+    const { isFinalWeek } = state.review
 
     void reviewService
       .completeReview(
         {
           reviewWeekNo: state.review.weekNo,
-          nextLimits: { timeMinutes, stakesAmount },
+          // The final week has no next week, so it sets no limits — it only closes.
+          ...(isFinalWeek ? {} : { nextLimits: { timeMinutes, stakesAmount } }),
           incomplete: state.review.missingDays.length > 0,
         },
         userId,
@@ -96,7 +99,7 @@ export function WeekReviewFlow() {
           setSubmitting(false)
           return
         }
-        navigate('dashboard')
+        navigate(isFinalWeek ? 'reports' : 'dashboard')
       })
   }
 

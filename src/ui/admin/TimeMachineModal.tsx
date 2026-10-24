@@ -2,6 +2,7 @@ import { Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
+import { DEFAULT_CONFIG } from '@domain/config.ts'
 import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { useAdminService } from '@ui/app/AppContext.ts'
 import { useCurrentUser } from '@ui/app/currentUser.ts'
@@ -10,8 +11,12 @@ import { TextField } from '@ui/components/TextField.tsx'
 import { useTranslation } from '@ui/i18n/context.ts'
 import * as gateway from '@ui/notifications/notificationGateway.ts'
 
-/** Programme length in days — the reachable range of the time machine. */
-const MAX_DAY = 28
+/**
+ * Furthest reachable day: a full week past the programme's end, so the demo
+ * can show day 29 (final-week close-out + final summary) and the days after it,
+ * including day 34+ where day 28 has aged out of the backfill window.
+ */
+const MAX_DAY = DEFAULT_CONFIG.PROGRAMME_DAYS + DEFAULT_CONFIG.WEEK_LENGTH_DAYS
 
 /**
  * Preselected time-of-day, matching `config.ts`'s `REMINDER_TIMES` — jumping

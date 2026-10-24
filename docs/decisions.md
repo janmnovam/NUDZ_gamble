@@ -97,3 +97,30 @@ Kód: `getPendingReview` (`src/domain/review.ts`), DTO `ReviewResponse`
 (`src/app/dto/review.ts`), `WeekReviewFlow` (`src/ui/review/WeekReviewFlow.tsx`). Guard
 `canEditCheckIn` (`src/domain/guards.ts`) zůstal beze změny — backfill okno i `locked_week`
 platí dál.
+
+---
+
+## 2026-10-24 — Review 4. týdne jen uzavírá týden, bez limitů
+
+**Zadání říká:** Review s nastavením limitů je po dnech 7, 14 a 21. Po dni 28 se během
+dne 29 zpřístupní závěrečný souhrn **bez nastavování limitů**. Tabulka `review`
+má `review_week_no` 1..4 a „uzavírá příslušný týden".
+
+**Bug:** 4. týden šel uzavřít jen přes stejný formulář „Nové limity na další týden" jako
+týdny 1–3 — jenže 5. týden neexistuje. Navíc se na ten formulář v den 29+ nedalo
+normálně dostat (dashboard týden 4 limit má, takže gate na chybějící limit nespustí),
+takže týden 4 zůstal navždy otevřený a notifikace `review_due` chodila dál
+(„Nastavte limity pro týden 4"). Text notifikace byl navíc o jedna mimo i pro týdny 1–3
+(uváděl uzavíraný týden místo následujícího).
+
+**Rozhodli jsme:** Review 4. týdne zůstává (zapíše řádek `review` pro týden 4,
+`limit_changed=false`), ale **bez limitů**: `getPendingReview` vrací `isFinalWeek`,
+`completeReview` pro týden 4 nebere `nextLimits` (pro 1–3 jsou povinné,
+`REVIEW_NEXT_LIMITS_REQUIRED`). `WeekReviewFlow` pro týden 4 ukáže uzavírací obrazovku
+a po potvrzení otevře závěrečný souhrn. Blokující den 28 (backfill) platí stejně jako u
+dnů 7/14/21. `DashboardFlow` od dne 29 na otevřené review týdne 4 přesměruje. Notifikace
+pro týden 4 má vlastní text; pro 1–3 uvádí číslo následujícího týdne.
+
+Kód: `completeReview` / `getPendingReview` (`src/domain/review.ts`),
+`WeekReviewFlow` / `WeekReviewScreen` (`src/ui/review/`), `DashboardFlow`
+(`src/ui/dashboard/DashboardFlow.tsx`), `useReminderNotifications.ts`.

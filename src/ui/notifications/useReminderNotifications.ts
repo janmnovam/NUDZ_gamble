@@ -1,5 +1,7 @@
 import { useEffect } from 'react'
 
+import { DEFAULT_CONFIG } from '@domain/config.ts'
+
 import { useAdminStore } from '@ui/admin/adminStore.ts'
 import { useNotificationService } from '@ui/app/AppContext.ts'
 import { useAppView } from '@ui/app/appView.ts'
@@ -73,9 +75,15 @@ export function useReminderNotifications(): void {
           },
         )
       } else {
+        // `weekNo` is the week being closed; its review sets the *next* week's
+        // limits — except the final week, which only closes the programme.
+        const isFinalWeek =
+          reminder.weekNo * DEFAULT_CONFIG.WEEK_LENGTH_DAYS >= DEFAULT_CONFIG.PROGRAMME_DAYS
         gateway.showNotification(
           t('notification.reminder.review.title'),
-          t('notification.reminder.review.body', { week: reminder.weekNo }),
+          isFinalWeek
+            ? t('notification.reminder.review.finalBody')
+            : t('notification.reminder.review.body', { week: reminder.weekNo + 1 }),
           () => {
             navigate('review')
           },

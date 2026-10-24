@@ -36,7 +36,12 @@ function checkIn(over: Partial<CheckIn>): CheckIn {
   }
 }
 
-function makeService(params: { today: string; checkIns?: CheckIn[]; limits?: Limit[] }) {
+function makeService(params: {
+  today: string
+  checkIns?: CheckIn[]
+  limits?: Limit[]
+  reviews?: Review[]
+}) {
   const profile: Profile = {
     userId: USER_ID,
     onboardingCompletedAt: '2026-08-31T21:30:00+02:00',
@@ -54,7 +59,7 @@ function makeService(params: { today: string; checkIns?: CheckIn[]; limits?: Lim
       limitSetAt: '2026-08-31T21:30:00+02:00',
     },
   ]
-  const reviewStore: Review[] = []
+  const reviewStore: Review[] = [...(params.reviews ?? [])]
   let seq = 0
 
   const profiles: ProfileRepository = {
@@ -118,6 +123,7 @@ describe('ReviewServiceImpl', () => {
         // The week's last day (07, "yesterday" on day 8) is unfilled and still
         // fillable, so it blocks the review until filled. Earlier gaps don't.
         blockingCheckInDay: '2026-09-07T00:00:00.000Z',
+        isFinalWeek: false,
         suggestedNextLimits: { timeMinutes: 480, stakesAmount: 8_000 },
       }),
     )
@@ -203,6 +209,55 @@ describe('ReviewServiceImpl', () => {
     expect(res.data).toBeNull()
     expect(res.error?.type).toBe('validation')
     expect(res.error?.code).toBe('REVIEW_TIME_CAP')
+  })
+
+  describe('final week (4)', () => {
+    // Day 29 = 2026-09-29; weeks 1–3 already closed by their reviews.
+    const closedWeeks: Review[] = [1, 2, 3].map((w) => ({
+      reviewId: `r${String(w)}`,
+      userId: USER_ID,
+      reviewWeekNo: w,
+      reviewCompletedAt: '2026-09-08T09:00:00.000Z',
+      limitChanged: false,
+      incomplete: false,
+    }))
+    const dayTwentyEight = checkIn({ behaviorDate: '2026-09-28T00:00:00.000Z', weekNo: 4 })
+
+    it('opens on day 29 as a close-out, still routing to day 28 first', async () => {
+      const { service, time } = makeService({ today: '2026-09-29', reviews: closedWeeks })
+      const review = data(await service.getPendingReview(USER_ID, time))
+      expect(review.weekNo).toBe(4)
+      expect(review.isFinalWeek).toBe(true)
+      expect(review.blockingCheckInDay).toBe('2026-09-28T00:00:00.000Z')
+    })
+
+    it('closes the week without next-week limits, so it stops being pending', async () => {
+      const { service, time, reviewStore, limitStore } = makeService({
+        today: '2026-09-30',
+        checkIns: [dayTwentyEight],
+        reviews: closedWeeks,
+      })
+      const before = limitStore.length
+      const res = await service.completeReview({ reviewWeekNo: 4, incomplete: true }, USER_ID, time)
+      expect(res.error).toBeNull()
+      expect(reviewStore.find((r) => r.reviewWeekNo === 4)).toMatchObject({
+        limitChanged: false,
+        incomplete: true,
+      })
+      expect(limitStore).toHaveLength(before)
+      await expect(service.getPendingReview(USER_ID, time)).resolves.toEqual(ok(null))
+    })
+
+    it('still requires next-week limits for weeks 1–3', async () => {
+      const { service, time } = makeService({ today: '2026-09-08', checkIns: week1CheckIns })
+      const res = await service.completeReview(
+        { reviewWeekNo: 1, incomplete: false },
+        USER_ID,
+        time,
+      )
+      expect(res.error?.type).toBe('validation')
+      expect(res.error?.code).toBe('REVIEW_NEXT_LIMITS_REQUIRED')
+    })
   })
 
   it('getFinalSummary reports per-week statuses without setting limits', async () => {

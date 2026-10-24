@@ -23,7 +23,8 @@ interface WeekReviewScreenProps {
 }
 
 /**
- * Start-of-week prompt for the next week's limits. Shown when the current week
+ * Start-of-week prompt for the next week's limits (or, for the final week, a
+ * close-out with no limits that leads to the final summary). Shown when the current week
  * has no limits set yet (a closed week's review is pending); the previous
  * limits come pre-filled as the default. Pure presentation — the flow owns the
  * draft state and the service calls.
@@ -43,6 +44,41 @@ export function WeekReviewScreen({
   const hourUnit = t('onboarding.limits.unitHour')
   const minuteUnit = t('onboarding.limits.unitMinute')
   const currency = t('onboarding.limits.currency')
+
+  // Week 4 has no next week: its review only closes the week and hands over to
+  // the final summary, so there is no limit form to show.
+  if (review.isFinalWeek) {
+    return (
+      <Screen
+        background="bg-selected-surface"
+        contentClassName="gap-3"
+        header={
+          <div className="flex flex-col gap-0.5 px-4 pt-2 pb-4">
+            <p className="type-overline text-faint">
+              {t('review.overline', { week: review.weekNo })}
+            </p>
+            <h2 className="type-h2 text-ink">{t('review.closing.title')}</h2>
+            <p className="text-muted text-sm leading-5">{t('review.closing.lead')}</p>
+          </div>
+        }
+        footer={
+          <div className="flex flex-col gap-2">
+            {errorMessage ? (
+              <p className="type-body-sm text-danger text-center">{errorMessage}</p>
+            ) : null}
+            <Button size="md" fullWidth onClick={onConfirm} disabled={submitting}>
+              {t('review.closing.cta')}
+            </Button>
+          </div>
+        }
+      >
+        <Card tone="sunken" className="flex flex-col gap-1">
+          <span className="type-title-card text-ink">{t('review.final.limitsDoneTitle')}</span>
+          <p className="type-body-sm text-muted">{t('review.final.limitsDoneBody')}</p>
+        </Card>
+      </Screen>
+    )
+  }
 
   return (
     <Screen
